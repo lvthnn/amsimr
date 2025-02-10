@@ -1,5 +1,0 @@
-default:
-  n_pop: 1000 
-  n_gene: 15
-  n_vars: 5
-  beta: 1.529852

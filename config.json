@@ -1,0 +1,12 @@
+{
+  "n_pop": 10000,
+  "n_gene": 8,
+  "n_pheno": 1,
+  "kappa": 1,
+  "snp_causal": {
+    "X1": [1, 4, 7]
+  },
+  "rules_propensity": [ 
+    ["X1", "X1", -0.03]
+  ]
+}
