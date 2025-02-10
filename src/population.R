@@ -15,8 +15,8 @@ population <- function(params) {
   rules_propensity <- config$rules_propensity
 
   # Simulate sex of individuals, minor allele frequencies and genotypes
-  sex <- rbinom(n, 1, 0.5)
-  maf <- runif(p, 0.1, 0.9)
+  sex <- sample(c(rep(0, n / 2), rep(1, n / 2)))
+  maf <- rbeta(p, 5, 5)
   gene <- matrix(rbinom(n * p, 2, rep(maf, each = n)), nrow = n, ncol = p)
 
   names(maf) <- paste0("rs", 1:p)
@@ -80,6 +80,12 @@ population <- function(params) {
 }
 
 alpha <- function(pop, i, j) {
+  #' Potential function for propensity distribution on space of potential
+  #' spouse pairs.
+  #'
+  #' @param pop Population object
+  #' @param i Male individual with index no. i
+  #' @param j Female individual with index no. j
   rules_propensity <- pop$rules_propensity
   kappa <- pop$kappa
   alpha <- 0
@@ -89,10 +95,10 @@ alpha <- function(pop, i, j) {
     phi2 <- rules_propensity[k, 2]
     w <- as.numeric(rules_propensity[k, 3])
     
-    phi1_i <- pop$data[i, phi1]
-    phi2_j <- pop$data[j, phi2]
+    phi1_i <- pop$get_sex(0)$data[i, phi1]
+    phi2_j <- pop$get_sex(1)[j, phi2]
   
-    alpha <- alpha + w * abs(phi1_i - phi2_j)
+    alpha <- alpha + w * (phi1_i - phi2_j)^2
   }
 
   return(alpha)
@@ -131,9 +137,13 @@ propensity_dist <- function(pop, n_samples, n_burnin) {
 
 pop <- population(params = "Github/AssocMating/config.json")
 
-pair_samples <- do.call(rbind, propensity_dist(pop, 1e5, 5000))
+pair_samples <- do.call(rbind, propensity_dist(pop, 1e5, 0)) |> as.data.frame()
 colnames(pair_samples) <- c("i", "j")
-pair_samples <- tibble::as_tibble(pair_samples) |> dplyr::arrange(i, j)
+pair_samples <- pair_samples |>
+  dplyr::mutate(pairs = paste0("(", i, ",", j, ")")) |>
+  dplyr::arrange(i, j)
+
+table(pair_samples$pairs) |> prop.table() |> hist()
 
 mating_pairs <- c()
 
@@ -143,5 +153,5 @@ while (length(mating_pairs) < min(pop$get_sex(0) |> nrow(), pop$get_sex(1) |> nr
   j_ind <- pair_samples[ind, 2]
 
   pair_samples <- pair_samples |> dplyr::filter(i != i_ind, j != j_ind)  
-  mating_pairs <- append(mating_pairs, ind) 
+  mating_pairs <- append(mating_pairs, paste0("(", i_ind, ",", j_ind, ")")) 
 }
