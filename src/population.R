@@ -16,7 +16,7 @@ population <- function(params) {
 
   # Simulate sex of individuals, minor allele frequencies and genotypes
   sex <- sample(c(rep(0, n / 2), rep(1, n / 2)))
-  maf <- rbeta(p, 5, 5)
+  maf <- runif(p, 0.1, 0.9)
   gene <- matrix(rbinom(n * p, 2, rep(maf, each = n)), nrow = n, ncol = p)
 
   names(maf) <- paste0("rs", 1:p)
@@ -30,12 +30,15 @@ population <- function(params) {
   for (pheno in names(snps_causal)) {
     snp_pheno <- snps_causal[[pheno]]
     gene_snp <- gene[, snp_pheno]
-    gam_snp <- rnorm(length(snp_pheno) + 1)
-    phenos <- gam_snp[1] + gene_snp %*% gam_snp[-1] + rnorm(n)
-    names(gam_snp) <- c("gam_0", paste0("rs", snp_pheno))
-    colnames(phenos) <- pheno
-
+    # gam_snp <- rnorm(length(snp_pheno), sd = 2)
+    gam_snp <- c(2, 2, 2)
+    
+    names(gam_snp) <- paste0("rs", snp_pheno)
     gam_causal[[pheno]] <- gam_snp
+    
+    phenos <- gene_snp %*% gam_snp + rnorm(n, sd = 0.5)
+    colnames(phenos) <- pheno
+    
     phi <- cbind(phi, phenos)
   }
   
@@ -60,16 +63,17 @@ population <- function(params) {
   pop$get_geno <- function(i, rs = paste0("rs", 1:p), sex = NA) {
     pop_obj <- pop$data
     if(!missing(sex)) {
-      pop_obj <- ifelse(sex == 0, pop$get_sex(0), pop$get_sex(1))
+      if (sex == 0) pop_obj <- pop_male
+      else pop_obj <- pop_female
     }
-    print(pop_obj)
     return(pop_obj[i, rs])
   }
   
-  pop$get_pheno <- function(i, phe = paste("X", 1:q), sex = NA) {
+  pop$get_pheno <- function(i, phe = paste0("phi", 1:q), sex = NA) {
     pop_obj <- pop$data
     if(!missing(sex)) {
-      pop_obj <- ifelse(sex == 0, pop$get_sex(0), pop$get_sex(1))
+      if (sex == 0) pop_obj <- pop_male
+      else pop_obj <- pop_female
     }
     return(pop_obj[i, phe])
   }
@@ -79,79 +83,67 @@ population <- function(params) {
   return(pop)
 }
 
-alpha <- function(pop, i, j) {
-  #' Potential function for propensity distribution on space of potential
-  #' spouse pairs.
+log_propen <- function(pop, m, f) {
+  #' Propensity kernel for propensity distribution on spouse pairs.
   #'
   #' @param pop Population object
-  #' @param i Male individual with index no. i
-  #' @param j Female individual with index no. j
+  #' @param m Male individual with index no. m
+  #' @param f Female individual with index no. f
+  
   rules_propensity <- pop$rules_propensity
   kappa <- pop$kappa
-  alpha <- 0
+  score <- 0
   
   for (k in 1:nrow(rules_propensity)) {
-    phi1 <- rules_propensity[k, 1]
-    phi2 <- rules_propensity[k, 2]
+    phe1 <- rules_propensity[k, 1]
+    phe2 <- rules_propensity[k, 2]
     w <- as.numeric(rules_propensity[k, 3])
     
-    phi1_i <- pop$get_sex(0)$data[i, phi1]
-    phi2_j <- pop$get_sex(1)[j, phi2]
+    phi_m <- pop$get_pheno(m, phe = phe1, sex = 0)
+    phi_f <- pop$get_pheno(f, phe = phe2, sex = 1)
   
-    alpha <- alpha + w * (phi1_i - phi2_j)^2
+    score <- score + w * (phi_m - phi_f)^2 / kappa
   }
 
-  return(alpha)
+  return(score)
 }
 
-propensity_dist <- function(pop, n_samples, n_burnin) {
+spouse_pairs <- function(pop, n_iter = 1e5) {
+  #' Generate spouse pairs using MCMC sampling.
+  #'
+  #' @param pop Population object
+  #' @param n_iter Number of iterations before matching is returned
+  
   pop_male <- pop$get_sex(0)
   pop_female <- pop$get_sex(1)
   n_male <- nrow(pop_male)
   n_female <- nrow(pop_female)
   
-  kappa <- pop$kappa
-  
-  rand_state <- function() c(sample(1:n_male, 1), sample(1:n_female, 1))
-  samples <- list()
-  samples[[1]] <- rand_state()
-  
-  for (s in 2:n_samples) {
-    pair_curr <- samples[[s - 1]]
-    pair_prop <- rand_state()
+  curr <- sample(1:n_male)
+  names(curr) <- 1:n_male
+
+  for (s in 2:n_iter) {
+    swap <- sample(curr, size = 2)
+    ms <- names(curr[swap]) |> as.integer()
+    fs <- curr[swap] |> as.integer()
+   
+    numer <- log_propen(pop, ms[1], fs[2]) + log_propen(pop, ms[2], fs[1])
+    denom <- log_propen(pop, ms[1], fs[1]) + log_propen(pop, ms[2], fs[2])
+    alpha_acc <- min(1, exp(numer - denom))
     
-    alpha_curr <- alpha(pop, pair_curr[1], pair_curr[2])
-    alpha_prop <- alpha(pop, pair_prop[1], pair_prop[2])
-    
-    acc_ratio <- min(exp((alpha_prop - alpha_curr) / kappa), 1)
-    
-    if (runif(1) < acc_ratio) {
-      samples[[s]] <- pair_prop
-    } else {
-      samples[[s]] <- pair_curr
+    if (runif(1) < alpha_acc) {
+      curr[swap] <- curr[rev(swap)]
     }
   }
   
-  return(samples)
+  return(curr)
 }
 
 pop <- population(params = "Github/AssocMating/config.json")
+gen1 <- spouse_pairs(pop, n_iter = 10000)
 
-pair_samples <- do.call(rbind, propensity_dist(pop, 1e5, 0)) |> as.data.frame()
-colnames(pair_samples) <- c("i", "j")
-pair_samples <- pair_samples |>
-  dplyr::mutate(pairs = paste0("(", i, ",", j, ")")) |>
-  dplyr::arrange(i, j)
+gen1_df <- data.frame(names(gen1) |> as.integer(), gen1,
+                      pop$get_sex(0)$phi1, pop$get_sex(1)$phi1)
+colnames(gen1_df) <- c("m", "f", "phi_m", "phi_f")
 
-table(pair_samples$pairs) |> prop.table() |> hist()
-
-mating_pairs <- c()
-
-while (length(mating_pairs) < min(pop$get_sex(0) |> nrow(), pop$get_sex(1) |> nrow())) {
-  ind <- sample(1:nrow(pair_samples), size = 1)
-  i_ind <- pair_samples[ind, 1]
-  j_ind <- pair_samples[ind, 2]
-
-  pair_samples <- pair_samples |> dplyr::filter(i != i_ind, j != j_ind)  
-  mating_pairs <- append(mating_pairs, paste0("(", i_ind, ",", j_ind, ")")) 
-}
+plot(gen1_df$phi_m, gen1_df$phi_f)
