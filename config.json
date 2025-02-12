@@ -1,11 +1,11 @@
 {
-  "n_pop": 20,
+  "n_pop": 50,
   "n_gene": 1,
   "n_pheno": 1,
   "snp_causal": {
     "phi1": [1]
   },
   "psi_vec": [
-    ["phi1", "phi1"]
+    [1, 1]
   ]
 }

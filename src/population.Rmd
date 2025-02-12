@@ -4,11 +4,7 @@ output: html_document
 date: "2025-02-12"
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-## BSc project
+## Simulated annealing implementation
 
 This is a function to generate the population:
 
@@ -32,9 +28,8 @@ population <- function(params) {
   maf <- 0.5
   
   gene <- matrix(rbinom(n * p, 2, rep(maf, each = n)), nrow = n, ncol = p)
-
-  names(maf) <- paste0("rs", 1:p)
-  colnames(gene) <- paste0("rs", 1:p)
+  
+  names(maf) <- names(gene) <- paste0("rs", 1:p)
 
   # Generate phenotypes, for now model as function of genotype
   snps_causal <- config$snp_causal
@@ -44,12 +39,12 @@ population <- function(params) {
   for (pheno in names(snps_causal)) {
     snp_pheno <- snps_causal[[pheno]]
     gene_snp <- gene[, snp_pheno]
-    gam_snp <- matrix(2)# @TODO: Make into variable
+    gam_snp <- matrix(2)
     
     names(gam_snp) <- paste0("rs", snp_pheno)
     gam_causal[[pheno]] <- gam_snp
     
-    phenos <- gene_snp %*% gam_snp + rnorm(n)
+    phenos <- gene_snp %*% gam_snp # + rnorm(n)
     colnames(phenos) <- pheno
     
     phi <- cbind(phi, phenos)
@@ -67,22 +62,33 @@ population <- function(params) {
 Here are $\psi: \mathcal S \to \mathbf R$ and $\Delta \psi$ as discussed.
 
 ```{r}
-dpsi <- function(sol, swap) norm(sol[swap, "phi1"] - sol[rev(swap), "phi1"], type = "2")^2
+dpsi <- function(sol, swap) {
+  norm(sol[swap, "phi1"] - sol[rev(swap), "phi1"], type = "2")^2
+}
 psi <- function(sol) norm(sol$phi1 - sol$f_phi1, type = "2")^2
+swap_sol <- function(sol, swap) {
+  exch_col <- grepl("f_", names(sol))
+  sol[swap, exch_col] <- sol[rev(swap), exch_col]
+  return(sol)
+}
 ```
 
-Here we implement the `sim_matching` function to generate a spouse matching between the male and female subpopulations. Currently, we are only using a single trait $\phi_1$ to select on.
+Here we implement simulated annealing:
 
 ```{r}
-sim_matching <- function(pop, iter = 10, kappa0 = 1, greedy = TRUE, eval = FALSE, progress = FALSE) {
-  # Size of male and female subpopulations
-  n <- nrow(pop) / 2
-  T_int <- floor(seq(from = 1, to = iter, length.out = 10))
+sim_matching <- function(pop, iter = 100, kappa0 = 1, greedy = TRUE, eval = FALSE) {
+  #' Find an approximately optimal matching between individuals in the population
+  #'
+  #' @param pop Population data frame
+  #' @param iter Number of iterations to
+  #' @param
   
+  # Size of male and female populations
+  n <- nrow(pop) / 2
+
   # Initial sample -- change this to greedy
   males <- pop[pop$sex == 0, ]
   females <- pop[pop$sex == 1, ]
-  
   if (greedy) {
     males <- males[order(males$phi1), ]
     females <- females[order(females$phi1), ]
@@ -91,11 +97,14 @@ sim_matching <- function(pop, iter = 10, kappa0 = 1, greedy = TRUE, eval = FALSE
   rownames(males) <- rownames(females) <- 1:n
   names(females) <- paste0("f_", colnames(females))
   
-  sol <- cbind(males, females)
+  # Set up the first sample
+  sol <- sol_opt <- cbind(males, females)
+  psi_opt <- psi(sol)
   exch_col <- grepl("f_", names(sol))
   
+  # Samples for exchanges
   swaps <- replicate(iter, sample(n, size = 2), simplify = FALSE)
-  kappa <- kappa0 / log(1 + 0.01 * 1:iter)
+  kappa <- kappa0 / (1 + 0.001 * 1:iter)
   
   if (eval) {
     psi_eval <- numeric(iter)
@@ -108,15 +117,15 @@ sim_matching <- function(pop, iter = 10, kappa0 = 1, greedy = TRUE, eval = FALSE
   
   # Metropolis step
   for (s in 2:iter) {
-    if (s %in% T_int && progress) print(s)
-    
-    swap <- swaps[[s]]
+    swap <- sample(n, size = 2)
+    psi_sol <- psi(sol)
     dpsi_sol <- dpsi(sol, swap)
-    rho_s <- min(1, exp(dpsi_sol / kappa))
+    rho_s <- min(1, exp(-dpsi_sol / kappa[s]))
     
     # Accept step
-    if (runif(1) > rho_s) {
+    if (runif(1) < rho_s) {
       sol[swap, exch_col] <- sol[rev(swap), exch_col]
+      if (psi_sol < psi_opt) sol_opt <- sol
     }
     
     if (eval) {
@@ -129,9 +138,12 @@ sim_matching <- function(pop, iter = 10, kappa0 = 1, greedy = TRUE, eval = FALSE
   if (eval) {
     return(list(
       sol = sol,
+      sol_opt = sol_opt,
+      psi_opt = psi(sol_opt),
       dpsi = dpsi_eval,
       psi = psi_eval,
-      rho = rho_eval
+      rho = rho_eval,
+      kappa = kappa
     ))
   } else {
     return(list(
@@ -139,20 +151,31 @@ sim_matching <- function(pop, iter = 10, kappa0 = 1, greedy = TRUE, eval = FALSE
     ))
   }
 }
-
-plot_eval <- function(eval) {
-  par(mfrow = c(1, 3))
-  plot(eval$psi, type = "l", xlab = "Iteration", ylab = expression(psi))
-  plot(eval$dpsi, type = "l", xlab = "Iteration", ylab = expression("Delta psi"))
-  hist(eval$rho)
-}
-
-test_matching <- sim_matching(pop, iter = 1000, eval = TRUE, greedy = FALSE)
-plot_eval(test_matching)
 ```
 
-Verification
+\`Verification
 
 ```{r}
-pop <- population("Github/AssocMating/config.json")
+set.seed(42)
+
+pop <- population("~/Github/AssocMating/config.json")
+
+test <- sim_matching(pop, iter = 1000, eval = TRUE, greedy = FALSE)
+```
+
+```{r}
+plot_eval <- function(samps_eval) {
+  par(mfrow = c(2, 2))
+  plot(samps_eval$psi, type = "l", xlab = "Iteration", ylab = expression(psi))
+  plot(samps_eval$dpsi, xlab = "Iteration", ylab = expression(Delta * psi))
+  plot(samps_eval$rho, xlab = "Iteration", ylab = "Acceptance probability")
+  plot(samps_eval$kappa, type = "l", xlab = "Iteration", ylab = "Temperature")
+}
+
+tsol <- test$sol
+
+tsolopt <- test$sol_opt
+plot(tsolopt$phi1, tsolopt$f_phi1)
+
+plot_eval(test)
 ```
