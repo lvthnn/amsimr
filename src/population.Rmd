@@ -120,6 +120,7 @@ sim_matching <- function(pop, iter = 100, kappa0 = 1, greedy = TRUE, eval = FALS
     swap <- sample(n, size = 2)
     psi_sol <- psi(sol)
     dpsi_sol <- dpsi(sol, swap)
+    print(-dpsi_sol / kappa[s])
     rho_s <- min(1, exp(-dpsi_sol / kappa[s]))
     
     # Accept step
