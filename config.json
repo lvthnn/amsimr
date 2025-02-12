@@ -1,12 +1,12 @@
 {
   "n_pop": 10000,
-  "n_gene": 3,
-  "n_pheno": 2,
+  "n_gene": 1,
+  "n_pheno": 1,
   "kappa": 1,
   "snp_causal": {
-    "phi1": [1, 2, 3]
+    "phi1": [1]
   },
   "rules_propensity": [ 
-    ["phi1", "phi1", -0.5]
+    ["phi1", "phi1"]
   ]
 }

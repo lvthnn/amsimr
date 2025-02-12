@@ -11,12 +11,10 @@ population <- function(params) {
   n <- config$n_pop
   p <- config$n_gene
   q <- config$n_pheno
-  kappa <- config$kappa
-  rules_propensity <- config$rules_propensity
 
   # Simulate sex of individuals, minor allele frequencies and genotypes
-  sex <- sample(c(rep(0, n / 2), rep(1, n / 2)))
-  maf <- runif(p, 0.1, 0.9)
+  sex <- sample(rep(c(0, 1), n / 2))
+  maf <- 0.5 # @TODO: Make into beta / uniform variable
   gene <- matrix(rbinom(n * p, 2, rep(maf, each = n)), nrow = n, ncol = p)
 
   names(maf) <- paste0("rs", 1:p)
@@ -30,8 +28,7 @@ population <- function(params) {
   for (pheno in names(snps_causal)) {
     snp_pheno <- snps_causal[[pheno]]
     gene_snp <- gene[, snp_pheno]
-    # gam_snp <- rnorm(length(snp_pheno), sd = 2)
-    gam_snp <- c(2, 2, 2)
+    gam_snp <- matrix(1)# @TODO: Make into variable
     
     names(gam_snp) <- paste0("rs", snp_pheno)
     gam_causal[[pheno]] <- gam_snp
@@ -42,108 +39,119 @@ population <- function(params) {
     phi <- cbind(phi, phenos)
   }
   
-  # Assemble all of the above into the 0th generation
+  pop <- data.frame(sex, gene, phi)
+  sex <- pop[, "sex"] == 0
+  
+  # Assemble the population object
   pop <- list(
-    kappa = kappa,
+    pop = pop,
+    sex = sex,
     maf_genes = maf,
     gam_causal = gam_causal,
-    rules_propensity = rules_propensity,
     data = data.frame(sex, gene, phi)
   )
   
-  pop_male <- pop$data[pop$data[, "sex"] == 0, ]
-  pop_female <- pop$data[pop$data[, "sex"] == 1, ]
-  
-  # Get male/female individuals within the population
-  pop$get_sex <- function(sex) {
-    if (sex == 0) return(pop_male)
-    else return(pop_female)
-  }
-  
-  pop$get_geno <- function(i, rs = paste0("rs", 1:p), sex = NA) {
-    pop_obj <- pop$data
-    if(!missing(sex)) {
-      if (sex == 0) pop_obj <- pop_male
-      else pop_obj <- pop_female
-    }
-    return(pop_obj[i, rs])
-  }
-  
-  pop$get_pheno <- function(i, phe = paste0("phi", 1:q), sex = NA) {
-    pop_obj <- pop$data
-    if(!missing(sex)) {
-      if (sex == 0) pop_obj <- pop_male
-      else pop_obj <- pop_female
-    }
-    return(pop_obj[i, phe])
-  }
-  
   class(pop) <- "population"
-
   return(pop)
 }
 
-log_propen <- function(pop, m, f) {
-  #' Propensity kernel for propensity distribution on spouse pairs.
-  #'
-  #' @param pop Population object
-  #' @param m Male individual with index no. m
-  #' @param f Female individual with index no. f
+delta_psi <- function(pop, sol, swap) {
+  i <- swap[1]; j <- swap[2]
+  ai <- sol[i]; aj <- sol[j]
   
-  rules_propensity <- pop$rules_propensity
-  kappa <- pop$kappa
-  score <- 0
+  # Extract phenotype values of the original and proposed pairs
+  phi_m <- pop$data[pop$sex, "phi1"][swap]
+  phi_f <- pop$data[!pop$sex, "phi1"][sol[swap]]
   
-  for (k in 1:nrow(rules_propensity)) {
-    phe1 <- rules_propensity[k, 1]
-    phe2 <- rules_propensity[k, 2]
-    w <- as.numeric(rules_propensity[k, 3])
-    
-    phi_m <- pop$get_pheno(m, phe = phe1, sex = 0)
-    phi_f <- pop$get_pheno(f, phe = phe2, sex = 1)
-  
-    score <- score + w * (phi_m - phi_f)^2 / kappa
-  }
+  # Compute squared difference in phenotype
+  return(2 * (phi_m[1] - phi_m[2]) * (phi_f[1] - phi_f[2]))
+}
 
+psi <- function(pop, sol) {
+  phi_m <- pop$pop[pop$sex, "phi1"]
+  phi_f <- pop$pop[!pop$sex, "phi1"]
+  
+  score <- 0
+  for (j in 1:length(sol)) {
+    score <- score + sum((phi_m[j] - phi_f[sol[j]])^2)
+  }
+  
   return(score)
 }
 
-spouse_pairs <- function(pop, n_iter = 1e5) {
-  #' Generate spouse pairs using MCMC sampling.
+sim_matching <- function(pop, iter = 500000, kappa0 = 100, eval = FALSE, lag = 1000) {
+  #' Generate a partner matching for a generation of individuals.
   #'
   #' @param pop Population object
-  #' @param n_iter Number of iterations before matching is returned
+  #' @param iter Number of iterations before matching is returned
+  #' @param kappa Initial value of inverse temperature parameter
+  #' @param eval Return simulated values
+  #' @param lag Lag interval with which to store samples if eval = TRUE
+ 
+  # Size of male and female subpopulations
+  n <- nrow(pop$data) / 2
+  index <- 1
   
-  pop_male <- pop$get_sex(0)
-  pop_female <- pop$get_sex(1)
-  n_male <- nrow(pop_male)
-  n_female <- nrow(pop_female)
+  # If eval = TRUE, store simulation values
+  if (eval) {
+    acc_prob <- numeric(iter / lag)
+    psi_sols <- numeric(iter / lag)
+    temp <- numeric(iter / lag)
+  }
+ 
+  # Initial sample 
+  sol <- sample(1:n)
+  names(sol) <- 1:n
   
-  curr <- sample(1:n_male)
-  names(curr) <- 1:n_male
-
-  for (s in 2:n_iter) {
-    swap <- sample(curr, size = 2)
-    ms <- names(curr[swap]) |> as.integer()
-    fs <- curr[swap] |> as.integer()
-   
-    numer <- log_propen(pop, ms[1], fs[2]) + log_propen(pop, ms[2], fs[1])
-    denom <- log_propen(pop, ms[1], fs[1]) + log_propen(pop, ms[2], fs[2])
-    alpha_acc <- min(1, exp(numer - denom))
+  swaps <- replicate(iter, sample(1:n, size = 2), simplify = FALSE)
+  phi_m <- pop$pop[pop$sex, "phi1"]
+  phi_f <- pop$pop[!pop$sex, "phi1"]
+  
+  kappa <- kappa0 / log(1 + 100 * 1:iter)
+  
+  # Metropolis step
+  for (s in 2:iter) {
+    if (s %% 1000 == 0) print(s)
+    swap <- swaps[[s]]
     
+    delta <- 2 * (phi_m[swap[1]] - phi_m[swap[2]]) * (phi_f[sol[swap[1]]] - phi_f[sol[swap[2]]])
+    alpha_acc <- min(1, exp(-delta / kappa[s]))
+
     if (runif(1) < alpha_acc) {
-      curr[swap] <- curr[rev(swap)]
+      sol[swap] <- sol[rev(swap)]
+    }
+    
+    if(eval && s %% 1000 == 0) {
+      acc_prob[i] <- alpha_acc
+      psi_sols[i] <- psi(pop, sol) 
+      temp[i] <- kappa[i]
+      i <- i + 1
     }
   }
   
-  return(curr)
+  if (eval) {
+    return(list(
+      sol = sol,
+      psi_sols = psi_sols,
+      acc_prob = acc_prob,
+      temp = temp 
+    ))
+  } else {
+    return(sol)
+  }
 }
 
 pop <- population(params = "Github/AssocMating/config.json")
-gen1 <- spouse_pairs(pop, n_iter = 10000)
 
-gen1_df <- data.frame(names(gen1) |> as.integer(), gen1,
-                      pop$get_sex(0)$phi1, pop$get_sex(1)$phi1)
-colnames(gen1_df) <- c("m", "f", "phi_m", "phi_f")
+test_matching <- sim_matching(pop, iter = 1500000, kappa = 100, eval = TRUE)
 
-plot(gen1_df$phi_m, gen1_df$phi_f)
+par(mfrow = c(1, 3))
+plot(test_matching$acc_prob)
+plot(test_matching$temp, type = 'l')
+plot(test_matching$psi_sol, type = 'l')
+ 
+matching <- data.frame(names(test_matching$sol) |> as.integer(), test_matching$sol,
+                       pop$pop[pop$sex, "phi1"], pop$pop[!pop$sex, "phi1"])
+colnames(matching) <- c("m", "f", "phi_m", "phi_f")
+
+plot(matching$phi_m, matching$phi_f)
