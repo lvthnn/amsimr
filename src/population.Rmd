@@ -1,3 +1,18 @@
+---
+title: "Dev"
+output: html_document
+date: "2025-02-12"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## BSc project
+
+This is a function to generate the population:
+
+```{r}
 population <- function(params) {
   #' Generate an initial population
   #'
@@ -40,7 +55,7 @@ population <- function(params) {
   }
   
   pop <- data.frame(sex, gene, phi)
-  sex <- pop[, "sex"] == 0
+  sex <- pop[, "sex"] == 1
   
   # Assemble the population object
   pop <- list(
@@ -54,57 +69,34 @@ population <- function(params) {
   class(pop) <- "population"
   return(pop)
 }
+```
 
-delta_psi <- function(pop, sol, swap) {
-  # Extract phenotype values of the original and proposed pairs
-  phi_m <- pop$data[pop$sex, "phi1"][swap]
-  phi_f <- pop$data[!pop$sex, "phi1"][sol[swap]]
-  
-  # Compute squared difference in phenotype
-  return(2 * (phi_m[1] - phi_m[2]) * (phi_f[1] - phi_f[2]))
-}
+Here are $\psi: \mathcal S \to \mathbf R$ and $\Delta \psi$ as discussed.
 
-psi <- function(pop, sol) {
-  phi_m <- pop$pop[!pop$sex, "phi1"]
-  phi_f <- pop$pop[pop$sex, "phi1"]
- 
-  # Use norm() instead, this is not a good idea 
-  score <- 0
-  for (j in 1:length(sol)) {
-    score <- score + sum(abs((phi_m[j] - phi_f[sol[j]])))
-  }
-  
-  return(score)
-}
+```{r}
+dpsi <- function(sol, swap) norm(sol[swap, "phi1"] - sol[rev(swap), "phi1"], type = "2")^2
+psi <- function(sol) norm(sol$phi1 - sol$f_phi1, type = "2")^2
+```
 
-sim_matching <- function(pop, iter = 50000, kappa0 = 100, eval = FALSE, lag = 1) {
-  #' Generate a partner matching for a generation of individuals.
-  #'
-  #' @param pop Population object
-  #' @param iter Number of iterations before matching is returned
-  #' @param kappa Initial value of inverse temperature parameter
-  #' @param eval Return simulated values
-  #' @param lag Lag interval with which to store samples if eval = TRUE
-  
+Here we implement the `sim_matching` function to generate a spouse matching between the male and female subpopulations. Currently, we are only using a single trait $\phi_1$ to select on.
+
+```{r}
+sim_matching <- function(pop, iter = 50000, kappa0 = 100, eval = FALSE) {
   # Size of male and female subpopulations
   n <- nrow(pop$data) / 2
-  i <- 1
   
-  # If eval = TRUE, store simulation values
-  if (eval) {
-    acc_prob <- numeric(iter / lag)
-    psi_sols <- numeric(iter / lag)
-    temp <- numeric(iter / lag)
-  }
+  # Initial sample -- change this to greedy
+  males <- pop$pop[!pop$sex, ]
+  females <- pop$pop[pop$sex, ]
+  males <- males[order(males$phi1), ]
+  females <- females[order(females$phi1), ]
+  rownames(males) <- rownames(females) <- 1:n
+  colnames(females) <- paste0("f_", colnames(females))
   
-  # Initial sample 
-  sol <- sample(1:n)
-  names(sol) <- 1:n
+  sol <- cbind(males, females)
   
   swaps <- replicate(iter, sample(1:n, size = 2), simplify = FALSE)
-  phi_m <- pop$pop[!pop$sex, "phi1"]
-  phi_f <- pop$pop[pop$sex, "phi1"]
-  
+
   kappa <- kappa0 / log(1 + 1000 * 1:iter)
   
   # Metropolis step
@@ -112,58 +104,24 @@ sim_matching <- function(pop, iter = 50000, kappa0 = 100, eval = FALSE, lag = 1)
     if (s %% 1000 == 0) print(s)
     swap <- swaps[[s]]
     
-    delta <- 2 * (phi_m[swap[1]] - phi_m[swap[2]]) * (phi_f[sol[swap[1]]] - phi_f[sol[swap[2]]])
-    alpha_acc <- min(1, exp(-delta / kappa[s]))
+    # Extract this into a function
+    alpha_acc <- min(1, exp(-dpsi(sol, swap) / kappa[s]))
     
+    # Accept step
     if (runif(1) < alpha_acc) {
       sol[swap] <- sol[rev(swap)]
     }
+  }
     
-    if(eval) {
-      acc_prob[i] <- alpha_acc
-      psi_sols[i] <- psi(pop, sol) 
-      temp[i] <- kappa[i]
-      i <- i + 1
-    }
-  }
-  
-  if (eval) {
-    return(list(
-      sol = sol,
-      psi_sols = psi_sols,
-      acc_prob = acc_prob,
-      temp = temp 
-    ))
-  } else {
-    return(sol)
-  }
+  return(sol)
 }
 
 
-pop <- population(params = "Github/AssocMating/config.json")
+```
 
-test_matching <- sim_matching(pop, iter = 1000000, kappa = 5, eval = TRUE)
+Verification
 
-par(mfrow = c(1, 3))
-plot(
-  test_matching$acc_prob,
-  type = "l",
-  xlab = "Iteration",
-  ylab = expression(rho[j])
-)
-plot(
-  test_matching$temp,
-  type = "l",
-  xlab = "Iteration",
-  ylab = expression(kappa[j])
-)
-plot(
-  test_matching$psi_sol,
-  type = "l",
-  xlab = "Iteration",
-  ylab = expression(psi(alpha[j]))
-)
-
+```{r}
 # Visualise phenotype as function of genotype (and sex)
 plot(pop$pop$rs1 + rnorm(pop$pop |> nrow(), sd = 0.1), pop$pop$phi1,
      col = ifelse(pop$sex, "blue", "orange"))
@@ -175,3 +133,5 @@ colnames(matching) <- c("m", "f", "phi_m", "phi_f")
 plot(matching$phi_m + rnorm(50, sd = 0.1), matching$phi_f + rnorm(50, sd = 0.1))
 
 table(matching$phi_m, matching$phi_f)
+
+```
