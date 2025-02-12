@@ -29,7 +29,8 @@ population <- function(params) {
 
   # Simulate sex of individuals, minor allele frequencies and genotypes
   sex <- sample(rep(c(0, 1), n / 2))
-  maf <- 0.5 # @TODO: Make into beta / uniform variable
+  maf <- 0.5
+  
   gene <- matrix(rbinom(n * p, 2, rep(maf, each = n)), nrow = n, ncol = p)
 
   names(maf) <- paste0("rs", 1:p)
@@ -43,30 +44,22 @@ population <- function(params) {
   for (pheno in names(snps_causal)) {
     snp_pheno <- snps_causal[[pheno]]
     gene_snp <- gene[, snp_pheno]
-    gam_snp <- matrix(1)# @TODO: Make into variable
+    gam_snp <- matrix(2)# @TODO: Make into variable
     
     names(gam_snp) <- paste0("rs", snp_pheno)
     gam_causal[[pheno]] <- gam_snp
     
-    phenos <- gene_snp %*% gam_snp # + rnorm(n, sd = 0.5)
+    phenos <- gene_snp %*% gam_snp + rnorm(n)
     colnames(phenos) <- pheno
     
     phi <- cbind(phi, phenos)
   }
   
   pop <- data.frame(sex, gene, phi)
-  sex <- pop[, "sex"] == 1
   
-  # Assemble the population object
-  pop <- list(
-    pop = pop,
-    sex = sex,
-    maf_genes = maf,
-    gam_causal = gam_causal,
-    data = data.frame(sex, gene, phi)
-  )
+  attr(pop, "maf_genes") <- maf
+  attr(pop, "gam_causal") <- gam_causal
   
-  class(pop) <- "population"
   return(pop)
 }
 ```
@@ -81,57 +74,85 @@ psi <- function(sol) norm(sol$phi1 - sol$f_phi1, type = "2")^2
 Here we implement the `sim_matching` function to generate a spouse matching between the male and female subpopulations. Currently, we are only using a single trait $\phi_1$ to select on.
 
 ```{r}
-sim_matching <- function(pop, iter = 50000, kappa0 = 100, eval = FALSE) {
+sim_matching <- function(pop, iter = 10, kappa0 = 1, greedy = TRUE, eval = FALSE, progress = FALSE) {
   # Size of male and female subpopulations
-  n <- nrow(pop$data) / 2
+  n <- nrow(pop) / 2
+  T_int <- floor(seq(from = 1, to = iter, length.out = 10))
   
   # Initial sample -- change this to greedy
-  males <- pop$pop[!pop$sex, ]
-  females <- pop$pop[pop$sex, ]
-  males <- males[order(males$phi1), ]
-  females <- females[order(females$phi1), ]
+  males <- pop[pop$sex == 0, ]
+  females <- pop[pop$sex == 1, ]
+  
+  if (greedy) {
+    males <- males[order(males$phi1), ]
+    females <- females[order(females$phi1), ]
+  }
+  
   rownames(males) <- rownames(females) <- 1:n
-  colnames(females) <- paste0("f_", colnames(females))
+  names(females) <- paste0("f_", colnames(females))
   
   sol <- cbind(males, females)
+  exch_col <- grepl("f_", names(sol))
   
-  swaps <- replicate(iter, sample(1:n, size = 2), simplify = FALSE)
-
-  kappa <- kappa0 / log(1 + 1000 * 1:iter)
+  swaps <- replicate(iter, sample(n, size = 2), simplify = FALSE)
+  kappa <- kappa0 / log(1 + 0.01 * 1:iter)
+  
+  if (eval) {
+    psi_eval <- numeric(iter)
+    dpsi_eval <- numeric(iter)
+    rho_eval <- numeric(iter)
+    psi_eval[1] <- psi(sol)
+    dpsi_eval[1] <- 0
+    rho_eval[1] <- 1
+  }
   
   # Metropolis step
   for (s in 2:iter) {
-    if (s %% 1000 == 0) print(s)
-    swap <- swaps[[s]]
+    if (s %in% T_int && progress) print(s)
     
-    # Extract this into a function
-    alpha_acc <- min(1, exp(-dpsi(sol, swap) / kappa[s]))
+    swap <- swaps[[s]]
+    dpsi_sol <- dpsi(sol, swap)
+    rho_s <- min(1, exp(dpsi_sol / kappa))
     
     # Accept step
-    if (runif(1) < alpha_acc) {
-      sol[swap] <- sol[rev(swap)]
+    if (runif(1) > rho_s) {
+      sol[swap, exch_col] <- sol[rev(swap), exch_col]
+    }
+    
+    if (eval) {
+      psi_eval[s] <- psi(sol)
+      dpsi_eval[s] <- dpsi_sol
+      rho_eval[s] <- rho_s
     }
   }
     
-  return(sol)
+  if (eval) {
+    return(list(
+      sol = sol,
+      dpsi = dpsi_eval,
+      psi = psi_eval,
+      rho = rho_eval
+    ))
+  } else {
+    return(list(
+      sol = sol
+    ))
+  }
 }
 
+plot_eval <- function(eval) {
+  par(mfrow = c(1, 3))
+  plot(eval$psi, type = "l", xlab = "Iteration", ylab = expression(psi))
+  plot(eval$dpsi, type = "l", xlab = "Iteration", ylab = expression("Delta psi"))
+  hist(eval$rho)
+}
 
+test_matching <- sim_matching(pop, iter = 1000, eval = TRUE, greedy = FALSE)
+plot_eval(test_matching)
 ```
 
 Verification
 
 ```{r}
-# Visualise phenotype as function of genotype (and sex)
-plot(pop$pop$rs1 + rnorm(pop$pop |> nrow(), sd = 0.1), pop$pop$phi1,
-     col = ifelse(pop$sex, "blue", "orange"))
-
-matching <- data.frame(names(test_matching$sol) |> as.integer(), test_matching$sol,
-                       pop$pop[pop$sex, "phi1"], pop$pop[!pop$sex, "phi1"])
-colnames(matching) <- c("m", "f", "phi_m", "phi_f")
-
-plot(matching$phi_m + rnorm(50, sd = 0.1), matching$phi_f + rnorm(50, sd = 0.1))
-
-table(matching$phi_m, matching$phi_f)
-
+pop <- population("Github/AssocMating/config.json")
 ```
