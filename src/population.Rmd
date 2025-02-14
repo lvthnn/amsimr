@@ -25,7 +25,7 @@ population <- function(params) {
   psi_vec <- as.data.frame(config$psi_vec)
   
   rownames(psi_vec) <- 1:nrow(psi_vec)
-  colnames(psi_vec) <- c("phi_m", "phi_f")
+  colnames(psi_vec) <- c("phi_m", "phi_f", "w")
   psi_vec$phi_f <- paste0("f_", psi_vec$phi_f)
 
   # Simulate sex of individuals, minor allele frequencies and genotypes
@@ -84,8 +84,8 @@ psi <- function(sol, psi_vec) {
   #'
   #' @param sol The state for which the density is computed
   #' @param phis Phenotype pairs to be modelled in the avoidance function
-
-  norm(sol[, psi_vec$phi_m] - sol[, psi_vec$phi_f], type = "2")^2
+  delta <- sol[, psi_vec$phi_m] - sol[, psi_vec$phi_f]
+  W <- diag(psi_vec$w |> as.integer())
 }
 
 dpsi <- function(sol, swap, psi_vec) {
@@ -195,7 +195,7 @@ sim_matching <- function(pop, iter = 1000, alpha = 0.99, kappa0 = 5, eval = FALS
 }
 ```
 
-\`Verification
+Verification
 
 ```{r}
 plot_eval <- function(samps_eval) {
