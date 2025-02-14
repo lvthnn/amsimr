@@ -22,14 +22,19 @@ population <- function(params) {
   n <- config$n_pop
   p <- config$n_gene
   q <- config$n_pheno
+  psi_vec <- as.data.frame(config$psi_vec)
+  
+  rownames(psi_vec) <- 1:nrow(psi_vec)
+  colnames(psi_vec) <- c("phi_m", "phi_f")
+  psi_vec$phi_f <- paste0("f_", psi_vec$phi_f)
 
   # Simulate sex of individuals, minor allele frequencies and genotypes
   sex <- sample(rep(c(0, 1), n / 2))
-  maf <- 0.5
+  maf <- rbeta(p, 5, 5)
   
   gene <- matrix(rbinom(n * p, 2, rep(maf, each = n)), nrow = n, ncol = p)
   
-  names(maf) <- names(gene) <- paste0("rs", 1:p)
+  names(maf) <- colnames(gene) <- paste0("rs", 1:p)
 
   # Generate phenotypes, for now model as function of genotype
   snps_causal <- config$snp_causal
@@ -39,12 +44,12 @@ population <- function(params) {
   for (pheno in names(snps_causal)) {
     snp_pheno <- snps_causal[[pheno]]
     gene_snp <- gene[, snp_pheno]
-    gam_snp <- matrix(2)
+    gam_snp <- rnorm(length(snp_pheno))
     
     names(gam_snp) <- paste0("rs", snp_pheno)
     gam_causal[[pheno]] <- gam_snp
     
-    phenos <- gene_snp %*% gam_snp # + rnorm(n)
+    phenos <- gene_snp %*% gam_snp + rnorm(n)
     colnames(phenos) <- pheno
     
     phi <- cbind(phi, phenos)
@@ -54,6 +59,7 @@ population <- function(params) {
   
   attr(pop, "maf_genes") <- maf
   attr(pop, "gam_causal") <- gam_causal
+  attr(pop, "psi_vec") <- psi_vec
   
   return(pop)
 }
@@ -62,89 +68,124 @@ population <- function(params) {
 Here are $\psi: \mathcal S \to \mathbf R$ and $\Delta \psi$ as discussed.
 
 ```{r}
-dpsi <- function(sol, swap) {
-  norm(sol[swap, "phi1"] - sol[rev(swap), "phi1"], type = "2")^2
-}
-psi <- function(sol) norm(sol$phi1 - sol$f_phi1, type = "2")^2
 swap_sol <- function(sol, swap) {
+  #' Auxiliary function to perform transposition.
+  #'
+  #' @param sol The current state
+  #' @param swap Vector of 2-swap indices to form proposal state
+
   exch_col <- grepl("f_", names(sol))
   sol[swap, exch_col] <- sol[rev(swap), exch_col]
   return(sol)
+}
+
+psi <- function(sol, psi_vec) {
+  #' Aggregate avoidance for a given mating permutation
+  #'
+  #' @param sol The state for which the density is computed
+  #' @param phis Phenotype pairs to be modelled in the avoidance function
+
+  norm(sol[, psi_vec$phi_m] - sol[, psi_vec$phi_f], type = "2")^2
+}
+
+dpsi <- function(sol, swap, psi_vec) {
+  #' Compute the ratio of densities of current and proposal state.
+  #'
+  #' @param sol The current state
+  #' @param swap Vector of 2-swap indices to form proposal state
+
+  psi(swap_sol(sol, swap), psi_vec) - psi(sol, psi_vec)
 }
 ```
 
 Here we implement simulated annealing:
 
 ```{r}
-sim_matching <- function(pop, iter = 100, kappa0 = 1, greedy = TRUE, eval = FALSE) {
+sim_matching <- function(pop, iter = 1000, alpha = 0.99, kappa0 = 5, eval = FALSE, progress = FALSE) {
   #' Find an approximately optimal matching between individuals in the population
   #'
   #' @param pop Population data frame
-  #' @param iter Number of iterations to
-  #' @param
+  #' @param iter Number of iterations simulated by Metropolis chain
+  #' @param alpha Exponential decay coefficient of inverse temperature
+  #' @param kappa0 Population mating preference strength parameter
+  #' @param eval If TRUE, returns simulation data
   
   # Size of male and female populations
   n <- nrow(pop) / 2
+  
+  if (progress) {
+    pb <- utils::txtProgressBar(1, iter)
+    utils::setTxtProgressBar(pb, 1)
+  }
 
   # Initial sample -- change this to greedy
   males <- pop[pop$sex == 0, ]
   females <- pop[pop$sex == 1, ]
-  if (greedy) {
-    males <- males[order(males$phi1), ]
-    females <- females[order(females$phi1), ]
-  }
-  
   rownames(males) <- rownames(females) <- 1:n
   names(females) <- paste0("f_", colnames(females))
   
   # Set up the first sample
   sol <- sol_opt <- cbind(males, females)
-  psi_opt <- psi(sol)
+  psi_opt <- psi(sol, psi_vec)
   exch_col <- grepl("f_", names(sol))
   
   # Samples for exchanges
   swaps <- replicate(iter, sample(n, size = 2), simplify = FALSE)
-  kappa <- kappa0 / (1 + 0.001 * 1:iter)
+  kappa <- kappa0
   
+  # Obtain phenotype pairs that enter avoidance function
+  psi_vec <- attr(pop, "psi_vec")
+  
+  # If eval is TRUE, set up vectors to store data in
   if (eval) {
     psi_eval <- numeric(iter)
     dpsi_eval <- numeric(iter)
     rho_eval <- numeric(iter)
-    psi_eval[1] <- psi(sol)
+    kappa_eval <- numeric(iter)
+    psi_eval[1] <- psi_opt
     dpsi_eval[1] <- 0
     rho_eval[1] <- 1
+    kappa_eval[1] <- kappa0
   }
   
   # Metropolis step
   for (s in 2:iter) {
     swap <- sample(n, size = 2)
-    psi_sol <- psi(sol)
-    dpsi_sol <- dpsi(sol, swap)
-    print(-dpsi_sol / kappa[s])
-    rho_s <- min(1, exp(-dpsi_sol / kappa[s]))
+    psi_sol <- psi(sol, psi_vec)
+    dpsi_sol <- dpsi(sol, swap, psi_vec)
+    rho_s <- min(1, exp(-dpsi_sol / kappa))
+    
+    if (progress) {
+      utils::setTxtProgressBar(pb, s)
+    }
     
     # Accept step
     if (runif(1) < rho_s) {
-      sol[swap, exch_col] <- sol[rev(swap), exch_col]
+      sol <- swap_sol(sol, swap)
       if (psi_sol < psi_opt) sol_opt <- sol
     }
     
     if (eval) {
-      psi_eval[s] <- psi(sol)
-      dpsi_eval[s] <- dpsi_sol
+      psi_eval[s] <- psi(sol, psi_vec)
+      dpsi_eval[s] <- dpsi(sol, swap, psi_vec)
       rho_eval[s] <- rho_s
     }
+    
+    kappa <- alpha * kappa
+    kappa_eval[s] <- kappa
   }
+  
+  if (progress) close(pb)
     
   if (eval) {
     return(list(
       sol = sol,
       sol_opt = sol_opt,
-      psi_opt = psi(sol_opt),
+      psi_opt = psi(sol_opt, psi_vec),
       dpsi = dpsi_eval,
       psi = psi_eval,
       rho = rho_eval,
-      kappa = kappa
+      kappa = kappa_eval
     ))
   } else {
     return(list(
@@ -157,26 +198,22 @@ sim_matching <- function(pop, iter = 100, kappa0 = 1, greedy = TRUE, eval = FALS
 \`Verification
 
 ```{r}
-set.seed(42)
-
-pop <- population("~/Github/AssocMating/config.json")
-
-test <- sim_matching(pop, iter = 1000, eval = TRUE, greedy = FALSE)
-```
-
-```{r}
 plot_eval <- function(samps_eval) {
   par(mfrow = c(2, 2))
   plot(samps_eval$psi, type = "l", xlab = "Iteration", ylab = expression(psi))
-  plot(samps_eval$dpsi, xlab = "Iteration", ylab = expression(Delta * psi))
-  plot(samps_eval$rho, xlab = "Iteration", ylab = "Acceptance probability")
+  plot(samps_eval$dpsi, type = "l", xlab = "Iteration", ylab = expression(Delta * psi))
+  plot(samps_eval$rho, xlab = "Iteration", ylab = "Acceptance rate")
   plot(samps_eval$kappa, type = "l", xlab = "Iteration", ylab = "Temperature")
 }
+```
+
+```{r}
+pop <- population("~/Github/AssocMating/config.json")
+
+test <- sim_matching(pop, iter = 25000, alpha = 0.9995, eval = TRUE)
 
 tsol <- test$sol
-
-tsolopt <- test$sol_opt
-plot(tsolopt$phi1, tsolopt$f_phi1)
-
+plot(tsol$phi1, tsol$f_phi1, xlab = expression(phi[1](m[j])), ylab = expression(phi[1](f[alpha(j)])))
+abline(lm(f_phi1 ~ phi1, data = tsol), col = "red", lwd = 1.5, lty = 2)
 plot_eval(test)
 ```
