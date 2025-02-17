@@ -82,7 +82,7 @@ dpsi <- function(sol, swap, psi_vec, exch_col) {
   #' @param exch_col Columns that specify female mate to swap
 
   res <- psi(swap_sol(sol, swap, exch_col), psi_vec) - psi(sol, psi_vec)
-  
+
   return(res)
 }
 
@@ -107,13 +107,13 @@ sim_matching <- function(pop, iter = 10000, alpha = 0.9995, temp0 = 5,
   names(females) <- paste0("f_", colnames(females))
 
   # Set up the first sample
-  sol <- sol_opt <- cbind(males, females)
+  sol <- sol_opt <- as.matrix(cbind(males, females))
   psi_opt <- psi(sol, psi_vec)
   exch_col <- grepl("f_", names(sol))
 
   # Samples for exchanges
   swaps <- replicate(iter, sample(n, size = 2), simplify = FALSE)
-  temp <- temp0 
+  temp <- temp0
 
   # If eval is TRUE, set up vectors to store data in
   if (eval) {
@@ -148,8 +148,8 @@ sim_matching <- function(pop, iter = 10000, alpha = 0.9995, temp0 = 5,
       rho_eval[s] <- rho_s
     }
 
-    temp <- alpha * temp 
-    temp_eval[s] <- temp 
+    temp <- alpha * temp
+    temp_eval[s] <- temp
   }
 
   if (eval) {
@@ -173,11 +173,14 @@ plot_eval <- function(samps_eval) {
   #' Plot the results from the return of a `sim_matching` function call
   #'
   #' @param samps_eval The return from `sim_matching` with `eval = TRUE`
-  
+
   par(mfrow = c(2, 2))
   plot(samps_eval$psi, type = "l", xlab = "Iteration", ylab = expression(psi))
-  plot(samps_eval$dpsi, type = "l", xlab = "Iteration",
-       ylab = expression(Delta * psi))
+  plot(samps_eval$dpsi,
+    type = "l", xlab = "Iteration",
+    ylab = expression(Delta * psi)
+  )
   plot(samps_eval$rho, xlab = "Iteration", ylab = "Acceptance rate")
   plot(samps_eval$temp, type = "l", xlab = "Iteration", ylab = "Temperature")
 }
+

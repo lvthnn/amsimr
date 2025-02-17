@@ -9,10 +9,12 @@ date: "2025-02-12"
 ```{r}
 pop <- population("~/Github/AssocMating/config.json")
 
-test <- sim_matching(pop, iter = 75000, alpha = 0.9999, progress = TRUE, eval = TRUE)
+test <- sim_matching(pop, iter = 100, alpha = 0.9999, progress = TRUE, eval = TRUE)
 
 plot_eval(test)
+```
 
+```{r}
 tsol <- test$sol
 plot(tsol$phi1, tsol$f_phi1, xlab = expression(phi[1](m[j])), ylab = expression(phi[1](f[alpha(j)])))
 abline(lm(f_phi1 ~ phi1, data = tsol), col = "red", lwd = 1.5, lty = 2)
