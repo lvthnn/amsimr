@@ -1,13 +1,7 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
 
-arma::mat swap_sol(const arma::mat &sol, const arma::uvec &swap,
-                   const arma::uvec &cf_idx) {
-  arma::mat new_sol = sol;
-  new_sol.submat(swap, cf_idx) = sol.submat(arma::reverse(swap), cf_idx);
-  return new_sol;
-}
-
+// [[Rcpp::export]]
 double psi(const arma::mat &sol, const arma::uvec &phi_m,
            const arma::uvec &phi_f, const arma::vec &w) {
   arma::mat delta = sol.cols(phi_m) - sol.cols(phi_f);
@@ -15,10 +9,17 @@ double psi(const arma::mat &sol, const arma::uvec &phi_m,
   return arma::sum(score);
 }
 
-double dpsi(const arma::mat &sol_prop, const arma::mat &sol,
+// [[Rcpp::export]]
+double dpsi(const arma::mat &sol, const arma::uvec &swap,
             const arma::uvec &phi_m, const arma::uvec &phi_f,
             const arma::vec w) {
-  return psi(sol_prop, phi_m, phi_f, w) - psi(sol, phi_m, phi_f, w);
+  arma::mat sol_eff = sol.rows(swap);
+  arma::uvec swap_eff = {0, 1};
+  double psi_sol = psi(sol_eff, phi_m, phi_f, w);
+  sol_eff.submat(swap_eff, phi_f) =
+      sol_eff.submat(arma::reverse(swap_eff), phi_f);
+  double psi_prop = psi(sol_eff, phi_m, phi_f, w);
+  return psi_prop - psi_sol;
 }
 
 // [[Rcpp::export]]
@@ -26,11 +27,6 @@ Rcpp::List optim_matching(arma::mat &sol, const arma::mat &psi_vec,
                           const arma::uvec &cf_idx, int n_iter = 10000,
                           double alpha = 0.9995, double temp0 = 5,
                           bool eval = false, bool progress = false) {
-  Rcpp::Rcout << "sol: " << std::endl << sol << std::endl;
-  Rcpp::Rcout << "sol size: " << sol.n_rows << " x " << sol.n_cols << std::endl;
-  Rcpp::Rcout << "psi_vec size: " << psi_vec.n_rows << " x " << psi_vec.n_cols
-              << std::endl;
-
   // Set up some variables used in the annealing algorithm
   int n_pairs = sol.n_rows;
   arma::uvec phi_m = arma::conv_to<arma::uvec>::from(psi_vec.col(0));
@@ -38,25 +34,50 @@ Rcpp::List optim_matching(arma::mat &sol, const arma::mat &psi_vec,
   arma::vec w = psi_vec.col(2);
   double temp = temp0;
 
-  Rcpp::Rcout << "phi_m: " << phi_m.t() << std::endl;
-  Rcpp::Rcout << "phi_f: " << phi_f.t() << std::endl;
+  arma::vec psi_eval, dpsi_eval, rho_eval, temp_eval;
+
+  if (eval) {
+    psi_eval.set_size(n_iter);
+    dpsi_eval.set_size(n_iter);
+    rho_eval.set_size(n_iter);
+    temp_eval.set_size(n_iter);
+
+    psi_eval[0] = psi(sol, phi_m, phi_f, w);
+    dpsi_eval[0] = 0.0;
+    rho_eval[0] = 1.0;
+    temp_eval[0] = temp0;
+  }
 
   // Simulated annealing algorithm
+  for (int i = 1; i < n_iter; i++) {
+    arma::uvec swap =
+        arma::randi<arma::uvec>(2, arma::distr_param(0, n_pairs - 1));
 
-  for (int i = 0; i < n_iter; i++) {
-    arma::uvec swap = arma::randperm(n_pairs, 2);
-    arma::mat sol_prop = swap_sol(sol, swap, cf_idx);
-
-    double dpsi_prop = dpsi(sol_prop, sol, phi_m, phi_f, w);
+    double dpsi_prop = dpsi(sol, swap, phi_m, phi_f, w);
     double rho_prop = std::min(1.0, std::exp(-dpsi_prop / temp));
     double u = Rcpp::as<double>(Rcpp::runif(1));
 
     if (u < rho_prop) {
-      sol = sol_prop;
+      sol.submat(swap, phi_f) = sol.submat(arma::reverse(swap), phi_f);
+    }
+
+    if (eval) {
+      psi_eval[i] = psi(sol, phi_m, phi_f, w);
+      dpsi_eval[i] = dpsi_prop;
+      rho_eval[i] = rho_prop;
+      temp_eval[i] = temp;
     }
 
     temp *= alpha;
   }
 
-  return Rcpp::List::create(Rcpp::Named("sol") = sol);
+  if (eval) {
+    return Rcpp::List::create(Rcpp::Named("sol") = sol,
+                              Rcpp::Named("psi") = Rcpp::wrap(psi_eval),
+                              Rcpp::Named("dpsi") = Rcpp::wrap(dpsi_eval),
+                              Rcpp::Named("rho") = Rcpp::wrap(rho_eval),
+                              Rcpp::Named("temp") = Rcpp::wrap(temp_eval));
+  } else {
+    return Rcpp::List::create(Rcpp::Named("sol") = sol);
+  }
 }

@@ -7,19 +7,19 @@ date: "2025-02-12"
 ## Test
 
 ```{r}
+source("~/Github/AssocMating/src/population.R")
+Rcpp::sourceCpp("~/Github/AssocMating/src/population.cpp")
 pop <- population("~/Github/AssocMating/config.json")
-
-test <- sim_matching(pop, iter = 100, alpha = 0.9999, progress = TRUE, eval = TRUE)
+test <- sim_matching(pop, iter = 1000000, eval = FALSE)
 
 plot_eval(test)
 ```
 
 ```{r}
-tsol <- test$sol
+tsol <- as.data.frame(test$sol)
+colnames(tsol) <- colnames(init_sol)
 plot(tsol$phi1, tsol$f_phi1, xlab = expression(phi[1](m[j])), ylab = expression(phi[1](f[alpha(j)])))
 abline(lm(f_phi1 ~ phi1, data = tsol), col = "red", lwd = 1.5, lty = 2)
 plot(tsol$phi1, tsol$f_phi2, xlab = expression(phi[1](m[j])), ylab = expression(phi[2](f[alpha(j)])))
 abline(lm(f_phi2 ~ phi1, data = tsol), col = "red", lwd = 1.5, lty = 2)
-plot(tsol$X, tsol$f_X, xlab = expression(X(m[j])), ylab = expression(X(f[alpha(j)])))
-abline(lm(f_X ~ X, data = tsol), col = "red", lwd = 1.5, lty = 2)
 ```

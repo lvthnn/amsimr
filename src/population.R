@@ -104,16 +104,25 @@ sim_matching <- function(pop, iter = 10000, alpha = 0.9995, temp0 = 5,
   females <- pop[pop$sex == 1, ]
   males$id <- females$id <- 1:n
   
-  colnames(females) <- paste0("f_", colnames(female))
+  colnames(females) <- paste0("f_", colnames(females))
   init_sol <- as.matrix(cbind(males, females))
   
   pheno_names <- names(attr(pop, "gam_causal"))
-  exch_col <- which(grepl("f_", colnames(init_sol))) - 1
-  phi_m <- grep("phi", colnames(init_sol)) - 1
-  phi_f <- grepl("f_phi", colnames(init_sol)) - 1
+  cf_idx <- which(grepl("f_", colnames(init_sol))) - 1
+  
+  psi_vec[, 1] <- as.integer(match(psi_vec[, 1], colnames(init_sol)) - 1)
+  psi_vec[, 2] <- as.integer(match(paste0("f_", psi_vec[, 2]), colnames(init_sol)) - 1)
+  psi_vec[, 3] <- as.numeric(psi_vec[, 3])
+  storage.mode(psi_vec) <- "numeric"
   
   # Run simulated annealing algorithm
-  optim_matching()
+  res <- optim_matching(init_sol, psi_vec, cf_idx = cf_idx, n_iter = iter,
+                        alpha = alpha, temp0 = temp0, eval = eval, progress = progress)
+  
+  res$sol <- as.data.frame(res$sol)
+  colnames(res$sol) <- colnames(init_sol)
+  
+  return(res)
 }
 
 plot_eval <- function(samps_eval) {
