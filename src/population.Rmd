@@ -7,19 +7,40 @@ date: "2025-02-12"
 ## Test
 
 ```{r}
+# Source the files we need
 source("~/Github/AssocMating/src/population.R")
 Rcpp::sourceCpp("~/Github/AssocMating/src/population.cpp")
+
+# Generate the population data frame -- see config.json file to modify
+# simulation parameters
 pop <- population("~/Github/AssocMating/config.json")
-test <- sim_matching(pop, iter = 1000000, eval = FALSE)
+
+# Generate mate matchings for the population -- if you want to run plot_eval
+# to visualise the progress of the simulated annealing algorithm, set eval=TRUE
+# (note that this slows down performance)
+test <- sim_matching(pop, iter = 100000, eval = TRUE)
 
 plot_eval(test)
 ```
 
 ```{r}
+# Extract the "optimal" solution
 tsol <- as.data.frame(test$sol)
-colnames(tsol) <- colnames(init_sol)
-plot(tsol$phi1, tsol$f_phi1, xlab = expression(phi[1](m[j])), ylab = expression(phi[1](f[alpha(j)])))
+
+# Visualise the phenotype pairs for matched partners
+plot(
+  x = tsol$phi1,
+  y = tsol$f_phi1,
+  xlab = expression(phi[1](m[j])),
+  ylab = expression(phi[1](f[alpha(j)]))
+)
 abline(lm(f_phi1 ~ phi1, data = tsol), col = "red", lwd = 1.5, lty = 2)
-plot(tsol$phi1, tsol$f_phi2, xlab = expression(phi[1](m[j])), ylab = expression(phi[2](f[alpha(j)])))
+
+plot(
+  x = tsol$phi1,
+  y = tsol$f_phi2,
+  xlab = expression(phi[1](m[j])),
+  ylab = expression(phi[2](f[alpha(j)]))
+)
 abline(lm(f_phi2 ~ phi1, data = tsol), col = "red", lwd = 1.5, lty = 2)
 ```
