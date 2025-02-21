@@ -75,7 +75,7 @@ Rcpp::List optim_matching(arma::mat &sol, const arma::mat &psi_vec,
     double u = Rcpp::as<double>(Rcpp::runif(1));
 
     if (u < rho_prop) {
-      sol.submat(swap, phi_f) = sol.submat(arma::reverse(swap), phi_f);
+      sol.submat(swap, cf_idx) = sol.submat(arma::reverse(swap), cf_idx);
     }
 
     if (eval) {
