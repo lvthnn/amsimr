@@ -33,7 +33,7 @@ population <- function(sim_params) {
     names(gam_snp) <- paste0("rs", snp_pheno)
     gam_causal[[pheno]] <- gam_snp
 
-    phenos <- gene_snp %*% gam_snp + rnorm(n) # Phenotype generation
+    phenos <- gene_snp %*% gam_snp + rnorm(n, sd = 0.5) # Phenotype generation
     colnames(phenos) <- pheno
 
     phi <- cbind(phi, phenos)
@@ -46,6 +46,14 @@ population <- function(sim_params) {
   attr(pop, "psi_vec") <- psi_vec
 
   return(pop)
+}
+
+update_generation <- function(pop, pairs) {
+  #' Generate the next generation based on a matching of partners.
+  #'
+  #' @param pop Population data frame
+  #' @param pairs Data frame designating matched pairs
+  
 }
 
 sim_matching <- function(pop, iter = 10000, alpha = 0.9995, temp0 = 5,
@@ -63,28 +71,34 @@ sim_matching <- function(pop, iter = 10000, alpha = 0.9995, temp0 = 5,
   psi_vec <- attr(pop, "psi_vec")
 
   # Initial solution
-  males <- pop[pop$sex == 0, ]
-  females <- pop[pop$sex == 1, ]
-  males$id <- females$id <- 1:n
-
+  males <- cbind(scale(pop[pop$sex == 0, unique(psi_vec[, 1]), drop = FALSE]),
+                 id = as.integer(rownames(pop[pop$sex == 0, ])))
+  females <- cbind(scale(pop[pop$sex == 1, unique(psi_vec[, 2]), drop = FALSE]),
+                   id = as.integer(rownames(pop[pop$sex == 1, ])))
+  rownames(males) <- rownames(females) <- 1:n
   colnames(females) <- paste0("f_", colnames(females))
+  
   init_sol <- as.matrix(cbind(males, females))
-
+  
   cf_idx <- which(grepl("f_", colnames(init_sol))) - 1
 
-  psi_vec[, 1] <- as.integer(
-    match(psi_vec[, 1], colnames(init_sol)) - 1
-  )
-  psi_vec[, 2] <- as.integer(match(
-    paste0("f_", psi_vec[, 2]), colnames(init_sol)
-  ) - 1)
+  psi_vec[, 1] <- as.integer(match(psi_vec[, 1], colnames(init_sol)) - 1)
+  psi_vec[, 2] <-
+    as.integer(match(paste0("f_", psi_vec[, 2]), colnames(init_sol)) - 1)
   psi_vec[, 3] <- as.numeric(psi_vec[, 3])
+  
   storage.mode(psi_vec) <- "numeric"
 
   # Run simulated annealing algorithm
-  res <- optim_matching(init_sol, psi_vec,
-    cf_idx = cf_idx, n_iter = iter,
-    alpha = alpha, temp0 = temp0, eval = eval, progress = progress
+  res <- optim_matching(
+    init_sol,
+    psi_vec,
+    cf_idx = cf_idx,
+    n_iter = iter,
+    alpha = alpha,
+    temp0 = temp0,
+    eval = eval,
+    progress = progress
   )
 
   res$sol <- as.data.frame(res$sol)

@@ -25,7 +25,7 @@ double psi(const arma::mat &sol, const arma::uvec &phi_m,
 //' @return Difference in avoidance function for proposed and current state
 double dpsi(const arma::mat &sol, const arma::uvec &swap,
             const arma::uvec &phi_m, const arma::uvec &phi_f,
-            const arma::vec w) {
+            const arma::vec rho) {
   arma::mat sol_eff = sol.rows(swap);
   arma::uvec swap_eff = {0, 1};
   double psi_sol = psi(sol_eff, phi_m, phi_f, w);
@@ -53,7 +53,7 @@ Rcpp::List optim_matching(arma::mat &sol, const arma::mat &psi_vec,
   arma::uvec phi_m = arma::conv_to<arma::uvec>::from(psi_vec.col(0));
   arma::uvec phi_f = arma::conv_to<arma::uvec>::from(psi_vec.col(1));
   arma::vec psi_eval, dpsi_eval, rho_eval, temp_eval;
-  arma::vec w = psi_vec.col(2);
+  arma::vec rho = psi_vec.col(2);
   double temp = temp0;
 
   if (eval) {
