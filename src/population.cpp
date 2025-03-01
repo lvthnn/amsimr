@@ -8,31 +8,39 @@
 //' @param phi_f Female phenotypes to enter avoidance function
 //' @param w Weights for phenotype-phenotype pairs
 //' @return Value of avoidance function
-double psi(const arma::mat &sol, const arma::uvec &phi_m,
-           const arma::uvec &phi_f, const arma::vec &w) {
-  arma::mat delta = sol.cols(phi_m) - sol.cols(phi_f);
-  arma::rowvec score = arma::sum(arma::square(delta), 0) % w.t();
-  return arma::sum(score);
+double psi(const arma::vec &rho_sol, const arma::mat &sol,
+           const arma::uvec &phi_m, const arma::uvec &phi_f,
+           const arma::vec &rho) {}
+
+//' Compute Δ_{\tilde\alpha,\alpha}(j) for phenotype pair j.
+//'
+//' @param sol The current state matrix
+//' @param swap Indices of swapped pairs
+//' @param phi_m Male phenotype indices
+//' @param phi_f Female phenotype indices
+//' @return Vector of Δ values for each phenotype pair
+arma::vec compute_delta(const arma::mat &sol, const arma::uvec &swap,
+                        const arma::uvec &phi_m, const arma::uvec &phi_f) {
+  arma::vec delta = arma::vec(sol.n_elem);
+  for (int j = 0; j < phi_m.n_elem; j++) {
+    delta[j] =
+  }
 }
 
-//' Calculate the difference in avoidance function for a proposed state
+//' Calculate the energy differential for a proposed state
 //'
+//' @param rho_sol The correlation vector for the current state
 //' @param sol The current state
 //' @param swap Row indices used to construct proposal state
-//' @param phi_m Male phenotypes to enter avoidance function
-//' @param phi_f Female phenotype to enter avoidance function
+//' @param phi_m Male phenotype indices
+//' @param phi_f Female phenotype indices
 //' @param w Weights for phenotype-phenotype pairs
 //' @return Difference in avoidance function for proposed and current state
-double dpsi(const arma::mat &sol, const arma::uvec &swap,
-            const arma::uvec &phi_m, const arma::uvec &phi_f,
-            const arma::vec rho) {
-  arma::mat sol_eff = sol.rows(swap);
-  arma::uvec swap_eff = {0, 1};
-  double psi_sol = psi(sol_eff, phi_m, phi_f, w);
-  sol_eff.submat(swap_eff, phi_f) =
-      sol_eff.submat(arma::reverse(swap_eff), phi_f);
-  double psi_prop = psi(sol_eff, phi_m, phi_f, w);
-  return psi_prop - psi_sol;
+// [[Rcpp::export]]
+double dpsi(const arma::vec &rho_sol, const arma::mat &sol,
+            const arma::uvec &swap, const arma::uvec &phi_m,
+            const arma::uvec &phi_f, const arma::vec &rho) {
+  arma::vec delta = compute_delta(sol, swap, phi_m, phi_f);
 }
 
 //' Optimise avoidance distribution to produce matching for next generation
@@ -56,12 +64,14 @@ Rcpp::List optim_matching(arma::mat &sol, const arma::mat &psi_vec,
   arma::vec rho = psi_vec.col(2);
   double temp = temp0;
 
+  arma::vec rho_sol = arma::vec(phi_m.n_elem);
+
   if (eval) {
     psi_eval.set_size(n_iter);
     dpsi_eval.set_size(n_iter);
     rho_eval.set_size(n_iter);
     temp_eval.set_size(n_iter);
-    psi_eval[0] = psi(sol, phi_m, phi_f, w);
+    psi_eval[0] = psi(sol, phi_m, phi_f, rho);
     dpsi_eval[0] = 0.0;
     rho_eval[0] = 1.0;
     temp_eval[0] = temp0;
@@ -70,11 +80,10 @@ Rcpp::List optim_matching(arma::mat &sol, const arma::mat &psi_vec,
   for (int i = 1; i < n_iter; i++) {
     arma::uvec swap =
         arma::randi<arma::uvec>(2, arma::distr_param(0, n_pairs - 1));
-    double dpsi_prop = dpsi(sol, swap, phi_m, phi_f, w);
-    double rho_prop = std::min(1.0, std::exp(-dpsi_prop / temp));
     double u = Rcpp::as<double>(Rcpp::runif(1));
+    double alpha = dpsi();
 
-    if (u < rho_prop) {
+    if (u < alpha) {
       sol.submat(swap, cf_idx) = sol.submat(arma::reverse(swap), cf_idx);
     }
 
