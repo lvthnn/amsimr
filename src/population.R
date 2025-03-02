@@ -12,7 +12,7 @@ population <- function(sim_params) {
   psi_vec <- as.matrix(config$psi_vec)
 
   rownames(psi_vec) <- seq_len(nrow(psi_vec))
-  colnames(psi_vec) <- c("phi_m", "phi_f", "w")
+  colnames(psi_vec) <- c("phi_m", "phi_f", "cor")
 
   # Simulate sex of individuals, minor allele frequencies and genotypes
   sex <- sample(rep(c(0, 1), n / 2))
@@ -48,16 +48,8 @@ population <- function(sim_params) {
   return(pop)
 }
 
-update_generation <- function(pop, pairs) {
-  #' Generate the next generation based on a matching of partners.
-  #'
-  #' @param pop Population data frame
-  #' @param pairs Data frame designating matched pairs
-  
-}
-
-sim_matching <- function(pop, iter = 10000, alpha = 0.9995, temp0 = 5,
-                         eval = FALSE, progress = FALSE) {
+sim_matching <- function(pop, iter = 10000, alpha = 1, temp0 = 5,
+                         eval = FALSE) {
   #' Find an optimal matching between individuals in the population
   #'
   #' @param pop Population data frame
@@ -97,8 +89,7 @@ sim_matching <- function(pop, iter = 10000, alpha = 0.9995, temp0 = 5,
     n_iter = iter,
     alpha = alpha,
     temp0 = temp0,
-    eval = eval,
-    progress = progress
+    eval = eval
   )
 
   res$sol <- as.data.frame(res$sol)
@@ -118,6 +109,6 @@ plot_eval <- function(samps_eval) {
     type = "l", xlab = "Iteration",
     ylab = expression(Delta * psi)
   )
-  plot(samps_eval$rho, xlab = "Iteration", ylab = "Acceptance rate")
+  plot(samps_eval$alpha, xlab = "Iteration", ylab = "Acceptance rate")
   plot(samps_eval$temp, type = "l", xlab = "Iteration", ylab = "Temperature")
 }

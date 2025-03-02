@@ -1,49 +1,59 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
 
-//' Evaluate avoidance function for a given state.
+//' Compute update vector for correlation vector of assortative trait pairs.
 //'
-//' @param sol The state to evaluate
-//' @param phi_m Male phenotypes to enter avoidance function
-//' @param phi_f Female phenotypes to enter avoidance function
-//' @param w Weights for phenotype-phenotype pairs
-//' @return Value of avoidance function
-double psi(const arma::vec &rho_sol, const arma::mat &sol,
-           const arma::uvec &phi_m, const arma::uvec &phi_f,
-           const arma::vec &rho) {}
+//' @param sol The current state matrix
+//' @param swap Indices of swapped pairs
+//' @param phi_m Male phenotype indices
+//' @param phi_f Female phenotype indices
+//' @return Update vector for correlation vector of assortative trait pairs
+//[[Rcpp::export]]
+arma::vec compute_delta(const arma::mat &sol, const arma::uvec &swap,
+                        const arma::uvec &phi_m, const arma::uvec &phi_f) {
+  arma::uvec rswap = arma::reverse(swap);
+  arma::mat phimat_m = sol.submat(swap, phi_m);
+  arma::mat phimat_f = sol.submat(rswap, phi_f) - sol.submat(swap, phi_f);
+  arma::vec res = arma::sum(phimat_m % phimat_f, 0).t();
 
-//' Compute Δ_{\tilde\alpha,\alpha}(j) for phenotype pair j.
+  Rcpp::Rcout << "---------------------" << std::endl
+              << "swap" << std::endl
+              << swap << std::endl
+              << "phimat_m" << std::endl
+              << phimat_m << std::endl
+              << "phimat_f" << std::endl
+              << phimat_f << std::endl
+              << "res" << std::endl
+              << res << std::endl
+              << "--------------------" << std::endl;
+  return res;
+}
+
+//' Compute the energy differential between proposal state and current state
+//'
+//' @param rho_sol
+//' @param delta
+//' @param rho
+//' @return Energy differential between proposed state and current state
+//[[Rcpp::export]]
+double dpsi(const arma::vec &rho_sol, const arma::vec &delta,
+            const arma::vec &rho) {
+  return arma::dot(delta, delta) + 2 * arma::dot(rho_sol - rho, delta);
+}
+
+//' Evaluate the energy of a state
 //'
 //' @param sol The current state matrix
 //' @param swap Indices of swapped pairs
 //' @param phi_m Male phenotype indices
 //' @param phi_f Female phenotype indices
 //' @return Vector of Δ values for each phenotype pair
-arma::vec compute_delta(const arma::mat &sol, const arma::uvec &swap,
-                        const arma::uvec &phi_m, const arma::uvec &phi_f) {
-  arma::vec delta = arma::vec(sol.n_elem);
-  for (int j = 0; j < phi_m.n_elem; j++) {
-    delta[j] =
-  }
+//[[Rcpp::export]]
+double psi(const arma::vec &rho_sol, const arma::vec &rho) {
+  return arma::norm(rho_sol - rho, 2);
 }
 
-//' Calculate the energy differential for a proposed state
-//'
-//' @param rho_sol The correlation vector for the current state
-//' @param sol The current state
-//' @param swap Row indices used to construct proposal state
-//' @param phi_m Male phenotype indices
-//' @param phi_f Female phenotype indices
-//' @param w Weights for phenotype-phenotype pairs
-//' @return Difference in avoidance function for proposed and current state
-// [[Rcpp::export]]
-double dpsi(const arma::vec &rho_sol, const arma::mat &sol,
-            const arma::uvec &swap, const arma::uvec &phi_m,
-            const arma::uvec &phi_f, const arma::vec &rho) {
-  arma::vec delta = compute_delta(sol, swap, phi_m, phi_f);
-}
-
-//' Optimise avoidance distribution to produce matching for next generation
+//' Determine the optimal matching for a given generation.
 //'
 //' @param sol Initial solution to start annealing algorithm from
 //' @param psi_vec Phenotype pairs for avoidance function
@@ -56,52 +66,63 @@ double dpsi(const arma::vec &rho_sol, const arma::mat &sol,
 Rcpp::List optim_matching(arma::mat &sol, const arma::mat &psi_vec,
                           const arma::uvec &cf_idx, int n_iter = 10000,
                           double alpha_temp = 1.0, double temp0 = 5.0,
-                          bool eval = false, bool progress = false) {
-  int n_pairs = sol.n_rows;
+                          bool eval = false) {
+  int n = sol.n_rows;
   arma::uvec phi_m = arma::conv_to<arma::uvec>::from(psi_vec.col(0));
   arma::uvec phi_f = arma::conv_to<arma::uvec>::from(psi_vec.col(1));
-  arma::vec psi_eval, dpsi_eval, rho_eval, temp_eval;
+  arma::vec psi_eval, dpsi_eval, alpha_eval, temp_eval;
   arma::vec rho = psi_vec.col(2);
   double temp = temp0;
 
+  // Compute the assortative trait correlation vector for the initial state
   arma::vec rho_sol = arma::vec(phi_m.n_elem);
-
-  if (eval) {
-    psi_eval.set_size(n_iter);
-    dpsi_eval.set_size(n_iter);
-    rho_eval.set_size(n_iter);
-    temp_eval.set_size(n_iter);
-    psi_eval[0] = psi(sol, phi_m, phi_f, rho);
-    dpsi_eval[0] = 0.0;
-    rho_eval[0] = 1.0;
-    temp_eval[0] = temp0;
+  for (int i = 0; i < phi_m.n_elem; i++) {
+    arma::mat cor = arma::cor(sol.col(phi_m[i]), sol.col(phi_f[i]));
+    rho_sol[i] = cor(0, 0);
   }
 
-  for (int i = 1; i < n_iter; i++) {
-    arma::uvec swap =
-        arma::randi<arma::uvec>(2, arma::distr_param(0, n_pairs - 1));
-    double u = Rcpp::as<double>(Rcpp::runif(1));
-    double alpha = dpsi();
+  // Run the simulated annealing algorithm
+  for (int i = 0; i < n_iter; i++) {
+    arma::uvec swap = arma::randi<arma::uvec>(2, arma::distr_param(0, n - 1));
+    arma::vec delta_prop = compute_delta(sol, swap, phi_m, phi_f);
+    arma::vec rho_prop = rho_sol + delta_prop;
 
-    if (u < alpha) {
-      sol.submat(swap, cf_idx) = sol.submat(arma::reverse(swap), cf_idx);
-    }
+    double dpsi_prop = dpsi(rho_sol, delta_prop, rho);
+    double alpha = std::min(1.0, std::exp(-dpsi_prop / temp));
+    double unf = Rcpp::as<double>(Rcpp::runif(1));
 
     if (eval) {
-      psi_eval[i] = psi(sol, phi_m, phi_f, w);
-      dpsi_eval[i] = dpsi_prop;
-      rho_eval[i] = rho_prop;
-      temp_eval[i] = temp;
+      psi_eval.set_size(n_iter);
+      dpsi_eval.set_size(n_iter);
+      alpha_eval.set_size(n_iter);
+      temp_eval.set_size(n_iter);
+
+      psi_eval[0] = psi(rho_sol, rho);
+      dpsi_eval[0] = 0.0;
+      alpha_eval[0] = 1.0;
+      temp_eval[0] = temp;
+    }
+
+    if (unf < alpha) {
+      sol.submat(swap, cf_idx) = sol.submat(arma::reverse(swap), cf_idx);
+      rho_sol = rho_prop;
     }
 
     temp *= alpha_temp;
+
+    if (eval) {
+      psi_eval[i] = psi(rho_sol, rho);
+      dpsi_eval[i] = dpsi_prop;
+      alpha_eval[i] = alpha;
+      temp_eval[i] = temp;
+    }
   }
 
   if (eval) {
     return Rcpp::List::create(Rcpp::Named("sol") = sol,
                               Rcpp::Named("psi") = Rcpp::wrap(psi_eval),
                               Rcpp::Named("dpsi") = Rcpp::wrap(dpsi_eval),
-                              Rcpp::Named("rho") = Rcpp::wrap(rho_eval),
+                              Rcpp::Named("alpha") = Rcpp::wrap(alpha_eval),
                               Rcpp::Named("temp") = Rcpp::wrap(temp_eval));
   } else {
     return Rcpp::List::create(Rcpp::Named("sol") = sol);

@@ -13,14 +13,15 @@ Rcpp::sourceCpp("~/Github/AssocMating/src/population.cpp")
 
 # Generate the population data frame -- see config.json file to modify
 # simulation parameters
+set.seed(42)
 pop <- population("~/Github/AssocMating/config.json")
 
 # Generate mate matchings for the population -- if you want to run plot_eval
 # to visualise the progress of the simulated annealing algorithm, set eval=TRUE
 # (note that this slows down performance)
-test <- sim_matching(pop, iter = 1000000, eval = FALSE)
+test <- sim_matching(pop, eval = TRUE)
 
-# plot_eval(test)
+plot_eval(test)
 ```
 
 ```{r}

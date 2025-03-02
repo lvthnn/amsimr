@@ -1,5 +1,5 @@
   {
-  "n_pop": 1000,
+  "n_pop": 100,
   "n_gene": 5,
   "snp_causal": {
     "phi1": [1, 3],
