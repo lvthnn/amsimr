@@ -11,22 +11,19 @@
 //[[Rcpp::export]]
 arma::vec compute_delta(const arma::mat &sol, const arma::uvec &swap,
                         const arma::uvec &phi_m, const arma::uvec &phi_f) {
-  arma::uvec rswap = arma::reverse(swap);
-  arma::mat phimat_m = sol.submat(swap, phi_m);
-  arma::mat phimat_f = sol.submat(rswap, phi_f) - sol.submat(swap, phi_f);
-  arma::vec res = arma::sum(phimat_m % phimat_f, 0).t();
+  int n = sol.n_rows;
+  arma::vec delta = arma::vec(phi_m.n_elem);
 
-  Rcpp::Rcout << "---------------------" << std::endl
-              << "swap" << std::endl
-              << swap << std::endl
-              << "phimat_m" << std::endl
-              << phimat_m << std::endl
-              << "phimat_f" << std::endl
-              << phimat_f << std::endl
-              << "res" << std::endl
-              << res << std::endl
-              << "--------------------" << std::endl;
-  return res;
+  for (int i = 0; i < phi_m.n_elem; i++) {
+    double m0 = sol(swap(0), phi_m[i]);
+    double m1 = sol(swap(1), phi_m[i]);
+    double f0 = sol(swap(0), phi_f[i]);
+    double f1 = sol(swap(1), phi_f[i]);
+
+    delta[i] = (1.0 / n) * (m0 * (f1 - f0) + m1 * (f0 - f1));
+  }
+
+  return delta;
 }
 
 //' Compute the energy differential between proposal state and current state
@@ -50,7 +47,7 @@ double dpsi(const arma::vec &rho_sol, const arma::vec &delta,
 //' @return Vector of Δ values for each phenotype pair
 //[[Rcpp::export]]
 double psi(const arma::vec &rho_sol, const arma::vec &rho) {
-  return arma::norm(rho_sol - rho, 2);
+  return std::pow(arma::norm(rho_sol - rho, 2), 2);
 }
 
 //' Determine the optimal matching for a given generation.
@@ -77,8 +74,20 @@ Rcpp::List optim_matching(arma::mat &sol, const arma::mat &psi_vec,
   // Compute the assortative trait correlation vector for the initial state
   arma::vec rho_sol = arma::vec(phi_m.n_elem);
   for (int i = 0; i < phi_m.n_elem; i++) {
-    arma::mat cor = arma::cor(sol.col(phi_m[i]), sol.col(phi_f[i]));
-    rho_sol[i] = cor(0, 0);
+    rho_sol[i] = (1.0 / n) * arma::dot(sol.col(phi_m[i]), sol.col(phi_f[i]));
+  }
+
+  // If eval = true, set up vectors to store data in
+  if (eval) {
+    psi_eval.set_size(n_iter);
+    dpsi_eval.set_size(n_iter);
+    alpha_eval.set_size(n_iter);
+    temp_eval.set_size(n_iter);
+
+    psi_eval[0] = psi(rho_sol, rho);
+    dpsi_eval[0] = 0.0;
+    alpha_eval[0] = 1.0;
+    temp_eval[0] = temp;
   }
 
   // Run the simulated annealing algorithm
@@ -90,18 +99,6 @@ Rcpp::List optim_matching(arma::mat &sol, const arma::mat &psi_vec,
     double dpsi_prop = dpsi(rho_sol, delta_prop, rho);
     double alpha = std::min(1.0, std::exp(-dpsi_prop / temp));
     double unf = Rcpp::as<double>(Rcpp::runif(1));
-
-    if (eval) {
-      psi_eval.set_size(n_iter);
-      dpsi_eval.set_size(n_iter);
-      alpha_eval.set_size(n_iter);
-      temp_eval.set_size(n_iter);
-
-      psi_eval[0] = psi(rho_sol, rho);
-      dpsi_eval[0] = 0.0;
-      alpha_eval[0] = 1.0;
-      temp_eval[0] = temp;
-    }
 
     if (unf < alpha) {
       sol.submat(swap, cf_idx) = sol.submat(arma::reverse(swap), cf_idx);
