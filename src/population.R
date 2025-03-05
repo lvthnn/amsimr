@@ -33,13 +33,13 @@ population <- function(sim_params) {
     names(gam_snp) <- paste0("rs", snp_pheno)
     gam_causal[[pheno]] <- gam_snp
 
-    phenos <- gene_snp %*% gam_snp + rnorm(n, sd = 0.5) # Phenotype generation
+    phenos <- gene_snp %*% gam_snp + rnorm(n, sd = 0.5)
     colnames(phenos) <- pheno
 
     phi <- cbind(phi, phenos)
   }
 
-  pop <- data.frame(sex, gene, phi)
+  pop <- data.frame(sex, gene, phi, family_id = 1:n)
 
   attr(pop, "maf_genes") <- maf
   attr(pop, "gam_causal") <- gam_causal
@@ -48,7 +48,7 @@ population <- function(sim_params) {
   return(pop)
 }
 
-sim_matching <- function(pop, iter = 10000, alpha = 1, temp0 = 5,
+sim_matching <- function(pop, iter = 100000, alpha = 1, temp0 = 1e-9,
                          eval = FALSE) {
   #' Find an optimal matching between individuals in the population
   #'
@@ -63,22 +63,26 @@ sim_matching <- function(pop, iter = 10000, alpha = 1, temp0 = 5,
   psi_vec <- attr(pop, "psi_vec")
 
   # Initial solution
-  males <- cbind(scale(pop[pop$sex == 0, unique(psi_vec[, 1]), drop = FALSE]),
-                 id = as.integer(rownames(pop[pop$sex == 0, ])))
-  females <- cbind(scale(pop[pop$sex == 1, unique(psi_vec[, 2]), drop = FALSE]),
-                   id = as.integer(rownames(pop[pop$sex == 1, ])))
+  males <- cbind(
+    scale(pop[pop$sex == 0, unique(psi_vec[, 1]), drop = FALSE]),
+    id = as.integer(rownames(pop[pop$sex == 0, ]))
+  )
+  females <- cbind(
+    scale(pop[pop$sex == 1, unique(psi_vec[, 2]), drop = FALSE]),
+    id = as.integer(rownames(pop[pop$sex == 1, ]))
+  )
   rownames(males) <- rownames(females) <- 1:n
   colnames(females) <- paste0("f_", colnames(females))
-  
+
   init_sol <- as.matrix(cbind(males, females))
-  
+
   cf_idx <- which(grepl("f_", colnames(init_sol))) - 1
 
   psi_vec[, 1] <- as.integer(match(psi_vec[, 1], colnames(init_sol)) - 1)
-  psi_vec[, 2] <-
-    as.integer(match(paste0("f_", psi_vec[, 2]), colnames(init_sol)) - 1)
+  psi_vec[, 2] <- as.integer(match(paste0("f_", psi_vec[, 2]),
+                                   colnames(init_sol)) - 1)
   psi_vec[, 3] <- as.numeric(psi_vec[, 3])
-  
+
   storage.mode(psi_vec) <- "numeric"
 
   # Run simulated annealing algorithm
@@ -96,6 +100,67 @@ sim_matching <- function(pop, iter = 10000, alpha = 1, temp0 = 5,
   colnames(res$sol) <- colnames(init_sol)
 
   return(res)
+}
+
+generate_offspring <- function(pop, female_idx) {
+  cols <- c("sex", attr(pop, "maf_genes") |> names())
+  females <- pop[female_idx, cols]
+  males <- pop[setdiff(1:nrow(pop), female_idx), cols]
+  num_pairs <- nrow(males)
+  
+  offspring_boys <- data.frame()
+  offspring_girls <- data.frame()
+  
+  for (i in 1:num_pairs) {
+    male <- males[i, ]
+    female <- females[i, ]
+    genetic_variants_male <- male[-1]
+    genetic_variants_female <- female[-1]
+    
+    boy_genes <- sapply(1:length(genetic_variants_male), function(j) {
+      binom_male <- rbinom(1, 1, 0.5 * genetic_variants_male[[j]])
+      binom_female <- rbinom(1, 1, 0.5 * genetic_variants_female[[j]])
+      binom_male + binom_female
+    })
+    
+    girl_genes <- sapply(1:length(genetic_variants_female), function(j) {
+      binom_male <- rbinom(1, 1, 0.5 * genetic_variants_male[[j]])
+      binom_female <- rbinom(1, 1, 0.5 * genetic_variants_female[[j]])
+      binom_male + binom_female
+    })
+    
+    names(boy_genes) <- names(girl_genes) <- names(genetic_variants_male)
+   
+    gam_causal <- attr(pop, "gam_causal")
+    phenos <- attr(pop, "gam_causal") |> names()
+    
+    boy_phenos <- sapply(names(gam_causal), function(pheno) {
+      gam <- gam_causal[[pheno]]
+      gam_snps <- boy_genes[names(gam)]
+      boy_pheno <- gam_snps %*% gam + rnorm(1, sd = 0.5)
+      return(boy_pheno)
+    })
+    
+    girl_phenos <- sapply(names(gam_causal), function(pheno) {
+      gam <- gam_causal[[pheno]]
+      gam_snps <- girl_genes[names(gam)]
+      girl_pheno <- gam_snps %*% gam + rnorm(1, sd = 0.5)
+      return(girl_pheno)
+    })
+    
+    names(boy_phenos) <- names(girl_phenos) <- names(gam_causal)
+    
+    boy <- c(sex = 0, boy_genes, boy_phenos, family_id = i)
+    girl <- c(sex = 1, girl_genes, girl_phenos, family_id = i)
+    
+    offspring_boys <- rbind(offspring_boys, boy)
+    offspring_girls <- rbind(offspring_girls, girl)
+  }
+  
+  colnames(offspring_boys) <- colnames(offspring_girls) <- c(cols, "family_id")
+  next_generation <- rbind(offspring_boys, offspring_girls)
+  
+  return(next_generation)
 }
 
 plot_eval <- function(samps_eval) {
