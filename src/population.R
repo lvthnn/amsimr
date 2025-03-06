@@ -9,8 +9,7 @@ population <- function(sim_params) {
   # Extract relevant parameters
   n <- config$n_pop
   p <- config$n_gene
-  psi_vec <- as.matrix(config$psi_vec)
-
+  psi_vec <- config$psi_vec
   rownames(psi_vec) <- seq_len(nrow(psi_vec))
   colnames(psi_vec) <- c("phi_m", "phi_f", "cor")
 
@@ -27,18 +26,21 @@ population <- function(sim_params) {
 
   for (pheno in names(snps_causal)) {
     snp_pheno <- snps_causal[[pheno]]
-    gene_snp <- gene[, snp_pheno]
-    gam_snp <- rnorm(length(snp_pheno))
 
-    names(gam_snp) <- paste0("rs", snp_pheno)
+    gam_snp <- numeric(p)
+    names(gam_snp) <- paste0("rs", 1:p)
+    gam_snp[snp_pheno] <- rnorm(length(snp_pheno))
     gam_causal[[pheno]] <- gam_snp
 
-    phenos <- gene_snp %*% gam_snp + rnorm(n, sd = 0.5)
+    phenos <- gene %*% gam_snp + rnorm(n, sd = 0.5)
     colnames(phenos) <- pheno
 
     phi <- cbind(phi, phenos)
   }
 
+  gam_causal <- do.call(rbind, gam_causal) |>
+    as.matrix() |>
+    t()
   pop <- data.frame(sex, gene, phi, family_id = 1:n)
 
   attr(pop, "maf_genes") <- maf
@@ -63,14 +65,18 @@ sim_matching <- function(pop, iter = 100000, alpha = 1, temp0 = 1e-9,
   psi_vec <- attr(pop, "psi_vec")
 
   # Initial solution
+  snp_cols <- grepl("sex|rs", colnames(pop))
+
   males <- cbind(
-    scale(pop[pop$sex == 0, unique(psi_vec[, 1]), drop = FALSE]),
-    id = as.integer(rownames(pop[pop$sex == 0, ]))
+    pop[pop$sex == 0, snp_cols],
+    scale(pop[pop$sex == 0, unique(psi_vec[, 1]), drop = FALSE])
   )
+
   females <- cbind(
-    scale(pop[pop$sex == 1, unique(psi_vec[, 2]), drop = FALSE]),
-    id = as.integer(rownames(pop[pop$sex == 1, ]))
+    pop[pop$sex == 1, snp_cols],
+    scale(pop[pop$sex == 1, unique(psi_vec[, 2]), drop = FALSE])
   )
+
   rownames(males) <- rownames(females) <- 1:n
   colnames(females) <- paste0("f_", colnames(females))
 
@@ -78,9 +84,17 @@ sim_matching <- function(pop, iter = 100000, alpha = 1, temp0 = 1e-9,
 
   cf_idx <- which(grepl("f_", colnames(init_sol))) - 1
 
-  psi_vec[, 1] <- as.integer(match(psi_vec[, 1], colnames(init_sol)) - 1)
-  psi_vec[, 2] <- as.integer(match(paste0("f_", psi_vec[, 2]),
-                                   colnames(init_sol)) - 1)
+  psi_vec <- as.matrix(psi_vec)
+  psi_vec[, 1] <- as.integer(
+    match(
+      psi_vec[, 1],
+      colnames(init_sol)
+    ) - 1
+  )
+  psi_vec[, 2] <- as.integer(match(
+    paste0("f_", psi_vec[, 2]),
+    colnames(init_sol)
+  ) - 1)
   psi_vec[, 3] <- as.numeric(psi_vec[, 3])
 
   storage.mode(psi_vec) <- "numeric"
@@ -102,65 +116,40 @@ sim_matching <- function(pop, iter = 100000, alpha = 1, temp0 = 1e-9,
   return(res)
 }
 
-generate_offspring <- function(pop, female_idx) {
-  cols <- c("sex", attr(pop, "maf_genes") |> names())
-  females <- pop[female_idx, cols]
-  males <- pop[setdiff(1:nrow(pop), female_idx), cols]
-  num_pairs <- nrow(males)
-  
-  offspring_boys <- data.frame()
-  offspring_girls <- data.frame()
-  
-  for (i in 1:num_pairs) {
-    male <- males[i, ]
-    female <- females[i, ]
-    genetic_variants_male <- male[-1]
-    genetic_variants_female <- female[-1]
-    
-    boy_genes <- sapply(1:length(genetic_variants_male), function(j) {
-      binom_male <- rbinom(1, 1, 0.5 * genetic_variants_male[[j]])
-      binom_female <- rbinom(1, 1, 0.5 * genetic_variants_female[[j]])
-      binom_male + binom_female
-    })
-    
-    girl_genes <- sapply(1:length(genetic_variants_female), function(j) {
-      binom_male <- rbinom(1, 1, 0.5 * genetic_variants_male[[j]])
-      binom_female <- rbinom(1, 1, 0.5 * genetic_variants_female[[j]])
-      binom_male + binom_female
-    })
-    
-    names(boy_genes) <- names(girl_genes) <- names(genetic_variants_male)
-   
-    gam_causal <- attr(pop, "gam_causal")
-    phenos <- attr(pop, "gam_causal") |> names()
-    
-    boy_phenos <- sapply(names(gam_causal), function(pheno) {
-      gam <- gam_causal[[pheno]]
-      gam_snps <- boy_genes[names(gam)]
-      boy_pheno <- gam_snps %*% gam + rnorm(1, sd = 0.5)
-      return(boy_pheno)
-    })
-    
-    girl_phenos <- sapply(names(gam_causal), function(pheno) {
-      gam <- gam_causal[[pheno]]
-      gam_snps <- girl_genes[names(gam)]
-      girl_pheno <- gam_snps %*% gam + rnorm(1, sd = 0.5)
-      return(girl_pheno)
-    })
-    
-    names(boy_phenos) <- names(girl_phenos) <- names(gam_causal)
-    
-    boy <- c(sex = 0, boy_genes, boy_phenos, family_id = i)
-    girl <- c(sex = 1, girl_genes, girl_phenos, family_id = i)
-    
-    offspring_boys <- rbind(offspring_boys, boy)
-    offspring_girls <- rbind(offspring_girls, girl)
-  }
-  
-  colnames(offspring_boys) <- colnames(offspring_girls) <- c(cols, "family_id")
-  next_generation <- rbind(offspring_boys, offspring_girls)
-  
-  return(next_generation)
+generate_offspring <- function(pop, sol) {
+  #' Produce a generation of offspring designated by the mate matching sol
+  #'
+  #' @param pop The population data frame
+  #' @param sol The mate matching
+  n <- nrow(pop)
+  gam_causal <- attr(pop, "gam_causal")
+
+  cols <- which(grepl("rs", colnames(sol)))
+  pairs_geno <- split.default(
+    sol[, cols],
+    cut(seq_along(sol[, cols]), 2,
+      labels = FALSE
+    )
+  )
+
+  p <- ncol(pairs_geno[["1"]])
+
+  snp_probs <- as.matrix(0.25 * pairs_geno[["1"]] + 0.25 * pairs_geno[["2"]])
+
+  snps <- matrix(
+    rbinom(
+      n * p,
+      size = 2, prob = rep(as.vector(snp_probs), 2)
+    ),
+    nrow = n,
+    ncol = p
+  )
+
+  colnames(snps) <- colnames(pairs_geno[["1"]])
+  phenos <- snps %*% gam_causal + matrix(rnorm(n * 2, sd = 0.5), n, 2)
+  offspring <- cbind(snps, phenos)
+
+  return(offspring)
 }
 
 plot_eval <- function(samps_eval) {
