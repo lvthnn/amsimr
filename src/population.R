@@ -122,6 +122,7 @@ generate_offspring <- function(pop, sol) {
   #' @param pop The population data frame
   #' @param sol The mate matching
   n <- nrow(pop)
+  p <- nrow(attr(pop, "gam_causal"))
   gam_causal <- attr(pop, "gam_causal")
 
   cols <- which(grepl("rs", colnames(sol)))
@@ -131,8 +132,6 @@ generate_offspring <- function(pop, sol) {
       labels = FALSE
     )
   )
-
-  p <- ncol(pairs_geno[["1"]])
 
   snp_probs <- as.matrix(0.25 * pairs_geno[["1"]] + 0.25 * pairs_geno[["2"]])
 
