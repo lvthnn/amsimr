@@ -62,7 +62,7 @@ double psi(const arma::vec &rho_sol, const arma::vec &rho) {
 // [[Rcpp::export]]
 Rcpp::List optim_matching(arma::mat &sol, const arma::mat &psi_vec,
                           const arma::uvec &cf_idx, int n_iter = 10000,
-                          double alpha_temp = 1.0, double temp0 = 5.0,
+                          double alpha_temp = 1.0, double temp0 = 1.0,
                           bool eval = false) {
   int n = sol.n_rows;
   arma::uvec phi_m = arma::conv_to<arma::uvec>::from(psi_vec.col(0));
