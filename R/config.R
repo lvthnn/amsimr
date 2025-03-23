@@ -65,7 +65,6 @@ is_pair <- function(config, x) {
   }
 
   # Check SNP names
-  valid_snps <- paste0("rs", 1:config$simulation$n_genes)
   if (!x$male_snp %in% valid_snps) {
     stop("Invalid male_snp in mating_model: ", x$male_snp)
   }
@@ -189,7 +188,12 @@ process_config <- function(config) {
   # Extract phenotype data into phenotype_<key>
   config_data["phenotype_name"] <- config$phenotype[["name"]]
   config_data["phenotype_heritability"] <- config$phenotype[["heritability"]]
-  config_data[["phenotype_tias"]] <- unlist(config$phenotype[["causal_snps"]])
+
+  causal_snps <- config$phenotype[["causal_snps"]]
+  neutral_snps <- setdiff(snp_ids, names(causal_snps))
+  causal_snps[neutral_snps] <- 0
+
+  config_data[["phenotype_causal_snps"]] <- unlist(causal_snps)
 
   # Extract mating_model data into mating_model_<key>. In particular, extract
   # allele pairs into a tabular / data frame format.

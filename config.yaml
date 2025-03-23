@@ -1,0 +1,29 @@
+simulation:
+  n_genes: 10 # number of SNPs
+  n_pop: 10000 # size of population
+  random_seed: 42 # seed for RNG
+
+snps:
+  default_maf: 0.20
+  snp_maf:
+    rs1: 0.15
+    rs2: 0.35
+    rs3: 0.05
+
+phenotype:
+  name: "height"
+  heritability: 0.80
+  causal_snps:
+    rs1: 0.5
+    rs2: 0.3
+
+mating_model:
+  type: "assortative" 
+  pairs:
+    - male_snp: rs1
+      female_snp: rs3
+      correlation: 0.25
+
+    - male_snp: rs1 
+      female_snp: rs2
+      correlation: 0.75
