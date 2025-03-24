@@ -1,6 +1,8 @@
 # Assortative Mating (AM) Simulation Tool
 
-R package developed for my B.Sc. thesis, *Distant LD and its effects on polygenic score construction and prediction: a simulation study*. The package implements an algorithm to simulate non-random correlation between allele pairs.
+R package developed for my B.Sc. thesis, *Distant LD and its effects on polygenic
+score construction and prediction: a simulation study*. The package implements an algorithm
+to simulate non-random correlation between allele pairs.
 
 ## Installation
 
@@ -8,8 +10,8 @@ To install the package, clone this repository and load the package in R:
 
 ```sh
 # Clone the repository
-git clone https://github.com/lvthnn/am-simulation.git
-cd am-simulation
+git clone https://github.com/lvthnn/am_simulation.git
+cd am_simulation
 
 # Load the package in R
 library(devtools)
@@ -18,7 +20,9 @@ devtools::load_all()
 
 ## Setting up a Configuration File
 
-To run a simulation, you will need to specify a configuration file. The required sections are `simulation`, `snps`, `phenotype`, and `mating_model`. Shown below is an example:
+To run a simulation, you will need to specify a configuration file. The required
+sections are `simulation`, `snps`, `phenotype`, and `mating_model`. Shown below is
+an example:
 
 ```yaml
 simulation:
@@ -70,7 +74,8 @@ head(pop)
 
 ## Output
 
-The simulation produces a dataset containing information about individuals across generations, including genotype, phenotype, and mating pairs. Example output:
+The simulation produces a dataset containing information about individuals across
+generations, including genotype, phenotype, and mating pairs. Example output:
 
 ```r
 # Summarize the population statistics
@@ -107,7 +112,8 @@ install.packages(c("yaml"))
 
 If you use this package in your research, please cite:
 
-> Hlynsson, K. (2025). *Distant LD and its effects on polygenic score construction and prediction: a simulation study*.
+> Hlynsson, K. (2025). *Distant LD and its effects on polygenic score construction
+> and prediction: a simulation study*.
 
 ## License
 
