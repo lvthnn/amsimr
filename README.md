@@ -8,7 +8,7 @@ To install the package, clone this repository and load the package in R:
 
 ```sh
 # Clone the repository
-git clone https://github.com/yourusername/am-simulation.git
+git clone https://github.com/lvthnn/am-simulation.git
 cd am-simulation
 
 # Load the package in R
