@@ -1,9 +1,6 @@
 // [[depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
 
-using namespace Rcpp;
-using namespace arma;
-
 //' Computes correlation update when swapping pairs
 //'
 //' @param sol_mat Solution matrix
@@ -12,14 +9,14 @@ using namespace arma;
 //' @param female_snp_idx Female SNP indices
 //' @return Correlation vector update
 //[[Rcpp::export]]
-vec compute_delta(
-  const mat &sol_mat,
-  const uvec &swap_idx,
-  const uvec &male_snp_idx,
-  const uvec &female_snp_idx
+arma::vec compute_delta(
+  const arma::mat &sol_mat,
+  const arma::uvec &swap_idx,
+  const arma::uvec &male_snp_idx,
+  const arma::uvec &female_snp_idx
 ) {
   const int pop_size = sol_mat.n_rows;
-  vec cor_update = vec(male_snp_idx.n_elem);
+  arma::vec cor_update = arma::vec(male_snp_idx.n_elem);
 
   for (size_t i = 0; i < male_snp_idx.n_elem; i++) {
     double m0 = sol_mat(swap_idx(0), male_snp_idx[i]);
@@ -41,12 +38,12 @@ vec compute_delta(
 //' @return Energy differential
 //[[Rcpp::export]]
 double compute_dpsi(
-  const vec &curr_cor,
-  const vec &target_cor,
-  const vec &delta_cor
+  const arma::vec &curr_cor,
+  const arma::vec &target_cor,
+  const arma::vec &delta_cor
 ) {
-  const vec diff_cor = curr_cor - target_cor;
-  return dot(delta_cor, delta_cor) + 2.0 * dot(diff_cor, delta_cor);
+  const arma::vec diff_cor = curr_cor - target_cor;
+  return arma::dot(delta_cor, delta_cor) + 2.0 * arma::dot(diff_cor, delta_cor);
 }
 
 //' Evaluates energy of current state
@@ -56,10 +53,10 @@ double compute_dpsi(
 //' @return Energy value
 //[[Rcpp::export]]
 double compute_psi(
-  const vec &curr_cor,
-  const vec &target_cor
+  const arma::vec &curr_cor,
+  const arma::vec &target_cor
 ) {
-  return std::pow(norm(curr_cor - target_cor, 2), 2);
+  return std::pow(arma::norm(curr_cor - target_cor, 2), 2);
 }
 
 //' Performs simulated annealing to optimize matching
@@ -73,10 +70,10 @@ double compute_psi(
 //' @param collect_metrics Whether to collect optimization metrics
 //' @return Optimized solution matrix and optional metrics
 // [[Rcpp::export]]
-List optim_matching(
-  mat &sol_mat,
-  const mat &snp_pairs,
-  const uvec &female_swap_idx,
+Rcpp::List optim_matching(
+  arma::mat &sol_mat,
+  const arma::mat &snp_pairs,
+  const arma::uvec &female_swap_idx,
   const int num_iterations = 10000,
   const double temp_decay = 1.0,
   const double init_temp = 1.0,
@@ -85,20 +82,22 @@ List optim_matching(
   const int pop_size = sol_mat.n_rows;
 
   // Extract SNP genotype indices and target correlation
-  const uvec male_snp_idx = conv_to<uvec>::from(snp_pairs.col(0));
-  const uvec female_snp_idx = conv_to<uvec>::from(snp_pairs.col(1));
-  const vec target_correlation = snp_pairs.col(2);
+  const arma::uvec male_snp_idx =
+    arma::conv_to<arma::uvec>::from(snp_pairs.col(0));
+  const arma::uvec female_snp_idx =
+    arma::conv_to<arma::uvec>::from(snp_pairs.col(1));
+  const arma::vec target_correlation = snp_pairs.col(2);
 
   // Distribution parameters for generation of swap indices
-  const distr_param swap_distr = distr_param(0, pop_size - 1);
+  const arma::distr_param swap_distr = arma::distr_param(0, pop_size - 1);
 
   double curr_temp = init_temp;
 
   // Vectors for storing evaluation metrics if requested
-  vec energy_vals, energy_deltas, acc_probs, temp_vals;
+  arma::vec energy_vals, energy_deltas, acc_probs, temp_vals;
 
   // Compute the assortative SNP correlation vector for the initial state
-  vec curr_cor = vec(male_snp_idx.n_elem);
+  arma::vec curr_cor = arma::vec(male_snp_idx.n_elem);
   for (size_t i = 0; i < male_snp_idx.n_elem; i++) {
     curr_cor[i] = (1.0 / pop_size) * dot(
       sol_mat.col(male_snp_idx[i]),
@@ -121,8 +120,8 @@ List optim_matching(
 
   // Run the simulated annealing algorithm
   for (int i = 0; i < num_iterations; i++) {
-    uvec swap_idx = randi<uvec>(2, swap_distr);
-    vec delta_cor = compute_delta(
+    arma::uvec swap_idx = arma::randi<arma::uvec>(2, swap_distr);
+    arma::vec delta_cor = compute_delta(
       sol_mat,
       swap_idx,
       male_snp_idx,
@@ -133,9 +132,9 @@ List optim_matching(
       target_correlation,
       delta_cor
     );
-    vec prop_cor = curr_cor + delta_cor;
+    arma::vec prop_cor = curr_cor + delta_cor;
     double acc_prob = std::min(1.0, std::exp(-energy_delta / curr_temp));
-    double unf = as<double>(runif(1));
+    double unf = Rcpp::as<double>(Rcpp::runif(1));
 
     if (unf < acc_prob) {
       sol_mat.submat(swap_idx, female_swap_idx) = sol_mat.submat(
@@ -155,14 +154,14 @@ List optim_matching(
   }
 
   if (collect_metrics) {
-    return List::create(
-      Named("sol_mat") = sol_mat,
-      Named("energy_vals") = wrap(energy_vals),
-      Named("energy_deltas") = wrap(energy_deltas),
-      Named("acceptance_probs") = wrap(acc_probs),
-      Named("temp_vals") = wrap(temp_vals)
+    return Rcpp::List::create(
+      Rcpp::Named("sol_mat") = sol_mat,
+      Rcpp::Named("energy_vals") = Rcpp::wrap(energy_vals),
+      Rcpp::Named("energy_deltas") = Rcpp::wrap(energy_deltas),
+      Rcpp::Named("acceptance_probs") = Rcpp::wrap(acc_probs),
+      Rcpp::Named("temp_vals") = Rcpp::wrap(temp_vals)
     );
   } else {
-    return List::create(Named("sol_mat") = sol_mat);
+    return Rcpp::List::create(Rcpp::Named("sol_mat") = sol_mat);
   }
 }
