@@ -115,5 +115,5 @@ This project is licensed under the MIT License.
 
 ## Contact
 
-For questions or issues, please contact Kári Hlynsson at [kari.hlynsson@gmail.com].
+For questions or issues, please contact me at [kari.hlynsson@gmail.com].
 
