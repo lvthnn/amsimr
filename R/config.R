@@ -99,6 +99,7 @@ validate_section <- function(config, section, rules) {
   #' @param config The configuration object
   #' @param section The section name to validate
   #' @param rules A list of validation rules
+
   if (!section %in% names(config)) {
     stop("Missing required section '", section, "'")
   }
@@ -168,6 +169,7 @@ process_config <- function(config) {
   #' to be used in the simulation.
   #'
   #' @param config The configuration object to process
+  #'
   #' @return A list object with data processed from the configuration file
 
   # Extract some variables from the config file
@@ -186,7 +188,8 @@ process_config <- function(config) {
   config_data[["snp_maf"]] <- unlist(snp_maf)
 
   # Extract phenotype data into phenotype_<key>
-  config_data["phenotype_name"] <- config$phenotype[["name"]]
+  config_data["phenotype_name"] <- ifelse(!is.null(config$phenotype[["name"]]),
+                                          config$phenotype[["name"]], "X")
   config_data["phenotype_heritability"] <- config$phenotype[["heritability"]]
 
   causal_snps <- config$phenotype[["causal_snps"]]
@@ -212,6 +215,8 @@ load_config <- function(config_path) {
   #'
   #' @param config_path
   #' @returns A list object with data processed from the configuration file
+  #'
+  #' @export
 
   # Read the configuration file
   config <- yaml::read_yaml(config_path)
