@@ -97,10 +97,10 @@ This package relies on the following R packages:
 - `RcppArmadillo`
 - `yaml`
 
-Ensure these dependencies are installed before running the simulation:
+Ensure dependencies are installed before running the simulation:
 
-```r
-install.packages(c("Rcpp", "RcppArmadillo", "yaml"))
+```
+install.packages(c("yaml"))
 ```
 
 ## Citation
