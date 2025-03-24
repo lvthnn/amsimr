@@ -1,7 +1,8 @@
 simulation:
-  n_loci: 10 # number of SNPs
-  n_pop: 10000 # size of population
-  random_seed: 42 # seed for RNG
+  n_loci: 10
+  n_pop: 10000
+  n_gen: 50
+  random_seed: 42
 
 snps:
   default_maf: 0.20
