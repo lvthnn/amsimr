@@ -42,7 +42,7 @@ is_option <- function(config, options) {
 
 # Check whether a given string is a valid RS ID
 is_rs <- function(config, x) {
-  valid_snps <- paste0("rs", 1:config$simulation$n_genes)
+  valid_snps <- paste0("rs", 1:config$simulation$n_loci)
   val_fn <- is_option(config, valid_snps)
 
   return(val_fn(config, x))
@@ -57,7 +57,7 @@ is_pair <- function(config, x) {
     stop("Pairs in 'mating_model' missing keys '", missing_keys, "'")
   }
 
-  valid_snps <- paste0("rs", 1:config$simulation$n_genes)
+  valid_snps <- paste0("rs", 1:config$simulation$n_loci)
 
   # Check correlation value
   if (!is_correlation(config, x$correlation)) {
@@ -134,7 +134,7 @@ validate_config <- function(config) {
 
   # Validate simulation section
   validate_section(config, section = "simulation", list(
-    n_genes = list(required = TRUE, val = is_positive_int),
+    n_loci = list(required = TRUE, val = is_positive_int),
     n_pop = list(required = TRUE, val = is_positive_int),
     random_seed = list(required = FALSE, val = is_positive_int)
   ))
@@ -172,14 +172,14 @@ process_config <- function(config) {
 
   # Extract some variables from the config file
   config_data <- list(
-    n_genes = config$simulation[["n_genes"]],
+    n_loci = config$simulation[["n_loci"]],
     n_pop = config$simulation[["n_pop"]],
     random_seed = config$simulation[["random_seed"]]
   )
 
   # Fill in SNP MAFs with default value if unspecified
   snp_maf <- config$snps[["snp_maf"]]
-  snp_ids <- paste0("rs", 1:config_data$n_genes)
+  snp_ids <- paste0("rs", 1:config_data$n_loci)
   snp_default <- setdiff(snp_ids, names(snp_maf))
   snp_maf[snp_default] <- config$snps[["default_maf"]]
 

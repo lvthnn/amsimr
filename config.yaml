@@ -1,5 +1,5 @@
 simulation:
-  n_genes: 10 # number of SNPs
+  n_loci: 10 # number of SNPs
   n_pop: 10000 # size of population
   random_seed: 42 # seed for RNG
 
