@@ -1,8 +1,8 @@
 Package: amsim
 Title: Assortative mating simulator
 Version: 0.0.0.9000
-Authors@R (parsed): 
-    * Kári Hlynsson <kari.hlynsson@gmail.com> [aut, cre]
+Authors@R: 
+    person("Kári", "Hlynsson", , "kari.hlynsson@gmail.com", role = c("aut", "cre"))
 Description: Simulation tool for effect of distant LD on PGI construction.
 License: MIT + file LICENSE
 Encoding: UTF-8

@@ -12,53 +12,53 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // compute_delta
-vec compute_delta(const mat& sol_mat, const uvec& swap_idx, const uvec& male_snp_idx, const uvec& female_snp_idx);
+arma::vec compute_delta(const arma::mat& sol_mat, const arma::uvec& swap_idx, const arma::uvec& male_snp_idx, const arma::uvec& female_snp_idx);
 RcppExport SEXP _amsim_compute_delta(SEXP sol_matSEXP, SEXP swap_idxSEXP, SEXP male_snp_idxSEXP, SEXP female_snp_idxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const mat& >::type sol_mat(sol_matSEXP);
-    Rcpp::traits::input_parameter< const uvec& >::type swap_idx(swap_idxSEXP);
-    Rcpp::traits::input_parameter< const uvec& >::type male_snp_idx(male_snp_idxSEXP);
-    Rcpp::traits::input_parameter< const uvec& >::type female_snp_idx(female_snp_idxSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type sol_mat(sol_matSEXP);
+    Rcpp::traits::input_parameter< const arma::uvec& >::type swap_idx(swap_idxSEXP);
+    Rcpp::traits::input_parameter< const arma::uvec& >::type male_snp_idx(male_snp_idxSEXP);
+    Rcpp::traits::input_parameter< const arma::uvec& >::type female_snp_idx(female_snp_idxSEXP);
     rcpp_result_gen = Rcpp::wrap(compute_delta(sol_mat, swap_idx, male_snp_idx, female_snp_idx));
     return rcpp_result_gen;
 END_RCPP
 }
 // compute_dpsi
-double compute_dpsi(const vec& curr_cor, const vec& target_cor, const vec& delta_cor);
+double compute_dpsi(const arma::vec& curr_cor, const arma::vec& target_cor, const arma::vec& delta_cor);
 RcppExport SEXP _amsim_compute_dpsi(SEXP curr_corSEXP, SEXP target_corSEXP, SEXP delta_corSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const vec& >::type curr_cor(curr_corSEXP);
-    Rcpp::traits::input_parameter< const vec& >::type target_cor(target_corSEXP);
-    Rcpp::traits::input_parameter< const vec& >::type delta_cor(delta_corSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type curr_cor(curr_corSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type target_cor(target_corSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type delta_cor(delta_corSEXP);
     rcpp_result_gen = Rcpp::wrap(compute_dpsi(curr_cor, target_cor, delta_cor));
     return rcpp_result_gen;
 END_RCPP
 }
 // compute_psi
-double compute_psi(const vec& curr_cor, const vec& target_cor);
+double compute_psi(const arma::vec& curr_cor, const arma::vec& target_cor);
 RcppExport SEXP _amsim_compute_psi(SEXP curr_corSEXP, SEXP target_corSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const vec& >::type curr_cor(curr_corSEXP);
-    Rcpp::traits::input_parameter< const vec& >::type target_cor(target_corSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type curr_cor(curr_corSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type target_cor(target_corSEXP);
     rcpp_result_gen = Rcpp::wrap(compute_psi(curr_cor, target_cor));
     return rcpp_result_gen;
 END_RCPP
 }
 // optim_matching
-List optim_matching(mat& sol_mat, const mat& snp_pairs, const uvec& female_swap_idx, const int num_iterations, const double temp_decay, const double init_temp, const bool collect_metrics);
+Rcpp::List optim_matching(arma::mat& sol_mat, const arma::mat& snp_pairs, const arma::uvec& female_swap_idx, const int num_iterations, const double temp_decay, const double init_temp, const bool collect_metrics);
 RcppExport SEXP _amsim_optim_matching(SEXP sol_matSEXP, SEXP snp_pairsSEXP, SEXP female_swap_idxSEXP, SEXP num_iterationsSEXP, SEXP temp_decaySEXP, SEXP init_tempSEXP, SEXP collect_metricsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< mat& >::type sol_mat(sol_matSEXP);
-    Rcpp::traits::input_parameter< const mat& >::type snp_pairs(snp_pairsSEXP);
-    Rcpp::traits::input_parameter< const uvec& >::type female_swap_idx(female_swap_idxSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type sol_mat(sol_matSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type snp_pairs(snp_pairsSEXP);
+    Rcpp::traits::input_parameter< const arma::uvec& >::type female_swap_idx(female_swap_idxSEXP);
     Rcpp::traits::input_parameter< const int >::type num_iterations(num_iterationsSEXP);
     Rcpp::traits::input_parameter< const double >::type temp_decay(temp_decaySEXP);
     Rcpp::traits::input_parameter< const double >::type init_temp(init_tempSEXP);

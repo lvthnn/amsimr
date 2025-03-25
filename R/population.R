@@ -15,7 +15,7 @@ generate_phenotype <- function(config, snp_matrix) {
   # Compute contribution from genetic component
   genetic_effect <- snp_matrix %*% pheno_causal_snps
   env_variance <- heritability_coeff * var(genetic_effect)
-  env_effect <- rnorm(config$n_pop, mean = 0, sd = sqrt(env_variance))
+  env_effect <- stats::rnorm(config$n_pop, mean = 0, sd = sqrt(env_variance))
 
   # Assemble genetic and environmental effects
   phenotype <- genetic_effect + env_effect
@@ -40,7 +40,11 @@ initialise_population <- function(config) {
 
   # Create SNP matrix based on minor allele frequencies
   snp_matrix <- matrix(
-    rbinom(n_pop * n_loci, size = 2, prob = rep(config$snp_maf, each = n_pop)),
+    stats::rbinom(
+      n_pop * n_loci,
+      size = 2,
+      prob = rep(config$snp_maf, each = n_pop)
+    ),
     nrow = n_pop,
     ncol = n_loci,
     byrow = FALSE
@@ -76,13 +80,21 @@ produce_next_generation <- function(config, pop, matching) {
 
     # Sample alleles from each parent
     paternal_alleles <- matrix(
-      rbinom(n_pop * n_loci, 1, rep(as.vector(paternal_probs), each = 2)),
+      stats::rbinom(
+        n_pop * n_loci,
+        size = 1,
+        prob = rep(as.vector(paternal_probs), each = 2)
+      ),
       nrow = n_pop,
       ncol = n_loci
     )
 
     maternal_alleles <- matrix(
-      rbinom(n_pop * n_loci, 1, rep(as.vector(maternal_probs), each = 2)),
+      stats::rbinom(
+        n_pop * n_loci,
+        size = 1,
+        prob = rep(as.vector(maternal_probs), each = 2)
+      ),
       nrow = n_pop,
       ncol = n_loci
     )

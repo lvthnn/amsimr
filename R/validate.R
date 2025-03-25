@@ -76,4 +76,3 @@ is_pair <- function(config, x) {
 }
 
 is_pairs <- is_val_along(is_pair)
-

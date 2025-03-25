@@ -2,22 +2,22 @@
 % Please edit documentation in R/RcppExports.R
 \name{compute_delta}
 \alias{compute_delta}
-\title{Compute update vector for correlation vector of assortative trait pairs.}
+\title{Computes correlation update when swapping pairs}
 \usage{
-compute_delta(sol, swap, phi_m, phi_f)
+compute_delta(sol_mat, swap_idx, male_snp_idx, female_snp_idx)
 }
 \arguments{
-\item{sol}{The current state matrix}
+\item{sol_mat}{Solution matrix}
 
-\item{swap}{Indices of swapped pairs}
+\item{swap_idx}{Indices to swap}
 
-\item{phi_m}{Male phenotype indices}
+\item{male_snp_idx}{Male SNP indices}
 
-\item{phi_f}{Female phenotype indices}
+\item{female_snp_idx}{Female SNP indices}
 }
 \value{
-Update vector for correlation vector of assortative trait pairs
+Correlation vector update
 }
 \description{
-Compute update vector for correlation vector of assortative trait pairs.
+Computes correlation update when swapping pairs
 }
