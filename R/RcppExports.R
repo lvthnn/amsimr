@@ -3,33 +3,45 @@
 
 #' Computes correlation update when swapping pairs
 #'
+#' @name compute_delta
 #' @param sol_mat Solution matrix
 #' @param swap_idx Indices to swap
 #' @param male_snp_idx Male SNP indices
 #' @param female_snp_idx Female SNP indices
 #' @return Correlation vector update
-compute_delta <- function(sol_mat, swap_idx, male_snp_idx, female_snp_idx) {
-    .Call('_amsim_compute_delta', PACKAGE = 'amsim', sol_mat, swap_idx, male_snp_idx, female_snp_idx)
-}
+#' @keywords internal
+NULL
 
 #' Computes energy differential between states
 #'
+#' @name compute_dpsi
 #' @param curr_cor Current correlation
 #' @param target_cor Target correlation
 #' @param delta_cor Correlation update
 #' @return Energy differential
-compute_dpsi <- function(curr_cor, target_cor, delta_cor) {
-    .Call('_amsim_compute_dpsi', PACKAGE = 'amsim', curr_cor, target_cor, delta_cor)
-}
+#' @keywords internal
+NULL
 
 #' Evaluates energy of current state
 #'
+#' @name compute_psi
 #' @param curr_cor Current correlation
 #' @param target_cor Target correlation
 #' @return Energy value
-compute_psi <- function(curr_cor, target_cor) {
-    .Call('_amsim_compute_psi', PACKAGE = 'amsim', curr_cor, target_cor)
-}
+#' @keywords internal
+NULL
+
+#' Automatically determine initial temperature for simulated annealing
+#'
+#' @name auto_init_temp
+#' @param sol_mat Current solution matrix
+#' @param snp_pairs SNP pair data (male_idx, female_idx, target_cor)
+#' @param female_swap_idx Columns to swap in solution
+#' @param num_samples Number of random moves to sample
+#' @param accept_ratio Target initial acceptance ratio (default: 0.8)
+#' @return Recommended initial temperature
+#' @keywords internal
+NULL
 
 #' Performs simulated annealing to optimize matching
 #'
@@ -39,9 +51,14 @@ compute_psi <- function(curr_cor, target_cor) {
 #' @param max_iterations Maximum iterations to run
 #' @param temp_decay Temperature decay rate
 #' @param init_temp Initial temperature
+#' @param auto_temp_samples Number of samples to draw for determining initial
+#'   temperature of simulated annealing algorithm
+#' @param auto_accept_ratio Desired initial acceptance ratio for calibration of
+#'   initial temperature value in simulated annealing algorithm
 #' @param collect_metrics Whether to collect optimization metrics
+#' @param quietly Print diagnostics while running annealing
 #' @return Optimized solution matrix and optional metrics
-optim_matching <- function(sol_mat, snp_pairs, female_swap_idx, num_iterations = 10000L, temp_decay = 1.0, init_temp = 1.0, collect_metrics = FALSE) {
-    .Call('_amsim_optim_matching', PACKAGE = 'amsim', sol_mat, snp_pairs, female_swap_idx, num_iterations, temp_decay, init_temp, collect_metrics)
+optim_matching <- function(sol_mat, snp_pairs, female_swap_idx, num_iterations = 10000L, temp_decay = 0.995, init_temp = 1e-9, auto_temp_samples = 100000L, auto_accept_ratio = 0.995, collect_metrics = FALSE, quietly = TRUE) {
+    .Call(`_amsimr_optim_matching`, sol_mat, snp_pairs, female_swap_idx, num_iterations, temp_decay, init_temp, auto_temp_samples, auto_accept_ratio, collect_metrics, quietly)
 }
 

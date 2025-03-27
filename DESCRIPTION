@@ -1,9 +1,9 @@
-Package: amsim
-Title: Assortative mating simulator
+Package: amsimr
+Title: Assortative mating simulation tool
 Version: 0.0.0.9000
 Authors@R: 
     person("Kári", "Hlynsson", , "kari.hlynsson@gmail.com", role = c("aut", "cre"))
-Description: Simulation tool for effect of distant LD on PGI construction.
+Description: Tool to simulate assortative mating in a genetic population.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -11,5 +11,7 @@ RoxygenNote: 7.3.2
 LinkingTo: 
     Rcpp,
     RcppArmadillo
-Imports: 
-    Rcpp
+Imports:
+    Rcpp (>= 1.0.14),
+    yaml (>= 2.3.10),
+    stats

@@ -7,7 +7,7 @@ simulation:
 snps:
   default_maf: 0.20
   snp_maf:
-    rs1: 0.15
+    rs1: 0.5
     rs2: 0.35
     rs3: 0.05
 
@@ -26,5 +26,5 @@ mating_model:
       correlation: 0.25
 
     - male_snp: rs1 
-      female_snp: rs2
-      correlation: 0.75
+      female_snp: rs1
+      correlation: 0.45

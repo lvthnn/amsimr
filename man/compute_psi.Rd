@@ -3,9 +3,6 @@
 \name{compute_psi}
 \alias{compute_psi}
 \title{Evaluates energy of current state}
-\usage{
-compute_psi(curr_cor, target_cor)
-}
 \arguments{
 \item{curr_cor}{Current correlation}
 
@@ -17,3 +14,4 @@ Energy value
 \description{
 Evaluates energy of current state
 }
+\keyword{internal}

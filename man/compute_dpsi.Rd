@@ -3,9 +3,6 @@
 \name{compute_dpsi}
 \alias{compute_dpsi}
 \title{Computes energy differential between states}
-\usage{
-compute_dpsi(curr_cor, target_cor, delta_cor)
-}
 \arguments{
 \item{curr_cor}{Current correlation}
 
@@ -19,3 +16,4 @@ Energy differential
 \description{
 Computes energy differential between states
 }
+\keyword{internal}

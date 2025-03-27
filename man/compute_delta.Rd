@@ -3,9 +3,6 @@
 \name{compute_delta}
 \alias{compute_delta}
 \title{Computes correlation update when swapping pairs}
-\usage{
-compute_delta(sol_mat, swap_idx, male_snp_idx, female_snp_idx)
-}
 \arguments{
 \item{sol_mat}{Solution matrix}
 
@@ -21,3 +18,4 @@ Correlation vector update
 \description{
 Computes correlation update when swapping pairs
 }
+\keyword{internal}

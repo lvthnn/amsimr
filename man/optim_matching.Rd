@@ -9,9 +9,12 @@ optim_matching(
   snp_pairs,
   female_swap_idx,
   num_iterations = 10000L,
-  temp_decay = 1,
-  init_temp = 1,
-  collect_metrics = FALSE
+  temp_decay = 0.995,
+  init_temp = 1e-09,
+  auto_temp_samples = 100000L,
+  auto_accept_ratio = 0.995,
+  collect_metrics = FALSE,
+  quietly = TRUE
 )
 }
 \arguments{
@@ -25,7 +28,15 @@ optim_matching(
 
 \item{init_temp}{Initial temperature}
 
+\item{auto_temp_samples}{Number of samples to draw for determining initial
+temperature of simulated annealing algorithm}
+
+\item{auto_accept_ratio}{Desired initial acceptance ratio for calibration of
+initial temperature value in simulated annealing algorithm}
+
 \item{collect_metrics}{Whether to collect optimization metrics}
+
+\item{quietly}{Print diagnostics while running annealing}
 
 \item{max_iterations}{Maximum iterations to run}
 }

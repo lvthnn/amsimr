@@ -1,4 +1,15 @@
-# Helper function to validate key-value pair
+#' Validate a configuration key-value pair
+#'
+#' Checks whether a key-value pair in a configuration section meets the
+#' specified validation rules. Throws an error if the key or value is invalid.
+#'
+#' @param config A list representing the configuration.
+#' @param section A character string indicating the configuration section.
+#' @param key A character string specifying the key.
+#' @param value The value associated with the key.
+#' @param rule A list of validation functions for the key and value.
+#'
+#' @NoRd
 validate_key_value <- function(config, section, key, value, rule) {
   # Check if the key and value are both valid
   key_invalid <- !is.null(rule$key_val) && !rule$key_val(config, names(value))
@@ -10,16 +21,17 @@ validate_key_value <- function(config, section, key, value, rule) {
   }
 }
 
+#' Validate a section of the configuration against rules
+#'
+#' Validates a section of the simulation configuration file, i.e. whether
+#' a key within the section is required and how to validate it, using a
+#' validation function.
+#'
+#' @param config The configuration object
+#' @param section The section name to validate
+#' @param rules A list of validation rules
+#' @NoRd
 validate_section <- function(config, section, rules) {
-  #' Validate a section of the configuration against rules
-  #'
-  #' Validates a section of the simulation configuration file, i.e. whether
-  #' a key within the section is required and how to validate it, using a
-  #' validation function.
-  #'
-  #' @param config The configuration object
-  #' @param section The section name to validate
-  #' @param rules A list of validation rules
 
   if (!section %in% names(config)) {
     stop("Missing required section '", section, "'")
@@ -46,18 +58,19 @@ validate_section <- function(config, section, rules) {
 }
 
 
+#' Validate the entire configuration file
+#'
+#' Validates that the configuration file has all required sections and
+#' that all required parameters have valid values.
+#'
+#' @param config The configuration object to validate
+#' @NoRd
 validate_config <- function(config) {
-  #' Validate the entire configuration file
-  #'
-  #' Validates that the configuration file has all required sections and
-  #' that all required parameters have valid values.
-  #'
-  #' @param config The configuration object to validate
-
   # Validate simulation section
   validate_section(config, section = "simulation", list(
     n_loci = list(required = TRUE, val = is_positive_int),
     n_pop = list(required = TRUE, val = is_positive_int),
+    n_gen = list(required = TRUE, val = is_positive_int),
     random_seed = list(required = FALSE, val = is_positive_int)
   ))
 
@@ -83,20 +96,22 @@ validate_config <- function(config) {
   ))
 }
 
+#' Process the configuration file
+#'
+#' Extracts and transforms data registered in configuration file
+#' to be used in the simulation.
+#'
+#' @param config The configuration object to process
+#'
+#' @return A list object with data processed from the configuration file
+#' @NoRd
 process_config <- function(config) {
-  #' Process the configuration file
-  #'
-  #' Extracts and transforms data registered in configuration file
-  #' to be used in the simulation.
-  #'
-  #' @param config The configuration object to process
-  #'
-  #' @return A list object with data processed from the configuration file
 
   # Extract some variables from the config file
   config_data <- list(
     n_loci = config$simulation[["n_loci"]],
     n_pop = config$simulation[["n_pop"]],
+    n_gen = config$simulation[["n_gen"]],
     random_seed = config$simulation[["random_seed"]]
   )
 
@@ -123,24 +138,26 @@ process_config <- function(config) {
   # allele pairs into a tabular / data frame format.
   mating_model_pairs <- config$mating_model$pairs
   config_data["mating_model_type"] <- config$mating_model[["type"]]
-  config_data[["mating_model_pairs"]] <- do.call(rbind, mating_model_pairs)
+  config_data[["mating_model_pairs"]] <- do.call(rbind, mating_model_pairs) |>
+    as.data.frame()
 
   return(config_data)
 }
 
+#' Load a simulation configuration file
+#'
+#' Validates and processes data from configuration file to be used
+#' in the simulation.
+#'
+#' @param config_path Path to configuration file
+#' @returns A list object with data processed from the configuration file
+#'
+#' @importFrom yaml read_yaml
+#'
+#' @export
 load_config <- function(config_path) {
-  #' Load a simulation configuration file
-  #'
-  #' Validates and processes data from configuration file to be used
-  #' in the simulation.
-  #'
-  #' @param config_path
-  #' @returns A list object with data processed from the configuration file
-  #'
-  #' @export
-
   # Read the configuration file
-  config <- yaml::read_yaml(config_path)
+  config <- read_yaml(config_path)
 
   validate_config(config)
 

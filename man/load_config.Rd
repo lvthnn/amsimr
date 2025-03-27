@@ -6,6 +6,9 @@
 \usage{
 load_config(config_path)
 }
+\arguments{
+\item{config_path}{Path to configuration file}
+}
 \value{
 A list object with data processed from the configuration file
 }
