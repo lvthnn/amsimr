@@ -82,8 +82,10 @@ double auto_init_temp(
   const int pop_size = sol_mat.n_rows;
   
   // Extract SNP indices and target correlation
-  const arma::uvec male_snp_idx = arma::conv_to<arma::uvec>::from(snp_pairs.col(0));
-  const arma::uvec female_snp_idx = arma::conv_to<arma::uvec>::from(snp_pairs.col(1));
+  const arma::uvec male_snp_idx =
+    arma::conv_to<arma::uvec>::from(snp_pairs.col(0));
+  const arma::uvec female_snp_idx =
+    arma::conv_to<arma::uvec>::from(snp_pairs.col(1));
   const arma::vec target_correlation = snp_pairs.col(2);
   
   // Distribution parameters for swap indices
@@ -120,14 +122,9 @@ double auto_init_temp(
   arma::vec pos_deltas = energy_deltas.elem(arma::find(energy_deltas > 0));
   
   // If there are no positive deltas, return a small default value
-  if (pos_deltas.n_elem == 0) {
-    return 1e-8;
-  }
-  
-  // Calculate temperature based on median energy delta and target acceptance ratio
+  if (pos_deltas.n_elem == 0) return 1e-9;
+
   double median_delta = arma::median(pos_deltas);
-  
-  // T = -median_delta / ln(accept_ratio)
   return -median_delta / std::log(accept_ratio);
 }
 
@@ -152,12 +149,12 @@ Rcpp::List optim_matching(
   const arma::mat &snp_pairs,
   const arma::uvec &female_swap_idx,
   const int num_iterations = 10000,
-  const double temp_decay = 1.0,
-  const double init_temp = 0.0,
-  const int auto_temp_samples = 10000,
-  const double auto_accept_ratio = 0.9,
+  const double temp_decay = 0.995,
+  const double init_temp = 1e-9,
+  const int auto_temp_samples = 100000,
+  const double auto_accept_ratio = 0.995,
   const bool collect_metrics = false,
-  const bool quietly = false
+  const bool quietly = true 
 ) {
   const int pop_size = sol_mat.n_rows;
 
@@ -180,7 +177,7 @@ Rcpp::List optim_matching(
       auto_temp_samples, 
       auto_accept_ratio
     );
-    if (quietly) {
+    if (!quietly) {
       Rcpp::Rcout << "Auto-determined initial temperature: "
                   << curr_temp << "\n";
     }

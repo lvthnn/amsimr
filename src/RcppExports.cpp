@@ -11,48 +11,9 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// compute_delta
-arma::vec compute_delta(const arma::mat& sol_mat, const arma::uvec& swap_idx, const arma::uvec& male_snp_idx, const arma::uvec& female_snp_idx);
-RcppExport SEXP _amsim_compute_delta(SEXP sol_matSEXP, SEXP swap_idxSEXP, SEXP male_snp_idxSEXP, SEXP female_snp_idxSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type sol_mat(sol_matSEXP);
-    Rcpp::traits::input_parameter< const arma::uvec& >::type swap_idx(swap_idxSEXP);
-    Rcpp::traits::input_parameter< const arma::uvec& >::type male_snp_idx(male_snp_idxSEXP);
-    Rcpp::traits::input_parameter< const arma::uvec& >::type female_snp_idx(female_snp_idxSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_delta(sol_mat, swap_idx, male_snp_idx, female_snp_idx));
-    return rcpp_result_gen;
-END_RCPP
-}
-// compute_dpsi
-double compute_dpsi(const arma::vec& curr_cor, const arma::vec& target_cor, const arma::vec& delta_cor);
-RcppExport SEXP _amsim_compute_dpsi(SEXP curr_corSEXP, SEXP target_corSEXP, SEXP delta_corSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type curr_cor(curr_corSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type target_cor(target_corSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type delta_cor(delta_corSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_dpsi(curr_cor, target_cor, delta_cor));
-    return rcpp_result_gen;
-END_RCPP
-}
-// compute_psi
-double compute_psi(const arma::vec& curr_cor, const arma::vec& target_cor);
-RcppExport SEXP _amsim_compute_psi(SEXP curr_corSEXP, SEXP target_corSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type curr_cor(curr_corSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type target_cor(target_corSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_psi(curr_cor, target_cor));
-    return rcpp_result_gen;
-END_RCPP
-}
 // optim_matching
-Rcpp::List optim_matching(arma::mat& sol_mat, const arma::mat& snp_pairs, const arma::uvec& female_swap_idx, const int num_iterations, const double temp_decay, const double init_temp, const bool collect_metrics);
-RcppExport SEXP _amsim_optim_matching(SEXP sol_matSEXP, SEXP snp_pairsSEXP, SEXP female_swap_idxSEXP, SEXP num_iterationsSEXP, SEXP temp_decaySEXP, SEXP init_tempSEXP, SEXP collect_metricsSEXP) {
+Rcpp::List optim_matching(arma::mat& sol_mat, const arma::mat& snp_pairs, const arma::uvec& female_swap_idx, const int num_iterations, const double temp_decay, const double init_temp, const int auto_temp_samples, const double auto_accept_ratio, const bool collect_metrics, const bool quietly);
+RcppExport SEXP _amsimr_optim_matching(SEXP sol_matSEXP, SEXP snp_pairsSEXP, SEXP female_swap_idxSEXP, SEXP num_iterationsSEXP, SEXP temp_decaySEXP, SEXP init_tempSEXP, SEXP auto_temp_samplesSEXP, SEXP auto_accept_ratioSEXP, SEXP collect_metricsSEXP, SEXP quietlySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -62,21 +23,21 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int >::type num_iterations(num_iterationsSEXP);
     Rcpp::traits::input_parameter< const double >::type temp_decay(temp_decaySEXP);
     Rcpp::traits::input_parameter< const double >::type init_temp(init_tempSEXP);
+    Rcpp::traits::input_parameter< const int >::type auto_temp_samples(auto_temp_samplesSEXP);
+    Rcpp::traits::input_parameter< const double >::type auto_accept_ratio(auto_accept_ratioSEXP);
     Rcpp::traits::input_parameter< const bool >::type collect_metrics(collect_metricsSEXP);
-    rcpp_result_gen = Rcpp::wrap(optim_matching(sol_mat, snp_pairs, female_swap_idx, num_iterations, temp_decay, init_temp, collect_metrics));
+    Rcpp::traits::input_parameter< const bool >::type quietly(quietlySEXP);
+    rcpp_result_gen = Rcpp::wrap(optim_matching(sol_mat, snp_pairs, female_swap_idx, num_iterations, temp_decay, init_temp, auto_temp_samples, auto_accept_ratio, collect_metrics, quietly));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_amsim_compute_delta", (DL_FUNC) &_amsim_compute_delta, 4},
-    {"_amsim_compute_dpsi", (DL_FUNC) &_amsim_compute_dpsi, 3},
-    {"_amsim_compute_psi", (DL_FUNC) &_amsim_compute_psi, 2},
-    {"_amsim_optim_matching", (DL_FUNC) &_amsim_optim_matching, 7},
+    {"_amsimr_optim_matching", (DL_FUNC) &_amsimr_optim_matching, 10},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_amsim(DllInfo *dll) {
+RcppExport void R_init_amsimr(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }
