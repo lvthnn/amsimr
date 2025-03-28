@@ -1,7 +1,7 @@
 simulation:
   n_loci: 10
   n_pop: 10000
-  n_gen: 50
+  n_gen: 10
   random_seed: 42
 
 snps:
@@ -19,7 +19,7 @@ phenotype:
     rs2: 0.3
 
 mating_model:
-  type: "assortative" 
+  type: "assortative"
   pairs:
     - male_snp: rs1
       female_snp: rs3

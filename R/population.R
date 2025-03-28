@@ -6,7 +6,7 @@
 #' @return A matrix with one column containing the phenotype values
 #'
 #' @importFrom stats var rnorm
-#' @NoRd
+#' @noRd
 generate_phenotype <- function(config, snp_matrix) {
   # Extract data from the config object
   pheno_name <- config$phenotype_name
@@ -71,7 +71,7 @@ initialise_population <- function(config) {
 #' @param config Configuration list with mating_model_pairs
 #'
 #' @return List with init_sol matrix, psi_vec, and female_swap_idx
-#' @NoRd
+#' @noRd
 generate_init_state <- function(config, population) {
   # Extract mating model pairs from flattened config
   mating_pairs <- config$mating_model_pairs
@@ -125,7 +125,7 @@ generate_init_state <- function(config, population) {
 #'  routine to evaluate performance
 #'
 #' @return List with init_sol matrix, psi_vec, and female_swap_idx
-#' @NoRd
+#' @noRd
 generate_matching <- function(config, population, collect_metrics = FALSE) {
   is_am <- config$mating_model_type == "assortative"
   sol_data <- generate_init_state(config, population)
@@ -154,7 +154,7 @@ generate_matching <- function(config, population, collect_metrics = FALSE) {
   matching_data <- optim_sol$sol_mat
 
   if (is_am) {
-    attained_cor <- sapply(
+    snp_pairs_cor <- sapply(
       seq_len(nrow(config$mating_model_pairs)),
       function(i) {
         male_snp <- config$mating_model_pairs[[i, 1]]
@@ -162,9 +162,12 @@ generate_matching <- function(config, population, collect_metrics = FALSE) {
         cor(matching_data[, male_snp], matching_data[, female_snp])
       }
     )
-  }
 
-  attr(matching, "attained_cor") <- attained_cor
+    names(snp_pairs_cor) <- paste(config$mating_model_pairs$male_snp,
+                                  config$mating_model_pairs$female_snp,
+                                  sep = "-")
+    attr(matching, "snp_pairs_cor") <- snp_pairs_cor
+  }
 
   return(matching)
 }
@@ -178,7 +181,7 @@ generate_matching <- function(config, population, collect_metrics = FALSE) {
 #' @return A data frame containing the offspring population
 #'
 #' @importFrom stats rbinom
-#' @NoRd
+#' @noRd
 generate_offspring <- function(config, population, matching) {
   # Helper function to create offspring SNP matrix
   create_snp_matrix <- function(snps_male, snps_female) {
@@ -245,8 +248,8 @@ generate_offspring <- function(config, population, matching) {
 #' @return A list containing the genetic correlation and additional statistics
 #'
 #' @importFrom stats cor sd
-#' @NoRd
-compute_sib_cor <- function(config, population, phenotype_name) {
+#' @noRd
+compute_sib_cor <- function(config, population) {
   # Check if population size is even (required for pairing)
   if (nrow(population) %% 2 != 0) {
     stop("Population size must be even to form sibling pairs")
@@ -274,19 +277,13 @@ compute_sib_cor <- function(config, population, phenotype_name) {
   mean_genetic_correlation <- mean(locus_correlations, na.rm = TRUE)
 
   # Calculate phenotypic correlation if phenotype name is provided
-  pheno_correlation <- NULL
-  if (!missing(phenotype_name) && phenotype_name %in% colnames(population)) {
-    phenos <- population[[phenotype_name]]
-    sibling1_pheno <- phenos[seq(1, nrow(population), 2)]
-    sibling2_pheno <- phenos[seq(2, nrow(population), 2)]
-    pheno_correlation <- cor(sibling1_pheno, sibling2_pheno)
-  }
+  phenos <- population[[config$phenotype_name]]
+  sibling1_pheno <- phenos[seq(1, nrow(population), 2)]
+  sibling2_pheno <- phenos[seq(2, nrow(population), 2)]
+  pheno_correlation <- cor(sibling1_pheno, sibling2_pheno)
 
   # Calculate estimated heritability if phenotypic correlation is available
-  heritability_estimate <- NULL
-  if (!is.null(pheno_correlation)) {
-    heritability_estimate <- pheno_correlation / mean_genetic_correlation
-  }
+  heritability <- pheno_correlation / mean_genetic_correlation
 
   # Calculate additional genotype statistics
   mean_genotype_similarity <- mean(
@@ -296,16 +293,44 @@ compute_sib_cor <- function(config, population, phenotype_name) {
   # Return results
   results <- list(
     mean_genetic_correlation = mean_genetic_correlation,
+    mean_genotype_similarity = mean_genotype_similarity,
     locus_correlations = locus_correlations,
-    locus_correlation_sd = sd(locus_correlations, na.rm = TRUE),
-    mean_genotype_similarity = mean_genotype_similarity
+    locus_correlation_sd = sd(locus_correlations, na.rm = TRUE)
   )
 
-  # Add phenotype results if available
-  if (!is.null(pheno_correlation)) {
-    results[paste0(config$phenotype_name, "_correlation")] <- pheno_correlation
-    results$heritability_estimate <- heritability_estimate
-  }
+  results[paste0(config$phenotype_name, "_correlation")] <- pheno_correlation
+  results[paste0(config$phenotype_name, "_heritability")] <- heritability
 
   return(results)
+}
+
+#' Simulate one generation of the population
+#'
+#' Simulates one generation by performing mate matching, generating offspring,
+#' and computing genetic similarity between siblings.
+#'
+#' @param config A list containing simulation parameters.
+#' @param population A data frame representing the current population.
+#'
+#' @return A list containing the offspring population, SNP pair correlations
+#'   from mate matching, and sibling genetic similarity.
+#'
+#' @export
+#' @noRd
+simulate_generation <- function(config, population) {
+  # Find mate matching and generate offspring population
+  mate_matching <- generate_matching(config, population)
+  population_offspring <- generate_offspring(config, population, mate_matching)
+  snp_pairs_cor <- attr(mate_matching, "snp_pairs_cor")
+
+  # Compute genetic similarity between siblings
+  sib_cor <- compute_sib_cor(config, population_offspring)
+
+  # Compile results into a list object
+  result <- list()
+  result[["population"]] <- population_offspring
+  result[["snp_pairs_cor"]] <- snp_pairs_cor
+  result[["sib_cor"]] <- sib_cor
+
+  return(result)
 }

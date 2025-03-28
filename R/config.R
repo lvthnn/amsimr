@@ -9,7 +9,7 @@
 #' @param value The value associated with the key.
 #' @param rule A list of validation functions for the key and value.
 #'
-#' @NoRd
+#' @noRd
 validate_key_value <- function(config, section, key, value, rule) {
   # Check if the key and value are both valid
   key_invalid <- !is.null(rule$key_val) && !rule$key_val(config, names(value))
@@ -30,7 +30,7 @@ validate_key_value <- function(config, section, key, value, rule) {
 #' @param config The configuration object
 #' @param section The section name to validate
 #' @param rules A list of validation rules
-#' @NoRd
+#' @noRd
 validate_section <- function(config, section, rules) {
 
   if (!section %in% names(config)) {
@@ -64,7 +64,7 @@ validate_section <- function(config, section, rules) {
 #' that all required parameters have valid values.
 #'
 #' @param config The configuration object to validate
-#' @NoRd
+#' @noRd
 validate_config <- function(config) {
   # Validate simulation section
   validate_section(config, section = "simulation", list(
@@ -104,7 +104,7 @@ validate_config <- function(config) {
 #' @param config The configuration object to process
 #'
 #' @return A list object with data processed from the configuration file
-#' @NoRd
+#' @noRd
 process_config <- function(config) {
 
   # Extract some variables from the config file
