@@ -57,7 +57,7 @@ mating_model:
       correlation: 0.75
 ```
 You can create a template configuration file in a location of your choosing by running
-```
+```r
 library(amsimr)
 
 from_template(path = "path_to_config_file.yaml")
