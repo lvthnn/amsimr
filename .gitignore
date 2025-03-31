@@ -40,5 +40,5 @@
 *.out
 *.app
 
-# Ignore development testing folder
-tests/
+# Ignore configuration files for testing
+config.yaml
