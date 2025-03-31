@@ -3,44 +3,50 @@
 
 #' Computes correlation update when swapping pairs
 #'
-#' @name compute_delta
 #' @param sol_mat Solution matrix
 #' @param swap_idx Indices to swap
 #' @param male_snp_idx Male SNP indices
 #' @param female_snp_idx Female SNP indices
+#'
 #' @return Correlation vector update
-#' @keywords internal
+#'
+#' @noRd
 NULL
 
 #' Computes energy differential between states
 #'
-#' @name compute_dpsi
 #' @param curr_cor Current correlation
 #' @param target_cor Target correlation
 #' @param delta_cor Correlation update
+#'
 #' @return Energy differential
-#' @keywords internal
+#'
+#' @noRd
 NULL
 
 #' Evaluates energy of current state
 #'
-#' @name compute_psi
 #' @param curr_cor Current correlation
 #' @param target_cor Target correlation
+#'
 #' @return Energy value
-#' @keywords internal
+#'
+#' @noRd
 NULL
 
 #' Automatically determine initial temperature for simulated annealing
 #'
 #' @name auto_init_temp
+#'
 #' @param sol_mat Current solution matrix
 #' @param snp_pairs SNP pair data (male_idx, female_idx, target_cor)
 #' @param female_swap_idx Columns to swap in solution
 #' @param num_samples Number of random moves to sample
 #' @param accept_ratio Target initial acceptance ratio (default: 0.8)
+#'
 #' @return Recommended initial temperature
-#' @keywords internal
+#'
+#' @noRd
 NULL
 
 #' Performs simulated annealing to optimize matching
@@ -57,6 +63,7 @@ NULL
 #'   initial temperature value in simulated annealing algorithm
 #' @param collect_metrics Whether to collect optimization metrics
 #' @param quietly Print diagnostics while running annealing
+#'
 #' @return Optimized solution matrix and optional metrics
 optim_matching <- function(sol_mat, snp_pairs, female_swap_idx, num_iterations = 10000L, temp_decay = 0.995, init_temp = 1e-9, auto_temp_samples = 100000L, auto_accept_ratio = 0.995, collect_metrics = FALSE, quietly = TRUE) {
     .Call(`_amsimr_optim_matching`, sol_mat, snp_pairs, female_swap_idx, num_iterations, temp_decay, init_temp, auto_temp_samples, auto_accept_ratio, collect_metrics, quietly)

@@ -3,13 +3,14 @@
 
 //' Computes correlation update when swapping pairs
 //'
-//' @name compute_delta
 //' @param sol_mat Solution matrix
 //' @param swap_idx Indices to swap
 //' @param male_snp_idx Male SNP indices
 //' @param female_snp_idx Female SNP indices
+//'
 //' @return Correlation vector update
-//' @keywords internal
+//'
+//' @noRd
 arma::vec compute_delta(
   const arma::mat &sol_mat,
   const arma::uvec &swap_idx,
@@ -33,12 +34,13 @@ arma::vec compute_delta(
 
 //' Computes energy differential between states
 //'
-//' @name compute_dpsi
 //' @param curr_cor Current correlation
 //' @param target_cor Target correlation
 //' @param delta_cor Correlation update
+//'
 //' @return Energy differential
-//' @keywords internal
+//'
+//' @noRd
 double compute_dpsi(
   const arma::vec &curr_cor,
   const arma::vec &target_cor,
@@ -50,11 +52,12 @@ double compute_dpsi(
 
 //' Evaluates energy of current state
 //'
-//' @name compute_psi
 //' @param curr_cor Current correlation
 //' @param target_cor Target correlation
+//'
 //' @return Energy value
-//' @keywords internal
+//'
+//' @noRd
 double compute_psi(
   const arma::vec &curr_cor,
   const arma::vec &target_cor
@@ -65,13 +68,16 @@ double compute_psi(
 //' Automatically determine initial temperature for simulated annealing
 //'
 //' @name auto_init_temp
+//'
 //' @param sol_mat Current solution matrix
 //' @param snp_pairs SNP pair data (male_idx, female_idx, target_cor)
 //' @param female_swap_idx Columns to swap in solution
 //' @param num_samples Number of random moves to sample
 //' @param accept_ratio Target initial acceptance ratio (default: 0.8)
+//'
 //' @return Recommended initial temperature
-//' @keywords internal
+//'
+//' @noRd
 double auto_init_temp(
   const arma::mat &sol_mat,
   const arma::mat &snp_pairs,
@@ -142,6 +148,7 @@ double auto_init_temp(
 //'   initial temperature value in simulated annealing algorithm
 //' @param collect_metrics Whether to collect optimization metrics
 //' @param quietly Print diagnostics while running annealing
+//'
 //' @return Optimized solution matrix and optional metrics
 // [[Rcpp::export]]
 Rcpp::List optim_matching(
