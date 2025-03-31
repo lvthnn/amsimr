@@ -10,11 +10,11 @@ To install the package, clone this repository and load the package in R:
 
 ```sh
 # Clone the repository
-git clone https://github.com/lvthnn/am_simulation.git
-cd am_simulation
+git clone https://github.com/lvthnn/amsimr.git
+cd amsimr
 
 # Load the package in R
-library(devtools)
+if (!requireNamespace("devtools")) install.packages("devtools")
 devtools::load_all()
 ```
 
@@ -39,8 +39,8 @@ snps:
     rs3: 0.05
 
 phenotype:
-  name: "height"
-  heritability: 0.80  # Heritability of the trait
+  name: "height"      # Name of phenotype colum in simulated data
+  heritability: 0.80  # Narrow-sense phenotype heritability
   causal_snps:
     rs1: 0.5  # Effect size of SNP rs1
     rs2: 0.3  # Effect size of SNP rs2
@@ -56,20 +56,23 @@ mating_model:
       female_snp: rs2
       correlation: 0.75
 ```
+You can create a template configuration file in a location of your choosing by running
+```
+library(amsimr)
+
+from_template(path = "path_to_config_file.yaml")
+```
+which you can succeedingly customise.
 
 ## Example Usage
 
 A minimal example of how to use the package is shown below:
 
 ```r
-# Load the package
-library(am_simulation)
+library(amsimr)
 
 # Run a simulation with the specified configuration file
-pop <- simulate_pop(config = "config.yaml")
-
-# View the first few individuals in the population
-head(pop)
+sim <- simulate_pop(config = "config.yaml", progress = TRUE)
 ```
 
 ## Output
@@ -78,21 +81,15 @@ The simulation produces a dataset containing information about individuals acros
 generations, including genotype, phenotype, and mating pairs. Example output:
 
 ```r
-# Summarize the population statistics
-summary(pop)
+# View simulation information
+print(sim)
 
-# Extract genotype frequencies
-table(pop$genotype)
+# View the first few individuals in the population
+head(sim)
+
+# Summarise population statistics
+summary(sim)
 ```
-
-## Customizing the Simulation
-
-The configuration file allows for various customizations:
-
-- **Number of loci** (`n_loci`): Controls the number of SNPs simulated.
-- **Population size** (`n_pop`): Determines how many individuals are included.
-- **Number of generations** (`n_iter`): Defines how many generations are simulated.
-- **Mating model** (`mating_model`): Specifies the assortative mating structure.
 
 ## Dependencies
 
@@ -101,12 +98,7 @@ This package relies on the following R packages:
 - `Rcpp`
 - `RcppArmadillo`
 - `yaml`
-
-Ensure dependencies are installed before running the simulation:
-
-```
-install.packages(c("yaml"))
-```
+- `pbapply`
 
 ## Citation
 
