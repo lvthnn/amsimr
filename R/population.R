@@ -302,34 +302,3 @@ compute_sib_cor <- function(config, population) {
 
   return(results)
 }
-
-#' Simulate one generation of the population
-#'
-#' Simulates one generation by performing mate matching, generating offspring,
-#' and computing genetic similarity between siblings.
-#'
-#' @param config A list containing simulation parameters.
-#' @param population A data frame representing the current population.
-#'
-#' @return A list containing the offspring population, SNP pair correlations
-#'   from mate matching, and sibling genetic similarity.
-#'
-#' @export
-#' @noRd
-simulate_generation <- function(config, population) {
-  # Find mate matching and generate offspring population
-  mate_matching <- generate_matching(config, population)
-  population_offspring <- generate_offspring(config, population, mate_matching)
-  snp_pairs_cor <- attr(mate_matching, "snp_pairs_cor")
-
-  # Compute genetic similarity between siblings
-  sib_cor <- compute_sib_cor(config, population_offspring)
-
-  # Compile results into a list object
-  result <- list()
-  result[["population"]] <- population_offspring
-  result[["snp_pairs_cor"]] <- snp_pairs_cor
-  result[["sib_cor"]] <- sib_cor
-
-  return(result)
-}
