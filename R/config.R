@@ -71,6 +71,7 @@ validate_config <- function(config) {
     n_loci = list(required = TRUE, val = is_positive_int),
     n_pop = list(required = TRUE, val = is_positive_int),
     n_gen = list(required = TRUE, val = is_positive_int),
+    n_iter = list(required = TRUE, val = is_positive_int),
     random_seed = list(required = FALSE, val = is_positive_int)
   ))
 
@@ -112,8 +113,12 @@ process_config <- function(config) {
     n_loci = config$simulation[["n_loci"]],
     n_pop = config$simulation[["n_pop"]],
     n_gen = config$simulation[["n_gen"]],
-    random_seed = config$simulation[["random_seed"]]
+    n_iter = config$simulation[["n_iter"]]
   )
+
+  if (!is.null(config$simulation[["random_seed"]])) {
+    config_data["random_seed"] <- config$simulation[["random_seed"]]
+  }
 
   # Fill in SNP MAFs with default value if unspecified
   snp_maf <- config$snps[["snp_maf"]]

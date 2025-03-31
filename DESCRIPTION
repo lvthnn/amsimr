@@ -14,4 +14,5 @@ LinkingTo:
 Imports:
     Rcpp (>= 1.0.14),
     yaml (>= 2.3.10),
+    pbapply (>= 1.7.2),
     stats

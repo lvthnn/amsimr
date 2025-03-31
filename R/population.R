@@ -136,7 +136,7 @@ generate_matching <- function(config, population, collect_metrics = FALSE) {
       sol_mat = sol_data$init_sol,
       snp_pairs = sol_data$snp_pairs,
       female_swap_idx = sol_data$female_swap_idx,
-      num_iterations = 1e6,
+      num_iterations = config$n_iter,
       collect_metrics = FALSE
     )
   } else {
