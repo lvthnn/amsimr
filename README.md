@@ -103,7 +103,7 @@ This package relies on the following R packages:
 If you use this package in your research, please cite:
 
 > Hlynsson, K. (2025). *Distant LD and its effects on polygenic score construction
-> and prediction: a simulation study*.
+> and prediction: a simulation study*. B.Sc. thesis. University of Iceland.
 
 ## License
 
