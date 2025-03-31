@@ -1,3 +1,20 @@
+#' Create a configuration template
+#'
+#' @param template_path Path where configuration template is created
+#'
+#' @importFrom yaml write_yaml
+#'
+#' @export
+from_template <- function(template_path) {
+  if (file.exists(template_path)) {
+    stop("File ", template_path, " already exists")
+  }
+  template_data <- system.file("data", "sysdata.rda", package = "amsimr")
+  load(template_data)
+
+  write_yaml(config_template, file = template_path)
+}
+
 #' Validate a configuration key-value pair
 #'
 #' Checks whether a key-value pair in a configuration section meets the

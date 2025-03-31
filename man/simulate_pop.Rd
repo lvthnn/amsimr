@@ -4,7 +4,7 @@
 \alias{simulate_pop}
 \title{Simulate a population from a config file}
 \usage{
-simulate_pop(config_path, progress = TRUE)
+simulate_pop(config_path, progress = FALSE)
 }
 \arguments{
 \item{config_path}{Path to configuration file with simulation parameters}

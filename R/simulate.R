@@ -143,3 +143,8 @@ print.amsim <- function(object, ...) {
 
   invisible(object)
 }
+
+#' @export
+head.amsim <- function(object, ...) {
+  head(object$population, ...)
+}
