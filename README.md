@@ -8,14 +8,9 @@ to simulate non-random correlation between allele pairs.
 
 To install the package, clone this repository and load the package in R:
 
-```sh
-# Clone the repository
-git clone https://github.com/lvthnn/amsimr.git
-cd amsimr
-
-# Load the package in R
-if (!requireNamespace("devtools")) install.packages("devtools")
-devtools::load_all()
+```r
+# Install the package
+devtools::install_github("lvthnn/amsimr")
 ```
 
 ## Setting up a Configuration File
