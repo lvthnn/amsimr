@@ -69,8 +69,6 @@ which you can succeedingly customise.
 A minimal example of how to use the package is shown below:
 
 ```r
-library(amsimr)
-
 # Run a simulation with the specified configuration file
 sim <- simulate_pop(config = "config.yaml", progress = TRUE)
 ```
