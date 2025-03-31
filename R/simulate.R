@@ -9,7 +9,6 @@
 #' @return A list containing the offspring population, SNP pair correlations
 #'   from mate matching, and sibling genetic similarity.
 #'
-#' @export
 #' @noRd
 simulate_generation <- function(config, population) {
   # Find mate matching and generate offspring population
