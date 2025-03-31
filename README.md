@@ -1,4 +1,4 @@
-# Assortative Mating (AM) Simulation Tool
+# amsimr: Assortative Mating Simulation Tool in R
 
 R package developed for my B.Sc. thesis, *Distant LD and its effects on polygenic
 score construction and prediction: a simulation study*. The package implements an algorithm
