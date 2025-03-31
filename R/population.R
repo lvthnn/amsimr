@@ -140,7 +140,8 @@ generate_matching <- function(config, population, collect_metrics = FALSE) {
       collect_metrics = FALSE
     )
   } else {
-    optim_sol <- sol_data$init_sol
+    optim_sol <- list()
+    optim_sol$sol_mat <- sol_data$init_sol
   }
 
   colnames(optim_sol$sol_mat) <- colnames(sol_data$init_sol)
@@ -153,21 +154,19 @@ generate_matching <- function(config, population, collect_metrics = FALSE) {
   # Compute the attained correlation in the matching based on SNP pairs
   matching_data <- optim_sol$sol_mat
 
-  if (is_am) {
-    snp_pairs_cor <- sapply(
-      seq_len(nrow(config$mating_model_pairs)),
-      function(i) {
-        male_snp <- config$mating_model_pairs[[i, 1]]
-        female_snp <- paste0("f_", config$mating_model_pairs[[i, 2]])
-        cor(matching_data[, male_snp], matching_data[, female_snp])
-      }
-    )
+  snp_pairs_cor <- sapply(
+    seq_len(nrow(config$mating_model_pairs)),
+    function(i) {
+      male_snp <- config$mating_model_pairs[[i, 1]]
+      female_snp <- paste0("f_", config$mating_model_pairs[[i, 2]])
+      cor(matching_data[, male_snp], matching_data[, female_snp])
+    }
+  )
 
-    names(snp_pairs_cor) <- paste(config$mating_model_pairs$male_snp,
-                                  config$mating_model_pairs$female_snp,
-                                  sep = "-")
-    attr(matching, "snp_pairs_cor") <- snp_pairs_cor
-  }
+  names(snp_pairs_cor) <- paste(config$mating_model_pairs$male_snp,
+                                config$mating_model_pairs$female_snp,
+                                sep = "-")
+  attr(matching, "snp_pairs_cor") <- snp_pairs_cor
 
   return(matching)
 }

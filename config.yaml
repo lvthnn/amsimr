@@ -17,7 +17,6 @@ phenotype:
   heritability: 0.45
   causal_snps:
     rs1: 0.5
-    rs2: 0.3
 
 mating_model:
   type: "assortative"
