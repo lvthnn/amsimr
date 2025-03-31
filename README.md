@@ -23,7 +23,8 @@ an example:
 simulation:
   n_loci: 10       # Number of genetic loci
   n_pop: 10000     # Population size
-  n_iter: 10       # Number of generations to simulate
+  n_gen: 10        # Number of generations to simulate
+  n_iter: 100000   # Number of iterations in annealing routine
   random_seed: 42  # Random seed for reproducibility
 
 snps:
