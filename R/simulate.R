@@ -8,7 +8,7 @@
 #' @importFrom pbapply pblapply
 #'
 #' @export
-simulate_pop <- function(config_path, progress = TRUE) {
+simulate_pop <- function(config_path, progress = FALSE) {
   config <- load_config(config_path)
   init_population <- initialise_population(config)
   population <- init_population
@@ -16,7 +16,6 @@ simulate_pop <- function(config_path, progress = TRUE) {
   # Simulate the generations and capture some interesting data
   apply_fn <- ifelse(progress, lapply, pblapply)
   generations <- apply_fn(1:config$n_gen, function(i) {
-    if (!progress) print(paste0("Simulating generation #", i))
     population_new <- simulate_generation(config, population)
     population <- population_new$population
 
