@@ -1,3 +1,47 @@
+#' Generate a SNP matrix for sibling pairs given paternal and maternal SNPs
+#'
+#' @param config Configuration list with simulation parameters
+#' @param snps_paternal Matrix of paternal SNP genotypes
+#' @param snps_maternal Matrix of maternal SNP genotypes
+#' @return A matrix of sibling pair genotypes
+#'
+#' @importFrom stats rbinom
+#'
+#' @noRd
+generate_snp_matrix <- function(config, snps_paternal, snps_maternal) {
+  n_pop <- config$n_pop
+  n_loci <- config$n_loci
+
+  # Calculate probability matrices for inheritance
+  prob_paternal <- as.matrix(snps_paternal) / 2
+  prob_maternal <- as.matrix(snps_maternal) / 2
+
+  # For each pair of siblings
+  haplotype_paternal <- matrix(
+    rbinom(
+      n_pop * n_loci,
+      size = 1,
+      prob = rep(as.vector(prob_paternal), each = 2)
+    ),
+    nrow = n_pop,
+    ncol = n_loci
+  )
+
+  haplotype_maternal <- matrix(
+    rbinom(
+      n_pop * n_loci,
+      size = 1,
+      prob = rep(as.vector(prob_maternal), each = 2)
+    ),
+    nrow = n_pop,
+    ncol = n_loci
+  )
+
+  snps_offspring <- haplotype_paternal + haplotype_maternal
+  colnames(snps_offspring) <- paste0("rs", 1:n_loci)
+  return(snps_offspring)
+}
+
 #' Generate phenotype values from genotypes and environmental effects
 #'
 #' @param config Configuration list with simulation parameters
@@ -21,9 +65,12 @@ generate_phenotype <- function(config, snp_matrix) {
 
   # Assemble genetic and environmental effects
   phenotype <- genetic_effect + env_effect
-  colnames(phenotype) <- pheno_name
+  phenotype_raw <- genetic_effect
 
-  return(phenotype)
+  colnames(phenotype) <- pheno_name
+  colnames(phenotype_raw) <- paste0(pheno_name, "_raw")
+
+  return(cbind(phenotype, phenotype_raw))
 }
 
 #' Initialize a population with genotypes and phenotypes
@@ -35,32 +82,46 @@ generate_phenotype <- function(config, snp_matrix) {
 #'
 #' @export
 initialise_population <- function(config) {
-
   # Extract data from config object
   n_pop <- config$n_pop
   n_loci <- config$n_loci
+  n_pairs <- n_pop / 2
 
   # Create sex vector (equal male/female split)
-  sex <- rep(0:1, each = n_pop / 2)
+  sex <- rep(0:1, times = n_pop / 2)
+  sibling_id <- rep(1:n_pairs, each = 2)
 
   # Create SNP matrix based on minor allele frequencies
-  snp_matrix <- matrix(
+  snps_paternal <- matrix(
     rbinom(
-      n_pop * n_loci,
+      n_pairs * n_loci,
       size = 2,
-      prob = rep(config$snp_maf, each = n_pop)
+      prob = rep(config$snp_maf, each = n_pairs)
     ),
-    nrow = n_pop,
+    nrow = n_pairs,
     ncol = n_loci,
     byrow = FALSE
   )
+
+  snps_maternal <- matrix(
+    rbinom(
+      n_pairs * n_loci,
+      size = 2,
+      prob = rep(config$snp_maf, each = n_pairs)
+    ),
+    nrow = n_pairs,
+    ncol = n_loci,
+    byrow = FALSE
+  )
+
+  snp_matrix <- generate_snp_matrix(config, snps_paternal, snps_maternal)
   colnames(snp_matrix) <- paste0("rs", 1:n_loci)
 
   # Compute phenotype vector
   phenotype <- generate_phenotype(config, snp_matrix)
 
   # Combine into population data frame
-  population <- as.data.frame(cbind(sex, snp_matrix, phenotype))
+  population <- as.data.frame(cbind(sex, snp_matrix, phenotype, sibling_id))
 
   return(population)
 }
@@ -71,6 +132,7 @@ initialise_population <- function(config) {
 #' @param config Configuration list with mating_model_pairs
 #'
 #' @return List with init_sol matrix, psi_vec, and female_swap_idx
+#'
 #' @noRd
 generate_init_state <- function(config, population) {
   # Extract mating model pairs from flattened config
@@ -125,6 +187,7 @@ generate_init_state <- function(config, population) {
 #'  routine to evaluate performance
 #'
 #' @return List with init_sol matrix, psi_vec, and female_swap_idx
+#'
 #' @noRd
 generate_matching <- function(config, population, collect_metrics = FALSE) {
   is_am <- config$mating_model_type == "assortative"
@@ -166,6 +229,7 @@ generate_matching <- function(config, population, collect_metrics = FALSE) {
   names(snp_pairs_cor) <- paste(config$mating_model_pairs$male_snp,
                                 config$mating_model_pairs$female_snp,
                                 sep = "-")
+
   attr(matching, "snp_pairs_cor") <- snp_pairs_cor
 
   return(matching)
@@ -180,59 +244,25 @@ generate_matching <- function(config, population, collect_metrics = FALSE) {
 #' @return A data frame containing the offspring population
 #'
 #' @importFrom stats rbinom
+#'
 #' @noRd
 generate_offspring <- function(config, population, matching) {
-  # Helper function to create offspring SNP matrix
-  create_snp_matrix <- function(snps_male, snps_female) {
-    n_pop <- config$n_pop
-    n_loci <- config$n_loci
-
-    # Calculate probability matrices for inheritance
-    paternal_probs <- as.matrix(snps_male) / 2
-    maternal_probs <- as.matrix(snps_female) / 2
-
-    # Sample alleles from each parent
-    paternal_alleles <- matrix(
-      rbinom(
-        n_pop * n_loci,
-        size = 1,
-        prob = rep(as.vector(paternal_probs), each = 2)
-      ),
-      nrow = n_pop,
-      ncol = n_loci
-    )
-
-    maternal_alleles <- matrix(
-      rbinom(
-        n_pop * n_loci,
-        size = 1,
-        prob = rep(as.vector(maternal_probs), each = 2)
-      ),
-      nrow = n_pop,
-      ncol = n_loci
-    )
-
-    # Combine alleles from both parents
-    snps_offspring <- paternal_alleles + maternal_alleles
-    colnames(snps_offspring) <- paste0("rs", 1:n_loci)
-
-    return(snps_offspring)
-  }
-
   # Create offspring sex vector (equal male/female split)
-  sex <- rep(0:1, times = config$n_pop / 2)
+  n_pairs <- config$n_pop / 2
+  sex <- rep(0:1, times = n_pairs)
+  sibling_id <- rep(1:n_pairs, each = 2)
 
   # Select genotype data in male and female subpopulations
   cols_select <- !(colnames(population) %in% c("sex", config$phenotype_name))
-  snps_male <- population[matching$male_idx, cols_select]
-  snps_female <- population[matching$female_idx, cols_select]
+  snps_paternal <- population[matching$male_idx, cols_select]
+  snps_maternal <- population[matching$female_idx, cols_select]
 
   # Generate SNP matrix and phenotype
-  snp_matrix <- create_snp_matrix(snps_male, snps_female)
+  snp_matrix <- generate_snp_matrix(config, snps_paternal, snps_maternal)
   phenotype <- generate_phenotype(config, snp_matrix)
 
   # Assemble offspring population
-  offspring_pop <- data.frame(sex, snp_matrix, phenotype)
+  offspring_pop <- data.frame(sex, snp_matrix, phenotype, sibling_id)
 
   return(offspring_pop)
 }
@@ -247,6 +277,7 @@ generate_offspring <- function(config, population, matching) {
 #' @return A list containing the genetic correlation and additional statistics
 #'
 #' @importFrom stats cor sd
+#'
 #' @noRd
 compute_sib_cor <- function(config, population) {
   # Check if population size is even (required for pairing)
