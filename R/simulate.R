@@ -1,3 +1,80 @@
+# Compute allele frequencies for a generation
+get_snp_frequencies <- function(config, population) {
+  rs_cols <- paste0("rs", 1:config$n_loci)
+  rs_freqs <- colMeans(population[, rs_cols] / 2)
+  return(rs_freqs)
+}
+
+# Genetic correlation between siblings
+get_genetic_correlation <- function(config, population) {
+  n_pop <- config$n_pop
+  population_sibs <- population[order(population$sibling_id), ]
+  snp_cols <- paste0("rs", 1:config$n_loci)
+
+  sibs_male <- population_sibs[seq(1, n_pop, by = 2), snp_cols]
+  sibs_female <- population_sibs[seq(2, n_pop, by = 2), snp_cols]
+
+  # Compute the genetic correlation between siblings
+  return(diag(cor(sibs_male, sibs_female, use = "pairwise.complete.obs")))
+}
+
+# Get allele pair correlations from annealing routine
+get_snp_pair_correlation <- function(config, population) {
+  return(attr(population, "snp_pair_cors"))
+}
+
+# Phenotype correlation between siblings
+get_phenotype_correlation <- function(config, population) {
+  n_pop <- config$n_pop
+  phenotype_col <- config$phenotype_name
+  population_sibs <- population[order(population$sibling_id), ]
+
+  sibs_male <- population_sibs[seq(1, n_pop, by = 2), phenotype_col]
+  sibs_female <- population_sibs[seq(2, n_pop, by = 2), phenotype_col]
+
+  # Compute the phenotype correlation between siblings
+  return(cor(sibs_male, sibs_female))
+}
+
+# Heritability estimate of the phenotype
+# TODO Find a suitable method to compute heritability estimate
+get_heritability_estimate <- function(config, population) {
+  return(NA)
+}
+
+# ' Compute summary statistics for a simulation object
+#'
+#' @param generations A list of generations, each containing a population.
+#' @param summarisers A named list of functions to compute summary statistics.
+#'   Each function should take a population data frame as input and return a
+#'   summary statistic.
+#'
+#' @return A list of summary statistics for each generation.
+#'
+#' @noRd
+compute_summary <- function(generations, summarisers = NULL) {
+  # Initialize a list to store the results
+  summary_results <- list()
+  if (summarisers == NULL) return(list())
+
+  # Loop through each generation
+  for (i in seq_along(generations)) {
+    generation <- generations[[i]]
+    generation_summary <- list()
+
+    # Loop through each summariser function
+    for (name in names(summarisers)) {
+      summariser_fn <- summarisers[[name]]
+      generation_summary[[name]] <- summariser_fn(generation)
+    }
+
+    # Store the summary for this generation
+    summary_results[[i]] <- generation_summary
+  }
+
+  return(summary_results)
+}
+
 #' Simulate one generation of the population
 #'
 #' Simulates one generation by performing mate matching, generating offspring,
@@ -14,18 +91,12 @@ simulate_generation <- function(config, population) {
   # Find mate matching and generate offspring population
   mate_matching <- generate_matching(config, population)
   population_offspring <- generate_offspring(config, population, mate_matching)
-  snp_pairs_cor <- attr(mate_matching, "snp_pairs_cor")
 
   # Compute genetic similarity between siblings
-  sib_cor <- compute_sib_cor(config, population_offspring)
+  snp_pair_cors <- attr(mate_matching, "snp_pair_cors")
+  attr(population_offspring, "snp_pair_cors") <- snp_pair_cors
 
-  # Compile results into a list object
-  result <- list()
-  result[["population"]] <- population_offspring
-  result[["snp_pairs_cor"]] <- snp_pairs_cor
-  result[["sib_cor"]] <- sib_cor
-
-  return(result)
+  return(population_offspring)
 }
 
 #' Simulate a population from a config file
@@ -38,7 +109,7 @@ simulate_generation <- function(config, population) {
 #' @importFrom pbapply pblapply
 #'
 #' @export
-simulate_pop <- function(config_path, progress = FALSE) {
+simulate_population <- function(config_path, progress = FALSE) {
   config <- load_config(config_path)
   init_population <- initialise_population(config)
   population <- init_population
@@ -48,12 +119,15 @@ simulate_pop <- function(config_path, progress = FALSE) {
   generations <- apply_fn(1:config$n_gen, function(i) {
     population_new <- simulate_generation(config, population)
     population <- population_new$population
-
-    return(list(
-      snp_pair_cor = population_new$snp_pairs_cor,
-      sib_cor = population_new$sib_cor
-    ))
+    return(population)
   })
+
+  summary_data <- compute_summary(generations, summarisers = list(
+    "snp_frequencies" = get_snp_frequencies,
+    "genetic_correlation" = get_genetic_correlation,
+    "phenotype_correlation" = get_phenotype_correlation,
+    "heritability_estimate" = get_heritability_estimate
+  ))
 
   # Extract snp_pair_cors and sib_cors into respective lists
   snp_pair_cors <- lapply(generations, `[[`, 1)
@@ -68,40 +142,29 @@ simulate_pop <- function(config_path, progress = FALSE) {
   attr(result, "class") <- "amsim"
   attr(result, "config") <- config
   attr(result, "config_path") <- config_path
+  attr(result, "summary_data") <- summary_data
 
   return(result)
 }
 
+#' Simulate a number of population from a config file, with parallel options
+#'
+#' @param config_path Path to configuration file with simulation parameters
+#' @param n_sims Number of populations to simulate before aggregating data
+#' @param progress Display progress bar when running simulation
+#'
+#' @return A list which population, snp_pair_cors, and sib_cors objects.
+#'
+#' @importFrom pbapply pblapply
+#'
+#' @export
+simulate_populations <- function(config_path, n_sims = 10, progress = FALSE) {
+  return(TRUE)
+}
+
 #' @export
 summary.amsim <- function(object, ...) {
-  # Extract the relevant components
-  extract_data <- function(object) {
-    c(
-      mean_genetic_correlation = object$mean_genetic_correlation,
-      mean_genotype_similarity = object$mean_genotype_similarity,
-      locus_correlation_sd = object$locus_correlation_sd,
-      height_correlation = object$height_correlation,
-      height_heritability = object$height_heritability
-    )
-  }
-
-  # Apply extraction to all list elements
-  data_list <- lapply(object$sib_cors, extract_data)
-
-  # Combine into a data frame
-  df <- do.call(rbind, data_list)
-
-  # Add locus correlations as columns
-  locus_correlations <- do.call(
-    rbind,
-    lapply(object$sib_cors, function(x) x$locus_correlations)
-  )
-
-  # Combine locus correlations with the main dataframe
-  final_df <- as.data.frame(cbind(df, locus_correlations))
-  colnames(final_df)[6:ncol(final_df)] <- paste0("rs", 1:(ncol(final_df) - 5))
-
-  return(final_df)
+  # TODO Reimplement this when we have better extraction interface
 }
 
 #' @export
