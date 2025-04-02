@@ -12,8 +12,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // optim_matching
-Rcpp::List optim_matching(arma::mat& sol_mat, const arma::mat& snp_pairs, const arma::uvec& female_swap_idx, const int num_iterations, const double temp_decay, const double init_temp, const int auto_temp_samples, const double auto_accept_ratio, const bool collect_metrics, const bool quietly);
-RcppExport SEXP _amsimr_optim_matching(SEXP sol_matSEXP, SEXP snp_pairsSEXP, SEXP female_swap_idxSEXP, SEXP num_iterationsSEXP, SEXP temp_decaySEXP, SEXP init_tempSEXP, SEXP auto_temp_samplesSEXP, SEXP auto_accept_ratioSEXP, SEXP collect_metricsSEXP, SEXP quietlySEXP) {
+Rcpp::List optim_matching(arma::mat& sol_mat, const arma::mat& snp_pairs, const arma::uvec& female_swap_idx, const int num_iterations, const double temp_decay, const double init_temp, const int auto_temp_samples, const double auto_accept_ratio, const bool collect_diagnostics, const bool quietly);
+RcppExport SEXP _amsimr_optim_matching(SEXP sol_matSEXP, SEXP snp_pairsSEXP, SEXP female_swap_idxSEXP, SEXP num_iterationsSEXP, SEXP temp_decaySEXP, SEXP init_tempSEXP, SEXP auto_temp_samplesSEXP, SEXP auto_accept_ratioSEXP, SEXP collect_diagnosticsSEXP, SEXP quietlySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -25,9 +25,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double >::type init_temp(init_tempSEXP);
     Rcpp::traits::input_parameter< const int >::type auto_temp_samples(auto_temp_samplesSEXP);
     Rcpp::traits::input_parameter< const double >::type auto_accept_ratio(auto_accept_ratioSEXP);
-    Rcpp::traits::input_parameter< const bool >::type collect_metrics(collect_metricsSEXP);
+    Rcpp::traits::input_parameter< const bool >::type collect_diagnostics(collect_diagnosticsSEXP);
     Rcpp::traits::input_parameter< const bool >::type quietly(quietlySEXP);
-    rcpp_result_gen = Rcpp::wrap(optim_matching(sol_mat, snp_pairs, female_swap_idx, num_iterations, temp_decay, init_temp, auto_temp_samples, auto_accept_ratio, collect_metrics, quietly));
+    rcpp_result_gen = Rcpp::wrap(optim_matching(sol_mat, snp_pairs, female_swap_idx, num_iterations, temp_decay, init_temp, auto_temp_samples, auto_accept_ratio, collect_diagnostics, quietly));
     return rcpp_result_gen;
 END_RCPP
 }
