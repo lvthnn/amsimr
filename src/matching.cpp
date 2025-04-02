@@ -146,8 +146,8 @@ double auto_init_temp(
 //'   temperature of simulated annealing algorithm
 //' @param auto_accept_ratio Desired initial acceptance ratio for calibration of
 //'   initial temperature value in simulated annealing algorithm
-//' @param collect_metrics Whether to collect optimization metrics
-//' @param quietly Print diagnostics while running annealing
+//' @param collect_diagnostics If TRUE, collect diagnostic metrics
+//' @param quietly If TRUE, suppress output messages
 //'
 //' @return Optimized solution matrix and optional metrics
 // [[Rcpp::export]]
@@ -160,7 +160,7 @@ Rcpp::List optim_matching(
   const double init_temp = 1e-9,
   const int auto_temp_samples = 100000,
   const double auto_accept_ratio = 0.995,
-  const bool collect_metrics = false,
+  const bool collect_diagnostics = false,
   const bool quietly = true 
 ) {
   const int pop_size = sol_mat.n_rows;
@@ -205,7 +205,7 @@ Rcpp::List optim_matching(
   }
 
   // If metric collection is requested, initialize metric vectors
-  if (collect_metrics) {
+  if (collect_diagnostics) {
     energy_vals.set_size(num_iterations);
     energy_deltas.set_size(num_iterations);
     acc_probs.set_size(num_iterations);
@@ -244,7 +244,7 @@ Rcpp::List optim_matching(
 
     curr_temp *= temp_decay;
 
-    if (collect_metrics) {
+    if (collect_diagnostics) {
       energy_vals[i] = compute_psi(curr_cor, target_correlation);
       energy_deltas[i] = energy_delta;
       acc_probs[i] = acc_prob;
@@ -252,15 +252,29 @@ Rcpp::List optim_matching(
     }
   }
 
-  if (collect_metrics) {
+  Rcpp::List call_params = Rcpp::List::create(
+    Rcpp::Named("num_iterations") = num_iterations,
+    Rcpp::Named("temp_decay") = temp_decay,
+    Rcpp::Named("init_temp") = init_temp,
+    Rcpp::Named("auto_temp_samples") = auto_temp_samples,
+    Rcpp::Named("auto_accept_ratio") = auto_accept_ratio,
+    Rcpp::Named("collect_diagnostics") = collect_diagnostics,
+    Rcpp::Named("quietly") = quietly
+  );
+
+  if (collect_diagnostics) {
     return Rcpp::List::create(
       Rcpp::Named("sol_mat") = sol_mat,
+      Rcpp::Named("call_params") = call_params,
       Rcpp::Named("energy_vals") = Rcpp::wrap(energy_vals),
       Rcpp::Named("energy_deltas") = Rcpp::wrap(energy_deltas),
       Rcpp::Named("acceptance_probs") = Rcpp::wrap(acc_probs),
       Rcpp::Named("temp_vals") = Rcpp::wrap(temp_vals)
     );
   } else {
-    return Rcpp::List::create(Rcpp::Named("sol_mat") = sol_mat);
+    return Rcpp::List::create(
+      Rcpp::Named("sol_mat") = sol_mat,
+      Rcpp::Named("call_params") = call_params
+    );
   }
 }
