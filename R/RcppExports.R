@@ -61,12 +61,12 @@ NULL
 #'   temperature of simulated annealing algorithm
 #' @param auto_accept_ratio Desired initial acceptance ratio for calibration of
 #'   initial temperature value in simulated annealing algorithm
-#' @param collect_metrics Whether to collect optimization metrics
-#' @param quietly Print diagnostics while running annealing
+#' @param collect_diagnostics If TRUE, collect diagnostic metrics
+#' @param quietly If TRUE, suppress output messages
 #'
 #' @return Optimized solution matrix and optional metrics
-optim_matching <- function(sol_mat, snp_pairs, female_swap_idx, num_iterations = 10000L, temp_decay = 0.995, init_temp = 1e-9, auto_temp_samples = 100000L, auto_accept_ratio = 0.995, collect_metrics = FALSE, quietly = TRUE) {
-    .Call(`_amsimr_optim_matching`, sol_mat, snp_pairs, female_swap_idx, num_iterations, temp_decay, init_temp, auto_temp_samples, auto_accept_ratio, collect_metrics, quietly)
+optim_matching <- function(sol_mat, snp_pairs, female_swap_idx, num_iterations = 10000L, temp_decay = 0.995, init_temp = 1e-9, auto_temp_samples = 100000L, auto_accept_ratio = 0.995, collect_diagnostics = FALSE, quietly = TRUE) {
+    .Call(`_amsimr_optim_matching`, sol_mat, snp_pairs, female_swap_idx, num_iterations, temp_decay, init_temp, auto_temp_samples, auto_accept_ratio, collect_diagnostics, quietly)
 }
 
 #' Extend (or construct) the pedigree matrix for a generation

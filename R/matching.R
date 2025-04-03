@@ -100,7 +100,7 @@ generate_matching <- function(config, population, collect_diagnostics = FALSE) {
   # Compute the attained correlation in the matching based on SNP pairs
   matching_data <- optim_sol$sol_mat
 
-  snp_pairs_cor <- sapply(
+  snp_pair_cors <- sapply(
     seq_len(nrow(config$mating_model_pairs)),
     function(i) {
       male_snp <- config$mating_model_pairs[[i, 1]]
@@ -109,11 +109,11 @@ generate_matching <- function(config, population, collect_diagnostics = FALSE) {
     }
   )
 
-  names(snp_pairs_cor) <- paste(config$mating_model_pairs$male_snp,
+  names(snp_pair_cors) <- paste(config$mating_model_pairs$male_snp,
                                 config$mating_model_pairs$female_snp,
                                 sep = "-")
 
-  attr(matching, "snp_pairs_cor") <- snp_pairs_cor
+  attr(matching, "snp_pair_cors") <- snp_pair_cors
   attr(matching, "class") <- "matching"
 
   return(matching)
@@ -148,9 +148,9 @@ print.matching <- function(matching) {
     cat(param_value)
   }
   cat("SNP pair correlations:\n")
-  for (i in seq_along(attr(matching, "snp_pairs_cor"))) {
-    cat(" ", names(attr(matching, "snp_pairs_cor"))[i], ":",
-        attr(matching, "snp_pairs_cor")[i], "\n")
+  for (i in seq_along(attr(matching, "snp_pair_cors"))) {
+    cat(" ", names(attr(matching, "snp_pair_cors"))[i], ":",
+        attr(matching, "snp_pair_cors")[i], "\n")
   }
 }
 

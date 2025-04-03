@@ -1,19 +1,19 @@
 # Compute allele frequencies for a generation
-get_snp_frequencies <- function(config, population) {
+get_snp_freq <- function(config, population) {
   rs_cols <- paste0("rs", 1:config$n_loci)
   rs_freqs <- colMeans(population[, rs_cols] / 2)
   return(rs_freqs)
 }
 
 # Compute allele correlation matrix for a generation
-get_snp_correlation <- function(config, population) {
+get_snp_cor <- function(config, population) {
   rs_cols <- paste0("rs", 1:config$n_loci)
   snp_matrix <- population[, rs_cols]
   return(cor(snp_matrix))
 }
 
 # Genetic correlation between siblings
-get_genetic_correlation <- function(config, population) {
+get_sibling_genotype_cor <- function(config, population) {
   n_pop <- config$n_pop
   population_sibs <- population[order(population$sibling_id), ]
   snp_cols <- paste0("rs", 1:config$n_loci)
@@ -26,7 +26,7 @@ get_genetic_correlation <- function(config, population) {
 }
 
 # Phenotype correlation between siblings
-get_phenotype_correlation <- function(config, population) {
+get_sibling_phenotype_cor <- function(config, population) {
   n_pop <- config$n_pop
   phenotype_col <- config$phenotype_name
   population_sibs <- population[order(population$sibling_id), ]
@@ -40,7 +40,8 @@ get_phenotype_correlation <- function(config, population) {
 
 # Heritability estimate of the phenotype
 # TODO Find a suitable method to compute heritability estimate
-get_heritability_estimate <- function(config, population) {
+# TODO Mention this in the meeting tomorrow with Stefanía
+get_sibling_heritability_est <- function(config, population) {
   return(NA)
 }
 
@@ -54,24 +55,13 @@ get_heritability_estimate <- function(config, population) {
 #' @return A list of summary statistics for each generation.
 #'
 #' @noRd
-compute_summary <- function(generations, summarisers = NULL) {
-  # Initialize a list to store the results
+compute_summary_data <- function(config, population, summarisers = list()) {
   summary_results <- list()
-  if (summarisers == NULL) return(list())
+  if (length(summarisers) == 0) return(list())
 
-  # Loop through each generation
-  for (i in seq_along(generations)) {
-    generation <- generations[[i]]
-    generation_summary <- list()
-
-    # Loop through each summariser function
-    for (name in names(summarisers)) {
-      summariser_fn <- summarisers[[name]]
-      generation_summary[[name]] <- summariser_fn(generation)
-    }
-
-    # Store the summary for this generation
-    summary_results[[i]] <- generation_summary
+  for (summariser in names(summarisers)) {
+    result <- summarisers[[summariser]](config, population)
+    summary_results[[summariser]] <- result
   }
 
   return(summary_results)
@@ -94,7 +84,7 @@ simulate_generation <- function(config, population) {
   mate_matching <- generate_matching(config, population)
   population_offspring <- generate_offspring(config, population, mate_matching)
 
-  # Compute genetic similarity between siblings
+  # Attach observed SNP pair correlations to the result
   snp_pair_cors <- attr(mate_matching, "snp_pair_cors")
   attr(population_offspring, "snp_pair_cors") <- snp_pair_cors
 
@@ -104,49 +94,45 @@ simulate_generation <- function(config, population) {
 #' Simulate a population from a config file
 #'
 #' @param config_path Path to configuration file with simulation parameters
-#' @param quietly Display progress bar when running simulation
 #'
-#' @return A list which population, snp_pair_cors, and sib_cors objects.
-#'
-#' @importFrom pbapply pblapply
+#' @return An amsim object containing the results of the simulation
 #'
 #' @export
-simulate_population <- function(config_path, progress = FALSE) {
+simulate_population <- function(config_path) {
   config <- load_config(config_path)
   init_population <- initialise_population(config)
   population <- init_population
 
-  # Simulate the generations and capture some interesting data
-  apply_fn <- ifelse(progress, lapply, pblapply)
-  generations <- apply_fn(1:config$n_gen, function(i) {
-    population_new <- simulate_generation(config, population)
-    population <- population_new$population
-    return(population)
-  })
-
-  summary_data <- compute_summary(generations, summarisers = list(
-    "snp_frequencies" = get_snp_frequencies,
-    "genetic_correlation" = get_genetic_correlation,
-    "phenotype_correlation" = get_phenotype_correlation,
-    "heritability_estimate" = get_heritability_estimate
-  ))
-
-  # Extract snp_pair_cors and sib_cors into respective lists
-  snp_pair_cors <- lapply(generations, `[[`, 1)
-  sib_cors <- lapply(generations, `[[`, 2)
-
-  result <- list(
-    population = population,
-    snp_pair_cors = snp_pair_cors,
-    sib_cors = sib_cors
+  # To contain SNP correlation from annealing routine
+  snp_pair_cors <- list()
+  summarisers <- list(
+    "snp_frequencies" = get_snp_freq,
+    "sibling_genotype_cor" = get_sibling_genotype_cor,
+    "sibling_pheotype_cor" = get_sibling_phenotype_cor,
+    "sibling_heritability_est" = get_sibling_heritability_est
   )
+  summary_data <- list()
+  summary_data[[1]] <- compute_summary_data(config, population, summarisers)
 
-  attr(result, "class") <- "amsim"
-  attr(result, "config") <- config
-  attr(result, "config_path") <- config_path
-  attr(result, "summary_data") <- summary_data
+  # Simulate the generations and capture some interesting data
+  for (i in 2:(config$n_gen + 1)) {
+    population_new <- simulate_generation(config, population)
+    snp_pair_cors[[i]] <- attr(population_new, "snp_pair_cors")
+    summary_data[[i]] <- compute_summary_data(
+      config,
+      population_new,
+      summarisers
+    )
+    population <- population_new
+  }
 
-  return(result)
+  attr(population, "class") <- "amsim"
+  attr(population, "config") <- config
+  attr(population, "config_path") <- config_path
+  attr(population, "snp_pair_cors") <- snp_pair_cors
+  attr(population, "summary_data") <- summary_data
+
+  return(population)
 }
 
 #' Simulate a number of population from a config file, with parallel options
@@ -191,9 +177,8 @@ print.amsim <- function(object, ...) {
   cat("Configuration file:", normalizePath(config_path), "\n")
   cat("Random seed:", config$random_seed, "\n\n")
 
-  cat("Population size:", config$n_pop, "\n")
-  cat("Number of loci:", config$n_loci, "\n")
-  cat("       of generations:", config$n_gen, "\n\n")
+  cat("Number of generations simulated:", config$n_gen, "\n\n")
+  cat("Summary functions:", config$n_gen, "\n\n")
 
   cat("SNP minor allele frequencies:\n")
   print(config$snp_maf)

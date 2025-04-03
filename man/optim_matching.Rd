@@ -13,7 +13,7 @@ optim_matching(
   init_temp = 1e-09,
   auto_temp_samples = 100000L,
   auto_accept_ratio = 0.995,
-  collect_metrics = FALSE,
+  collect_diagnostics = FALSE,
   quietly = TRUE
 )
 }
@@ -34,9 +34,9 @@ temperature of simulated annealing algorithm}
 \item{auto_accept_ratio}{Desired initial acceptance ratio for calibration of
 initial temperature value in simulated annealing algorithm}
 
-\item{collect_metrics}{Whether to collect optimization metrics}
+\item{collect_diagnostics}{If TRUE, collect diagnostic metrics}
 
-\item{quietly}{Print diagnostics while running annealing}
+\item{quietly}{If TRUE, suppress output messages}
 
 \item{max_iterations}{Maximum iterations to run}
 }
