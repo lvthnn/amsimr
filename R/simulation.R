@@ -5,6 +5,13 @@ get_snp_frequencies <- function(config, population) {
   return(rs_freqs)
 }
 
+# Compute allele correlation matrix for a generation
+get_snp_correlation <- function(config, population) {
+  rs_cols <- paste0("rs", 1:config$n_loci)
+  snp_matrix <- population[, rs_cols]
+  return(cor(snp_matrix))
+}
+
 # Genetic correlation between siblings
 get_genetic_correlation <- function(config, population) {
   n_pop <- config$n_pop
@@ -16,11 +23,6 @@ get_genetic_correlation <- function(config, population) {
 
   # Compute the genetic correlation between siblings
   return(diag(cor(sibs_male, sibs_female, use = "pairwise.complete.obs")))
-}
-
-# Get allele pair correlations from annealing routine
-get_snp_pair_correlation <- function(config, population) {
-  return(attr(population, "snp_pair_cors"))
 }
 
 # Phenotype correlation between siblings
