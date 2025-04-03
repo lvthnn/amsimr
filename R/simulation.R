@@ -107,6 +107,7 @@ simulate_population <- function(config_path) {
   snp_pair_cors <- list()
   summarisers <- list(
     "snp_frequencies" = get_snp_freq,
+    "snp_cor" = get_snp_cor,
     "sibling_genotype_cor" = get_sibling_genotype_cor,
     "sibling_pheotype_cor" = get_sibling_phenotype_cor,
     "sibling_heritability_est" = get_sibling_heritability_est
