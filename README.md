@@ -42,7 +42,7 @@ phenotype:
     rs2: 0.3  # Effect size of SNP rs2
 
 mating_model:
-  type: "assortative" # One of assortative or random
+  type: "assortative"  # One of assortative or random
   pairs:
     - male_snp: rs1
       female_snp: rs3
