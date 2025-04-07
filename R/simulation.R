@@ -67,6 +67,23 @@ compute_summary_data <- function(config, population, summarisers = list()) {
   return(summary_results)
 }
 
+#' Transform data compiled by summarisers for an amsim object.
+#'
+#' @param summary_data The amsim object
+#'
+#' @return Transformed summary data
+transform_summary_data <- function(summary_data) {
+  summarisers <- names(summary_data[[1]])
+  transformed_data <- list()
+  for (summariser in summarisers) {
+    transformed_data[[summariser]] <- lapply(summary_data, function(x) {
+      x[[summariser]]
+    })
+  }
+  return(transformed_data)
+}
+
+
 #' Simulate one generation of the population
 #'
 #' Simulates one generation by performing mate matching, generating offspring,
@@ -131,7 +148,7 @@ simulate_population <- function(config_path) {
   attr(population, "config") <- config
   attr(population, "config_path") <- config_path
   attr(population, "snp_pair_cors") <- snp_pair_cors
-  attr(population, "summary_data") <- summary_data
+  attr(population, "summary_data") <- transform_summary_data(summary_data)
 
   return(population)
 }
