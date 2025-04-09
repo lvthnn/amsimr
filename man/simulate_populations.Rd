@@ -4,7 +4,13 @@
 \alias{simulate_populations}
 \title{Simulate a number of population from a config file, with parallel options}
 \usage{
-simulate_populations(config_path, n_sims = 10, progress = FALSE)
+simulate_populations(
+  config_path,
+  n_sims = 10,
+  progress = FALSE,
+  mc_cores = 1,
+  initialise_population = FALSE
+)
 }
 \arguments{
 \item{config_path}{Path to configuration file with simulation parameters}
@@ -12,6 +18,12 @@ simulate_populations(config_path, n_sims = 10, progress = FALSE)
 \item{n_sims}{Number of populations to simulate before aggregating data}
 
 \item{progress}{Display progress bar when running simulation}
+
+\item{initialise_population}{Logical specifying whether to start simulations
+from the same population each time}
+
+\item{mc.cores}{How many cores to use for simulation (defaults to
+single-thread run)}
 }
 \value{
 A list which population, snp_pair_cors, and sib_cors objects.

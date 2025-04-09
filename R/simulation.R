@@ -115,9 +115,9 @@ simulate_generation <- function(config, population) {
 #' @return An amsim object containing the results of the simulation
 #'
 #' @export
-simulate_population <- function(config_path) {
+simulate_population <- function(config_path, init_population = NULL) {
   config <- load_config(config_path)
-  init_population <- initialise_population(config)
+  if (is.null(init_population)) init_population <- initialise_population(config)
   population <- init_population
 
   # To contain SNP correlation from annealing routine
@@ -158,14 +158,31 @@ simulate_population <- function(config_path) {
 #' @param config_path Path to configuration file with simulation parameters
 #' @param n_sims Number of populations to simulate before aggregating data
 #' @param progress Display progress bar when running simulation
+#' @param mc.cores How many cores to use for simulation (defaults to
+#'  single-thread run)
+#' @param initialise_population Logical specifying whether to start simulations
+#'  from the same population each time
 #'
 #' @return A list which population, snp_pair_cors, and sib_cors objects.
 #'
-#' @importFrom pbapply pblapply
+#' @importFrom pbmcapply pbmclapply
 #'
 #' @export
-simulate_populations <- function(config_path, n_sims = 10, progress = FALSE) {
-  return(TRUE)
+simulate_populations <- function(config_path, n_sims = 10, progress = FALSE,
+                                 mc_cores = 1, initialise_population = FALSE) {
+  config <- load_config(config_path)
+  if (initialise_population) {
+    init_population <- initialise_population(config)
+  } else {
+    init_population <- NULL
+  }
+  simulation_results <- pbmclapply(
+    1:n_sims,
+    function(i) simulate_population(config_path, init_population),
+    mc.cores = mc_cores
+  )
+  attr(simulation_results, "class") <- "ammultisim"
+  return(simulation_results)
 }
 
 #' @export
@@ -196,7 +213,7 @@ print.amsim <- function(object, ...) {
   cat("Random seed:", config$random_seed, "\n\n")
 
   cat("Number of generations simulated:", config$n_gen, "\n\n")
-  cat("Summary functions:", config$n_gen, "\n\n")
+  cat("Summary functions:\n\n")
 
   cat("SNP minor allele frequencies:\n")
   print(config$snp_maf)
