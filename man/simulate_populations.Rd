@@ -7,7 +7,6 @@
 simulate_populations(
   config_path,
   n_sims = 10,
-  progress = FALSE,
   mc_cores = 1,
   initialise_population = FALSE
 )
@@ -16,8 +15,6 @@ simulate_populations(
 \item{config_path}{Path to configuration file with simulation parameters}
 
 \item{n_sims}{Number of populations to simulate before aggregating data}
-
-\item{progress}{Display progress bar when running simulation}
 
 \item{initialise_population}{Logical specifying whether to start simulations
 from the same population each time}

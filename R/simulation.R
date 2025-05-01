@@ -5,6 +5,16 @@ get_snp_freq <- function(config, population) {
   return(rs_freqs)
 }
 
+# Compute genotype frequencies for a generation
+get_genotype_freq <- function(config, population) {
+  n_pop <- config$n_pop
+  rs_cols <- paste0("rs", 1:config$n_loci)
+  genotype_freq <- t(apply(population[, rs_cols], 2, function(x) {
+    table(factor(x, levels = 0:2)) / n_pop
+  }))
+  return(genotype_freq)
+}
+
 # Compute allele correlation matrix for a generation
 get_snp_cor <- function(config, population) {
   rs_cols <- paste0("rs", 1:config$n_loci)
@@ -30,7 +40,6 @@ get_sibling_phenotype_cor <- function(config, population) {
   n_pop <- config$n_pop
   phenotype_col <- config$phenotype_name
   population_sibs <- population[order(population$sibling_id), ]
-
   sibs_male <- population_sibs[seq(1, n_pop, by = 2), phenotype_col]
   sibs_female <- population_sibs[seq(2, n_pop, by = 2), phenotype_col]
 
@@ -39,10 +48,13 @@ get_sibling_phenotype_cor <- function(config, population) {
 }
 
 # Heritability estimate of the phenotype
-# TODO Find a suitable method to compute heritability estimate
-# TODO Mention this in the meeting tomorrow with Stefanía
-get_sibling_heritability_est <- function(config, population) {
-  return(NA)
+get_phenotype_heritability <- function(config, population) {
+  phenotype_name <- config$phenotype_name
+  phenotype <- population[, phenotype_name]
+  phenotype_raw <- population[, paste0(phenotype_name, "_raw")]
+  heritability <- var(phenotype_raw) / var(phenotype)
+
+  return(heritability)
 }
 
 # ' Compute summary statistics for a simulation object
@@ -82,7 +94,6 @@ transform_summary_data <- function(summary_data) {
   }
   return(transformed_data)
 }
-
 
 #' Simulate one generation of the population
 #'
@@ -125,9 +136,10 @@ simulate_population <- function(config_path, init_population = NULL) {
   summarisers <- list(
     "snp_frequencies" = get_snp_freq,
     "snp_cor" = get_snp_cor,
+    "genotype_frequencies" = get_genotype_freq,
     "sibling_genotype_cor" = get_sibling_genotype_cor,
-    "sibling_pheotype_cor" = get_sibling_phenotype_cor,
-    "sibling_heritability_est" = get_sibling_heritability_est
+    "sibling_phenotype_cor" = get_sibling_phenotype_cor,
+    "phenotype_heritability" = get_phenotype_heritability
   )
   summary_data <- list()
   summary_data[[1]] <- compute_summary_data(config, population, summarisers)
@@ -157,7 +169,6 @@ simulate_population <- function(config_path, init_population = NULL) {
 #'
 #' @param config_path Path to configuration file with simulation parameters
 #' @param n_sims Number of populations to simulate before aggregating data
-#' @param progress Display progress bar when running simulation
 #' @param mc.cores How many cores to use for simulation (defaults to
 #'  single-thread run)
 #' @param initialise_population Logical specifying whether to start simulations
@@ -168,8 +179,8 @@ simulate_population <- function(config_path, init_population = NULL) {
 #' @importFrom pbmcapply pbmclapply
 #'
 #' @export
-simulate_populations <- function(config_path, n_sims = 10, progress = FALSE,
-                                 mc_cores = 1, initialise_population = FALSE) {
+simulate_populations <- function(config_path, n_sims = 10, mc_cores = 1,
+                                 initialise_population = FALSE) {
   config <- load_config(config_path)
   if (initialise_population) {
     init_population <- initialise_population(config)

@@ -49,7 +49,6 @@ validate_key_value <- function(config, section, key, value, rule) {
 #' @param rules A list of validation rules
 #' @noRd
 validate_section <- function(config, section, rules) {
-
   if (!section %in% names(config)) {
     stop("Missing required section '", section, "'")
   }
@@ -95,7 +94,7 @@ validate_config <- function(config) {
   # Validate SNPs section
   validate_section(config, section = "snps", rules = list(
     default_maf = list(required = TRUE, val = is_probability),
-    snp_maf = list(required = TRUE, key_val = is_rs, val = is_probability)
+    snp_maf = list(required = FALSE, key_val = is_rs, val = is_probability)
   ))
 
   # Validate phenotype section
@@ -124,7 +123,6 @@ validate_config <- function(config) {
 #' @return A list object with data processed from the configuration file
 #' @noRd
 process_config <- function(config) {
-
   # Extract some variables from the config file
   config_data <- list(
     n_loci = config$simulation[["n_loci"]],
