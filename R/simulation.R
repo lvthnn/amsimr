@@ -192,7 +192,6 @@ simulate_populations <- function(config_path, n_sims = 10, mc_cores = 1,
     function(i) simulate_population(config_path, init_population),
     mc.cores = mc_cores
   )
-  attr(simulation_results, "class") <- "ammultisim"
   return(simulation_results)
 }
 

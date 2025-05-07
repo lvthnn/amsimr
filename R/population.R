@@ -21,7 +21,10 @@ generate_snp_matrix <- function(config, snps_paternal, snps_maternal) {
     rbinom(
       n_pop * n_loci,
       size = 1,
-      prob = rep(as.vector(prob_paternal), each = 2)
+      prob = rep(
+        as.vector(prob_paternal),
+        each = 2
+      )
     ),
     nrow = n_pop,
     ncol = n_loci
@@ -31,7 +34,10 @@ generate_snp_matrix <- function(config, snps_paternal, snps_maternal) {
     rbinom(
       n_pop * n_loci,
       size = 1,
-      prob = rep(as.vector(prob_maternal), each = 2)
+      prob = rep(
+        as.vector(prob_maternal),
+        each = 2
+      )
     ),
     nrow = n_pop,
     ncol = n_loci
@@ -42,16 +48,31 @@ generate_snp_matrix <- function(config, snps_paternal, snps_maternal) {
   return(snps_offspring)
 }
 
+#' Calibrate the environmental variance so the initial heritabilit
+#' of the phenotype matches the specified value in the config
+init_env_variance <- function(config, snp_matrix) {
+  # Extract data from the config object
+  pheno_heritability <- config$phenotype_heritability
+  heritability_coeff <- (1 - pheno_heritability) / pheno_heritability
+
+  # Compute contribution from genetic component
+  genetic_effect <- scale(snp_matrix) %*% config$phenotype_causal_snps
+  env_variance <- heritability_coeff * var(genetic_effect)
+
+  return(env_variance)
+}
+
 #' Generate phenotype values from genotypes and environmental effects
 #'
 #' @param config Configuration list with simulation parameters
 #' @param snp_matrix Matrix of SNP genotypes (0, 1, or 2 copies of alt allele)
+#' @param env_variance Initial environmental variance
 #'
 #' @return A matrix with one column containing the phenotype values
 #'
 #' @importFrom stats var rnorm
 #' @noRd
-generate_phenotype <- function(config, snp_matrix) {
+generate_phenotype <- function(config, snp_matrix, env_variance) {
   # Extract data from the config object
   pheno_name <- config$phenotype_name
   pheno_causal_snps <- config$phenotype_causal_snps
@@ -60,7 +81,8 @@ generate_phenotype <- function(config, snp_matrix) {
 
   # Compute contribution from genetic component
   genetic_effect <- scale(snp_matrix) %*% pheno_causal_snps
-  env_variance <- heritability_coeff * var(genetic_effect)
+
+  # Compute contribution from environmental component
   env_effect <- rnorm(config$n_pop, mean = 0, sd = sqrt(env_variance))
 
   # Assemble genetic and environmental effects
@@ -89,6 +111,7 @@ generate_offspring <- function(config, population, matching) {
   n_pairs <- config$n_pop / 2
   sex <- rep(0:1, times = n_pairs)
   sibling_id <- rep(1:n_pairs, each = 2)
+  env_variance <- attr(population, "env_variance")
 
   # Select genotype data in male and female subpopulations
   cols_select <- !(colnames(population) %in% c("sex", config$phenotype_name))
@@ -97,10 +120,11 @@ generate_offspring <- function(config, population, matching) {
 
   # Generate SNP matrix and phenotype
   snp_matrix <- generate_snp_matrix(config, snps_paternal, snps_maternal)
-  phenotype <- generate_phenotype(config, snp_matrix)
+  phenotype <- generate_phenotype(config, snp_matrix, env_variance)
 
   # Assemble offspring population
   offspring_pop <- data.frame(sex, snp_matrix, phenotype, sibling_id)
+  attr(offspring_pop, "env_variance") <- env_variance
 
   return(offspring_pop)
 }
@@ -128,7 +152,10 @@ initialise_population <- function(config) {
     rbinom(
       n_pairs * n_loci,
       size = 2,
-      prob = rep(config$snp_maf, each = n_pairs)
+      prob = rep(
+        config$snp_maf,
+        each = n_pairs
+      )
     ),
     nrow = n_pairs,
     ncol = n_loci,
@@ -139,7 +166,10 @@ initialise_population <- function(config) {
     rbinom(
       n_pairs * n_loci,
       size = 2,
-      prob = rep(config$snp_maf, each = n_pairs)
+      prob = rep(
+        config$snp_maf,
+        each = n_pairs
+      )
     ),
     nrow = n_pairs,
     ncol = n_loci,
@@ -149,11 +179,15 @@ initialise_population <- function(config) {
   snp_matrix <- generate_snp_matrix(config, snps_paternal, snps_maternal)
   colnames(snp_matrix) <- paste0("rs", 1:n_loci)
 
+  # Compute environmental variance to match initial heritability
+  init_env_variance <- init_env_variance(config, snp_matrix)
+
   # Compute phenotype vector
-  phenotype <- generate_phenotype(config, snp_matrix)
+  phenotype <- generate_phenotype(config, snp_matrix, init_env_variance)
 
   # Combine into population data frame
   population <- as.data.frame(cbind(sex, snp_matrix, phenotype, sibling_id))
+  attr(population, "env_variance") <- init_env_variance
 
   return(population)
 }
