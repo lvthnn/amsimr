@@ -103,7 +103,7 @@ This package relies on the following R packages:
 If you use this package in your research, please cite:
 
 > Hlynsson, K. (2025) *Effects of distant linkage disequilibrium
-on the construction and predictive performance of polygenic scores
+on the construction and predictive performance of polygenic scores:
 A simulation study*, B.Sc. thesis, Faculty of
 > Physical Sciences, University of Iceland.
 
