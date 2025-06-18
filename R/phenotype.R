@@ -1,27 +1,53 @@
 Phenotype <- R6::R6Class(
   "Phenotype",
   public = list(
-
-    initialize = function(name, n_loci, heritability) {
+    initialize = function(name, heritability, n_loci = NULL, causal_snps = NULL,
+                          causal_effects = NULL) {
       checkmate::assert_string(name, null.ok = FALSE)
-      checkmate::assert_count(n_loci, null.ok = FALSE)
       checkmate::assert_numeric(heritability, len = 1, lower = 0,
                                 upper = 1, null.ok = FALSE)
-
-      private$name <- name
-      private$n_loci <- n_loci
-      private$heritability <- heritability
+      if (missing(n_loci)) {
+        checkmate::assert_character(causal_snps, pattern = "rs[0-9]+$")
+        checkmate::assert_numeric(causal_effects, len = length(causal_snps))
+        private$.causal_snps <- causal_snps
+        private$.causal_effects <- causal_effects
+        private$.n_loci <- length(causal_snps)
+      } else if (missing(causal_snps) && missing(causal_effects)) {
+        checkmate::assert_count(n_loci)
+        private$.n_loci <- n_loci
+      } else {
+        cli::cli_abort(c(
+          "x" = "Invalid parameter combination: provide either `n_loci` or both
+                 `causal_snps` and `causal_effects`."
+        ))
+      }
+      private$.name <- name
+      private$.heritability <- heritability
     },
 
-    get_name = function() return(private$name),
-    get_n_loci = function() return(private$n_loci),
-    get_causal_snps = function() return(private$causal_effects)
+    # Getters
+    name           = function() return(private$.name),
+    n_loci         = function() return(private$.n_loci),
+    causal_snps    = function() return(private$.causal_snps),
+    causal_effects = function() return(private$.causal_effects),
+    heritability   = function() return(private$.heritability),
+
+    # Setters
+    set_n_loci = function(n_loci) {
+      private$.n_loci <- n_loci
+    },
+    set_causal_snps = function(causal_snps) {
+      private$.causal_snps <- causal_snps
+    },
+    set_causal_effects = function(causal_effects) {
+      private$.causal_effects <- causal_effects
+    }
   ),
   private = list(
-    name = NULL,
-    n_loci = NULL,
-    causal_snps = NULL,
-    causal_effects = NULL,
-    heritability = NULL
+    .name = NULL,
+    .n_loci = NULL,
+    .causal_snps = NULL,
+    .causal_effects = NULL,
+    .heritability = NULL
   )
 )

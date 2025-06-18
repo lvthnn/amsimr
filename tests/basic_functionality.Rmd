@@ -1,0 +1,26 @@
+```{r}
+# Load the amsimr package
+devtools::load_all()
+
+# Initialise a Phenotype
+height <- Phenotype$new(name = "height",
+                        heritability = 0.85,
+                        causal_snps = c("rs1", "rs2"),
+                        causal_effects = c(0.5, 0.8))
+
+bmi <- Phenotype$new(name = "bmi",
+                     heritability = 0.42,
+                     n_loci = 1e2)
+
+population <- Population$new(n_population = 1e5, n_loci = 1e3)
+population$add_phenotype(height)
+population$add_phenotype(bmi)
+```
+
+
+```{r}
+# Test the generate_snp_matrix function
+devtools::load_all()
+
+generate_snp_matrix(1000, 100, c(0.5, 0.2))
+```

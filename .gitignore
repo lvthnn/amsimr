@@ -39,7 +39,3 @@
 *.exe
 *.out
 *.app
-
-# Ignore configuration files for testing
-tests/
-config.yaml

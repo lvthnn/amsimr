@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c17",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "macos-clang-arm64",
+            "compilerArgs": [
+                "-I/opt/homebrew/Cellar/r/4.5.0/lib/R/include",
+                "-I/opt/homebrew/lib/R/4.5/site-library/Rcpp/include",
+                "-I/opt/homebrew/lib/R/4.5/site-library/RcppArmadillo/include",
+                "-I/opt/homebrew/lib/R/4.5/site-library/RcppEigen/include"
+            ]
+        }
+    ],
+    "version": 4
+}
