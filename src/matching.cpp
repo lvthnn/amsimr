@@ -83,7 +83,7 @@ double auto_init_temp(
   const arma::mat &snp_pairs,
   const arma::uvec &female_swap_idx,
   const int num_samples,
-  const double accept_ratio
+  const double accept_ratio = 0.36
 ) {
   const int pop_size = sol_mat.n_rows;
   

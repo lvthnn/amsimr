@@ -42,7 +42,7 @@ validate_key_value <- function(config, section, key, value, rule) {
 #'
 #' Validates a section of the simulation configuration file, i.e. whether
 #' a key within the section is required and how to validate it, using a
-#' validation function.
+#' validation function. Use "self" as key name for section-level validation.
 #'
 #' @param config The configuration object
 #' @param section The section name to validate
@@ -55,7 +55,24 @@ validate_section <- function(config, section, rules) {
 
   section_data <- config[[section]]
 
+  # Check for section-level validation (key = "self")
+  if ("self" %in% names(rules)) {
+    section_rule <- rules[["self"]]
+    result <- tryCatch({
+      section_rule$val(config, section_data)
+    }, error = function(e) {
+      stop("Section '", section, "' validation failed: ", e$message)
+    })
+
+    if (!result) {
+      stop("Section '", section, "' failed validation")
+    }
+  }
+
+  # Apply key-level validation rules
   for (key in names(rules)) {
+    if (key == "self") next  # Skip section-level rule
+
     rule <- rules[[key]]
     key_exists <- key %in% names(section_data)
 
@@ -73,7 +90,6 @@ validate_section <- function(config, section, rules) {
   }
 }
 
-
 #' Validate the entire configuration file
 #'
 #' Validates that the configuration file has all required sections and
@@ -88,20 +104,20 @@ validate_config <- function(config) {
     n_pop = list(required = TRUE, val = is_positive_int),
     n_gen = list(required = TRUE, val = is_positive_int),
     n_iter = list(required = TRUE, val = is_positive_int),
-    random_seed = list(required = FALSE, val = is_positive_int)
+    rel_tol = list(required = FALSE, val = is_positive)
   ))
 
   # Validate SNPs section
+  valid_dists <- c("uniform", "beta")
+
   validate_section(config, section = "snps", rules = list(
-    default_maf = list(required = TRUE, val = is_probability),
-    snp_maf = list(required = FALSE, key_val = is_rs, val = is_probability)
+    maf_dist = list(required = TRUE, val = is_option(config, valid_dists)),
+    maf_params = list(required = TRUE, val = is_positive)
   ))
 
-  # Validate phenotype section
-  validate_section(config, section = "phenotype", rules = list(
-    name = list(required = FALSE, val = is_pass),
-    heritability = list(required = TRUE, val = is_probability),
-    causal_snps = list(required = TRUE, key_val = is_rs, val = is_numeric)
+  # Validate phenotypes section
+  validate_section(config, section = "phenotypes", rules = list(
+    self = list(required = TRUE, val = is_phenotypes)
   ))
 
   # Validate mating model section
@@ -136,17 +152,25 @@ process_config <- function(config) {
   }
 
   # Fill in SNP MAFs with default value if unspecified
-  snp_maf <- config$snps[["snp_maf"]]
+  dist <- paste0("r", config$snps[["maf_dist"]])
+  rdist <- get(dist, envir = asNamespace("amsimr"))
+
+  snp_maf <- rdist(n = config_data$n_loci,
+                   config$snps[["maf_params"]][1],
+                   config$snps[["maf_params"]][2])
   snp_ids <- paste0("rs", 1:config_data$n_loci)
-  snp_default <- setdiff(snp_ids, names(snp_maf))
-  snp_maf[snp_default] <- config$snps[["default_maf"]]
 
   config_data[["snp_maf"]] <- unlist(snp_maf)
 
   # Extract phenotype data into phenotype_<key>
-  config_data["phenotype_name"] <- ifelse(!is.null(config$phenotype[["name"]]),
-                                          config$phenotype[["name"]], "X")
-  config_data["phenotype_heritability"] <- config$phenotype[["heritability"]]
+  for (phenotype in names(config$phenotypes)) {
+    config_data[paste0(phenotype, "_name")] <- ifelse(
+      !is.null(config$phenotype[["name"]]),
+      config$phenotype[["name"]], "X"
+    )
+
+    config_data[paste0(phenotype, "_heritability")] <- config$phenotype[["heritability"]]
+  }
 
   causal_snps <- config$phenotype[["causal_snps"]]
   neutral_snps <- setdiff(snp_ids, names(causal_snps))

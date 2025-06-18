@@ -152,6 +152,39 @@ is_pair <- function(config, x) {
   return(TRUE)
 }
 
+#' Validate a phenotype entry
+#'
+#' Ensures required keys and valid SNPs/effect values.
+#'
+#' @param config Parsed configuration object
+#' @param x A list representing a phenotype with required fields
+#'
+# @noRd
+is_phenotype <- function(config, x) {
+  required_keys <- c("heritability", "n_loci")
+  missing_keys <- setdiff(required_keys, names(x))
+
+  if (length(missing_keys) > 0) {
+    stop(
+      "Phenotype missing required keys: ",
+      paste(missing_keys, collapse = ", ")
+    )
+  }
+
+  if (!is_probability(config, x$heritability)) {
+    stop("Invalid heritability value in phenotype: ", x$heritability)
+  }
+
+  if (!is_positive_int(config, x$n_loci)) {
+    stop("Invalid n_loci value in phenotype: ", x$n_loci)
+  }
+
+  valid_snps <- paste0("rs", 1:config$simulation$n_loci)
+
+  return(TRUE)
+}
+
+
 #' Validate a list of pair entries
 #'
 #' Applies `is_pair` to each element in the list.
@@ -162,3 +195,12 @@ is_pair <- function(config, x) {
 #' @noRd
 is_pairs <- is_val_along(is_pair)
 
+#' Validate a list of phenotypes
+#'
+#' Applies `is_phenotype` to each element in the list.
+#'
+#' @param config Parsed configuration object
+#' @param x A list of pair entries
+#'
+#' @noRd
+is_phenotypes <- is_val_along(is_phenotype)

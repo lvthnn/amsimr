@@ -1,193 +1,229 @@
-#' Generate a SNP matrix for sibling pairs given paternal and maternal SNPs
+#' Population class
 #'
-#' @param config Configuration list with simulation parameters
-#' @param snps_paternal Matrix of paternal SNP genotypes
-#' @param snps_maternal Matrix of maternal SNP genotypes
-#' @return A matrix of sibling pair genotypes
+#' Represents a population for performing simulations of xAM, allowing for
+#' configuration via constructor arguments.
 #'
-#' @importFrom stats rbinom
-#'
-#' @noRd
-generate_snp_matrix <- function(config, snps_paternal, snps_maternal) {
-  n_pop <- config$n_pop
-  n_loci <- config$n_loci
-
-  # Calculate probability matrices for inheritance
-  prob_paternal <- as.matrix(snps_paternal) / 2
-  prob_maternal <- as.matrix(snps_maternal) / 2
-
-  # For each pair of siblings
-  haplotype_paternal <- matrix(
-    rbinom(
-      n_pop * n_loci,
-      size = 1,
-      prob = rep(
-        as.vector(prob_paternal),
-        each = 2
-      )
-    ),
-    nrow = n_pop,
-    ncol = n_loci
-  )
-
-  haplotype_maternal <- matrix(
-    rbinom(
-      n_pop * n_loci,
-      size = 1,
-      prob = rep(
-        as.vector(prob_maternal),
-        each = 2
-      )
-    ),
-    nrow = n_pop,
-    ncol = n_loci
-  )
-
-  snps_offspring <- haplotype_paternal + haplotype_maternal
-  colnames(snps_offspring) <- paste0("rs", 1:n_loci)
-  return(snps_offspring)
-}
-
-#' Calibrate the environmental variance so the initial heritabilit
-#' of the phenotype matches the specified value in the config
-init_env_variance <- function(config, snp_matrix) {
-  # Extract data from the config object
-  pheno_heritability <- config$phenotype_heritability
-  heritability_coeff <- (1 - pheno_heritability) / pheno_heritability
-
-  # Compute contribution from genetic component
-  genetic_effect <- scale(snp_matrix) %*% config$phenotype_causal_snps
-  env_variance <- heritability_coeff * var(genetic_effect)
-
-  return(env_variance)
-}
-
-#' Generate phenotype values from genotypes and environmental effects
-#'
-#' @param config Configuration list with simulation parameters
-#' @param snp_matrix Matrix of SNP genotypes (0, 1, or 2 copies of alt allele)
-#' @param env_variance Initial environmental variance
-#'
-#' @return A matrix with one column containing the phenotype values
-#'
-#' @importFrom stats var rnorm
-#' @noRd
-generate_phenotype <- function(config, snp_matrix, env_variance) {
-  # Extract data from the config object
-  pheno_name <- config$phenotype_name
-  pheno_causal_snps <- config$phenotype_causal_snps
-  pheno_heritability <- config$phenotype_heritability
-  heritability_coeff <- (1 - pheno_heritability) / pheno_heritability
-
-  # Compute contribution from genetic component
-  genetic_effect <- scale(snp_matrix) %*% pheno_causal_snps
-
-  # Compute contribution from environmental component
-  env_effect <- rnorm(config$n_pop, mean = 0, sd = sqrt(env_variance))
-
-  # Assemble genetic and environmental effects
-  phenotype <- genetic_effect + env_effect
-  phenotype_raw <- genetic_effect
-
-  colnames(phenotype) <- pheno_name
-  colnames(phenotype_raw) <- paste0(pheno_name, "_raw")
-
-  return(cbind(phenotype, phenotype_raw))
-}
-
-#' Produce the next generation of offspring based on a mate matching
-#'
-#' @param config Configuration list with simulation parameters
-#' @param population Data frame containing the current population
-#' @param matching Data frame with male_idx and female_idx columns
-#'
-#' @return A data frame containing the offspring population
-#'
-#' @importFrom stats rbinom
-#'
-#' @noRd
-generate_offspring <- function(config, population, matching) {
-  # Create offspring sex vector (equal male/female split)
-  n_pairs <- config$n_pop / 2
-  sex <- rep(0:1, times = n_pairs)
-  sibling_id <- rep(1:n_pairs, each = 2)
-  env_variance <- attr(population, "env_variance")
-
-  # Select genotype data in male and female subpopulations
-  cols_select <- !(colnames(population) %in% c("sex", config$phenotype_name))
-  snps_paternal <- population[matching$male_idx, cols_select]
-  snps_maternal <- population[matching$female_idx, cols_select]
-
-  # Generate SNP matrix and phenotype
-  snp_matrix <- generate_snp_matrix(config, snps_paternal, snps_maternal)
-  phenotype <- generate_phenotype(config, snp_matrix, env_variance)
-
-  # Assemble offspring population
-  offspring_pop <- data.frame(sex, snp_matrix, phenotype, sibling_id)
-  attr(offspring_pop, "env_variance") <- env_variance
-
-  return(offspring_pop)
-}
-
-#' Initialize a population with genotypes and phenotypes
-#'
-#' @param config Configuration list with simulation parameters
-#'
-#' @return A data frame containing the initial population
-#' @importFrom stats rbinom
+#' @importFrom R6 R6Class
+#' @importFrom checkmate assert_true assert_count assert_choice assert_numeric
+#' @importFrom checkmate assert_list assert_class test_count
+#' @importFrom cli cli_alert_info
+#' @importFrom stats var rnorm rbinom
 #'
 #' @export
-initialise_population <- function(config) {
-  # Extract data from config object
-  n_pop <- config$n_pop
-  n_loci <- config$n_loci
-  n_pairs <- n_pop / 2
+Population <- R6Class(
+  "Population",
 
-  # Create sex vector (equal male/female split)
-  sex <- rep(0:1, times = n_pop / 2)
-  sibling_id <- rep(1:n_pairs, each = 2)
+  public = list(
+    #' @field data Data frame containing SNP and phenotype data
+    data         = NULL,
 
-  # Create SNP matrix based on minor allele frequencies
-  snps_paternal <- matrix(
-    rbinom(
-      n_pairs * n_loci,
-      size = 2,
-      prob = rep(
-        config$snp_maf,
-        each = n_pairs
+    #' @field n_pop Number of individuals in the population
+    n_pop        = NULL,
+
+    #' @field n_loci Number of genetic loci (SNPs) modelled in the genome
+    n_loci       = NULL,
+
+    #' @field phenotypes A list of Phenotype objects
+    phenotypes   = NULL,
+
+    #' @field maf_dist One of 'beta' or 'uniform'
+    maf_dist     = NULL,
+
+    #' @field maf_params Parameters for MAF distribution
+    maf_params   = NULL,
+
+    #' @field maf Minor allele frequencies for SNPs
+    maf          = NULL,
+
+    #' @description
+    #' Instantiate a new `Population` object.
+    #'
+    #' @param n_pop Number of individuals in the population.
+    #' @param n_loci Number of loci in the genome.
+    #' @param maf_dist Minor allele frequency distribution type ("uniform" or
+    #'  "beta").
+    #' @param maf_params Parameters for the minor allele frequency distribution.
+    #' @param phenotypes List of Phenotype objects to model in the population.
+    #'
+    #' @return A new `Population` object.
+    initialize = function(n_pop, n_loci, maf_dist = NULL, maf_params = NULL,
+                          phenotypes = NULL) {
+
+      # Verify "n_" parameters
+      assert_true(test_count(n_pop, positive = TRUE))
+      if (n_pop %% 2 != 0) {
+        n_pop <- n_pop - 1
+        cli_alert_info("Updated parameter 'n_pop' to even value: {n_pop}")
+      }
+      assert_count(n_loci, positive = TRUE)
+
+      # Verify MAF distribution
+      if (is.null(maf_dist) && is.null(maf_params)) {
+        maf_dist <- "beta"
+        maf_params <- c(0.5, 1.5)
+        cli_alert_info(c("Using default values '{maf_dist}' and '{maf_params}'",
+                         "for 'maf_dist' and 'maf_params'"))
+      }
+
+      assert_choice(maf_dist, c("uniform", "beta"))
+
+      if (maf_dist == "uniform") {
+        assert_numeric(
+          maf_params,
+          len = 2,
+          lower = 0,
+          upper = 1,
+          any.missing = FALSE
+        )
+      } else {
+        assert_numeric(
+          maf_params,
+          len = 2,
+          lower = 0,
+          upper = Inf,
+          finite = TRUE,
+          any.missing = FALSE
+        )
+      }
+
+      # Verify phenotypes object
+      assert_list(phenotypes, types = "Phenotype", min.len = 1, null.ok = TRUE)
+
+      if (is.null(phenotypes)) {
+        cli_alert_info("Initialising default (empty) phenotype vector")
+        self$phenotypes <- c()
+      }
+
+      # Initialise the population
+      self$n_pop <- n_pop
+      self$n_loci <- n_loci
+      self$maf_dist <- maf_dist
+      self$maf_params <- maf_params
+      self$maf <- if (maf_dist == "uniform") {
+        runif(n_loci, min = maf_params[1], max = maf_params[2])
+      } else {
+        rbeta(n_loci, shape1 = maf_params[1], shape2 = maf_params[2])
+      }
+
+      self$data <- private$initialise_population()
+    },
+
+    #' @description
+    #' Add new phenotypes to model in the population
+    #'
+    #' @param phenotypes A list of Phenotype objects to add to the population
+    add_phenotypes = function(phenotypes) {
+      assert_class(phenotypes, classes = "Phenotype")
+      self$phenotypes <- append(self$phenotypes, phenotypes)
+      cli_alert_info("Adding new phenotypes:")
+      print(self$phenotypes)
+    },
+
+    #' @description
+    #' Remove phenotypes modelled in the population
+    #' 
+    #' @param phenotypes Names of phenotypes to remove from the population
+    remove_phenotypes = function(phenotypes) {
+      print("Yo!")
+    }
+  ),
+
+  private = list(
+    #' Initialize a population with genotypes and phenotypes
+    #'
+    #' @return A data frame containing the initial population
+    #'
+    #' @noRd
+    initialise_population = function() {
+      # Create sex vector (equal male/female split)
+      sex <- rep(0:1, each = self$n_pop / 2)
+      sibling_id <- rep(1:self$n_pop / 2, each = 2)
+
+      # Create SNP matrix based on minor allele frequencies
+      snps_paternal <- matrix(
+        rbinom(
+          self$n_pop * self$n_loci / 2,
+          prob = rep(self$maf, each = self$n_pop / 2),
+          size = 2
+        ),
+        nrow = self$n_pop / 2,
+        ncol = self$n_loci,
+        byrow = FALSE
       )
-    ),
-    nrow = n_pairs,
-    ncol = n_loci,
-    byrow = FALSE
-  )
 
-  snps_maternal <- matrix(
-    rbinom(
-      n_pairs * n_loci,
-      size = 2,
-      prob = rep(
-        config$snp_maf,
-        each = n_pairs
+      snps_maternal <- matrix(
+        rbinom(
+          self$n_pop * self$n_loci / 2,
+          prob = rep(self$maf, each = self$n_pop / 2),
+          size = 2
+        ),
+        nrow = self$n_pop / 2,
+        ncol = self$n_loci,
+        byrow = FALSE
       )
-    ),
-    nrow = n_pairs,
-    ncol = n_loci,
-    byrow = FALSE
+
+      snp_matrix <- private$generate_snp_matrix(snps_paternal, snps_maternal)
+      colnames(snp_matrix) <- paste0("rs", 1:self$n_loci)
+
+      generate_phenotypes()
+    },
+
+    #' Generate a SNP matrix for sibling pairs given paternal and maternal SNPs
+    #
+    #' @param self The Population object
+    #' @param snps_paternal Matrix of paternal SNP genotypes
+    #' @param snps_maternal Matrix of maternal SNP genotypes
+    #'
+    #' @return A matrix of sibling pair genotypes
+    #'
+    #' @noRd
+    generate_snp_matrix = function(snps_paternal, snps_maternal) {
+      prob_paternal <- as.matrix(snps_paternal) / 2
+      prob_maternal <- as.matrix(snps_maternal) / 2
+
+      # For each pair of siblings
+      haplotype_paternal <- matrix(
+        rbinom(
+          self$n_pop * self$n_loci,
+          prob = rep(as.vector(prob_paternal), each = 2),
+          size = 1
+        ),
+        nrow = self$n_pop,
+        ncol = self$n_loci
+      )
+
+      haplotype_maternal <- matrix(
+        rbinom(
+          self$n_pop * self$n_loci,
+          prob = rep(as.vector(prob_paternal), each = 2),
+          size = 1
+        ),
+        nrow = self$n_pop,
+        ncol = self$n_loci
+      )
+
+      snps_offspring <- haplotype_paternal + haplotype_maternal
+      colnames(snps_offspring) <- paste0("rs", 1:self$n_loci)
+      invisible(snps_offspring)
+    },
+
+    #' Generate phenotype values from genotypes and environmental effects
+    #
+    #' @param config Configuration list with simulation parameters
+    #' @param snp_matrix Matrix of SNP genotypes (0, 1, or 2 copies of allele)
+    #' @param env_variance Initial environmental variance
+    #
+    #' @return A matrix with one column containing the phenotype values
+    #'
+    #' @noRd
+    generate_phenotypes = function() {
+      if (is.null(self$phenotypes)) {
+        cli_abort("No phenotypes defined.")
+      }
+
+      for (phenotype in phenotypes) {
+        print(phenotype)
+      }
+    }
   )
-
-  snp_matrix <- generate_snp_matrix(config, snps_paternal, snps_maternal)
-  colnames(snp_matrix) <- paste0("rs", 1:n_loci)
-
-  # Compute environmental variance to match initial heritability
-  init_env_variance <- init_env_variance(config, snp_matrix)
-
-  # Compute phenotype vector
-  phenotype <- generate_phenotype(config, snp_matrix, init_env_variance)
-
-  # Combine into population data frame
-  population <- as.data.frame(cbind(sex, snp_matrix, phenotype, sibling_id))
-  attr(population, "env_variance") <- init_env_variance
-
-  return(population)
-}
+)

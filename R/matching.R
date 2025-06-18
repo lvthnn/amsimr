@@ -1,3 +1,28 @@
+#' @export
+MatingModel <- R6Class(
+  "MatingModel",
+
+  public = list(
+    phenotypes = NULL,
+    covariances = NULL,
+    error_tol = 1e-4,
+
+    initialize = function(phenotypes = NULL, covariances = NULL,
+                          error_tol = 1e-4) {
+      assert_list(phenotypes, types = "character", null.ok = TRUE)
+      assert_class(covariances, classes = "matrix", null.ok = TRUE)
+      assert_numeric(error_tol, null.ok = TRUE)
+      invisible(self)
+    },
+
+    get_consolidated_matrix = function() {
+      # collapses all phenotype pair correlation matrices into a single matrix,
+      # and we take non-zero correlation entries and compress into a vector. we
+      # also want a vector with indices
+    }
+  )
+)
+
 #' Generate initial solution matrix for mate matching optimisation routine
 #'
 #' @param population Population data frame with sex column and SNP genotypes

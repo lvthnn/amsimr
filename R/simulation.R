@@ -1,3 +1,59 @@
+#' Simulation class
+#'
+#' Class in the amsimr package to perform assortative mating simulations.
+#'
+#' @importFrom R6 R6Class
+#' @importFrom checkmate assert_class assert_numeric
+#'
+#' @export
+Simulation <- R6Class(
+  "Simulation",
+
+  public = list(
+    #' @field population Population object representing the initial population.
+    population = NULL,
+
+    #' @field mating_model MatingModel object to model the population mating regime.
+    mating_model = NULL,
+
+    #' @field summariser Summariser object to compute summary data each generation.
+    summariser = NULL,
+
+    #' @field n_generations Number of generations to simulate.
+    n_generations = NULL,
+
+    #' @field n_iterations Number of simulation iterations to perform.
+    n_iterations = NULL,
+
+    #' Instantiate a new Simulation object
+    #'
+    #' @param population Population object representing the initial population.
+    #' @param summariser Summariser object to compute summary data each generation.
+    #' @param mating_model MatingModel object to model the population mating regime.
+    #' @param n_generations Number of generations to simulate.
+    #' @param n_iterations Number of simulation iterations to perform.
+    initialize = function(population, mating_model, summariser,
+                          n_generations, n_iterations = 1) {
+      assert_class(population, "Population")
+      assert_class(summariser, "Summariser")
+      assert_class(mating_model, "MatingModel")
+
+      assert_count(n_generations, positive = TRUE)
+      assert_count(n_iterations, positive = TRUE)
+
+      self$population <- population
+      self$summariser <- summariser
+      self$mating_model <- mating_model
+      self$n_generations <- n_generations
+      self$n_iterations <- n_iterations
+    },
+
+    run = function() {
+      print("Yo!")
+    }
+  )
+)
+
 # Compute allele frequencies for a generation
 get_snp_freq <- function(config, population) {
   rs_cols <- paste0("rs", 1:config$n_loci)
