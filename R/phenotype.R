@@ -1,54 +1,27 @@
-#' Phenotype Class
-#'
-#' Represents a phenotype with its associated genetic properties.
-#'
-#' @importFrom R6 R6Class
-#' @importFrom checkmate assert_string assert_count assert_numeric assert_number
-#'
-#' @export
-Phenotype <- R6Class(
+Phenotype <- R6::R6Class(
   "Phenotype",
   public = list(
-    #' @field name Name of phenotype
+
+    initialize = function(name, n_loci, heritability) {
+      checkmate::assert_string(name, null.ok = FALSE)
+      checkmate::assert_count(n_loci, null.ok = FALSE)
+      checkmate::assert_numeric(heritability, len = 1, lower = 0,
+                                upper = 1, null.ok = FALSE)
+
+      private$name <- name
+      private$n_loci <- n_loci
+      private$heritability <- heritability
+    },
+
+    get_name = function() return(private$name),
+    get_n_loci = function() return(private$n_loci),
+    get_causal_snps = function() return(private$causal_effects)
+  ),
+  private = list(
     name = NULL,
-
-    #' @field loci Indices of causal loci
-    loci = NULL,
-
-    #' @field n_loci Number of causal loci
     n_loci = NULL,
-
-    #' @field loci_effects Genic effects of causal loci
-    loci_effects = NULL,
-
-    #' @field heritability Narrow-sense heritability of phenotype
-    heritability = NULL,
-
-    #' Initialise a Phenotype object
-    #'
-    #' @param name Name of the phenotype
-    #' @param n_loci Number of causal loci
-    #' @param heritability Narrow-sense heritability of phenotype
-    #' @param loci_effects Vector of genic effects of causal loci
-    initialize = function(name, heritability, loci = NULL, n_loci = NULL,
-                          loci_effects = NULL) {
-      assert_string(name)
-      assert_count()
-      assert_
-      assert_numeric(heritability, lower = 0, upper = 1, len = 1)
-
-      if (is.null(loci_effects)) {
-        loci_effects <- rep(heritability / n_loci, n_loci)
-      } else {
-        assert_numeric(loci_effects, len = n_loci, any.missing = FALSE)
-      }
-
-      if (!is.null(loci) && !is.null(n_loci))
-
-      self$name <- name
-      self$n_loci <- n_loci
-      self$loci_effects <- loci_effects
-      self$heritability <- heritability
-    }
+    causal_snps = NULL,
+    causal_effects = NULL,
+    heritability = NULL
   )
 )
