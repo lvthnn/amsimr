@@ -11,19 +11,6 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// generate_snp_matrix
-arma::umat generate_snp_matrix(int n_population, int n_loci, Rcpp::NumericVector snp_mafs);
-RcppExport SEXP _amsimr_generate_snp_matrix(SEXP n_populationSEXP, SEXP n_lociSEXP, SEXP snp_mafsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type n_population(n_populationSEXP);
-    Rcpp::traits::input_parameter< int >::type n_loci(n_lociSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type snp_mafs(snp_mafsSEXP);
-    rcpp_result_gen = Rcpp::wrap(generate_snp_matrix(n_population, n_loci, snp_mafs));
-    return rcpp_result_gen;
-END_RCPP
-}
 // optim_matching
 Rcpp::List optim_matching(arma::mat& sol_mat, const arma::mat& snp_pairs, const arma::uvec& female_swap_idx, const int num_iterations, const double temp_decay, const double init_temp, const int auto_temp_samples, const double auto_accept_ratio, const bool collect_diagnostics, const bool quietly);
 RcppExport SEXP _amsimr_optim_matching(SEXP sol_matSEXP, SEXP snp_pairsSEXP, SEXP female_swap_idxSEXP, SEXP num_iterationsSEXP, SEXP temp_decaySEXP, SEXP init_tempSEXP, SEXP auto_temp_samplesSEXP, SEXP auto_accept_ratioSEXP, SEXP collect_diagnosticsSEXP, SEXP quietlySEXP) {
@@ -46,7 +33,6 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_amsimr_generate_snp_matrix", (DL_FUNC) &_amsimr_generate_snp_matrix, 3},
     {"_amsimr_optim_matching", (DL_FUNC) &_amsimr_optim_matching, 10},
     {NULL, NULL, 0}
 };

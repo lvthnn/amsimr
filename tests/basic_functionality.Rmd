@@ -18,3 +18,13 @@ population$add_phenotype(bmi)
 
 population$compile()
 ```
+
+## Test `geno_utils.R` methods
+
+```{r}
+n_population <- 64000
+n_loci <- 2000
+snp_mafs <- rbeta(n_loci, 5, 5)
+
+genotypes_fbm <- .init_ancestral_snps(n_population, n_loci, snp_mafs)
+```
