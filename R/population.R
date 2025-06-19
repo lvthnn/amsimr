@@ -23,6 +23,7 @@ Population <- R6::R6Class(
                                 any.missing = FALSE, all.missing = FALSE)
 
       private$.n_population <- n_population
+      private$.n_pairs      <- n_population / 2
       private$.n_loci       <- n_loci
       private$.snp_mafs     <- snp_mafs
       private$.snp_dist     <- snp_dist
@@ -32,12 +33,14 @@ Population <- R6::R6Class(
     },
 
     # Getter methods
-    data         = function() return(private$.data),
-    n_population = function() return(private$.n_population),
-    n_loci       = function() return(private$.n_loci),
-    mating_model = function() return(private$.mating_model),
-    snp_mafs     = function() return(private$.snp_mafs),
-    phenotypes   = function() return(private$.phenotypes),
+    genotype_data  = function() return(private$.genotype_data),
+    phenotype_data = function() return(private$.phenotype_data),
+    n_population   = function() return(private$.n_population),
+    n_pairs        = function() return(private$.n_population),
+    n_loci         = function() return(private$.n_loci),
+    mating_model   = function() return(private$.mating_model),
+    snp_mafs       = function() return(private$.snp_mafs),
+    phenotypes     = function() return(private$.phenotypes),
 
     # Setter methods
     set_mating_model = function(mating_model) {
@@ -59,10 +62,9 @@ Population <- R6::R6Class(
       private$.phenotypes[[phenotype_name]] <- NULL
     },
     compile = function() {
-      # Compiles the Population object, generating data and locking further
-      # modifications to configuration
       private$.setup_phenotypes()
       private$.initialise_data()
+      private$.compiled <- TRUE
     }
   ),
 
@@ -71,6 +73,7 @@ Population <- R6::R6Class(
     .genotype_data  = NULL,
     .phenotype_data = NULL,
     .n_population   = NULL,
+    .n_pairs        = NULL,
     .n_loci         = NULL,
     .data           = NULL,
     .snp_mafs       = NULL,
@@ -99,13 +102,37 @@ Population <- R6::R6Class(
       }
     },
 
-    .initialise_data = function() {
-      # - Generate ancestral haplotype matrix based on MAFs (Rcpp),
-      #   and use to create genetic matrix. Store as an arma matrix
-      #   in the .genotype_data field.
+    .initial_ancestral_snps = function() {
+      mat_dim    <- self$n_pairs() * self$n_loci()
+      snp_probs  <- rep(self$snp_mafs(), each = self$n_pairs())
+      snp_counts <- rbinom(mat_dim, size = 2, prob = snp_probs)
+      return(matrix(snp_counts, self$n_pairs() * self$n_loci(),
+                    nrow = self$n_pairs(), ncol = self$n_loci()))
+    },
 
-      # - Compute trait vectors using genetic matrix and store in
-      #   .phenotype_data field.
+    .generate_haplotype = function(snp_parental) {
+      prob_parental      <- snp_parental / 2
+      prob_haplotype     <- rep(prob_parental, each = 2)
+      mat_dim            <- self$n_pairs() * self$n_loci()
+      haplotype_parental <- rbinom(mat_dim, size = 1, prob = prob_haplotype)
+      return(matrix(haplotype_parental, self$n_pairs() * self$n_loci(),
+                    nrow = self$n_population(), ncol = self$n_loci()))
+    },
+
+    .generate_snp_matrix = function(snps_paternal, snps_maternal) {
+      haplotype_paternal <- private$.generate_haplotype(snps_paternal)
+      haplotype_maternal <- private$.generate_haplotype(snps_maternal)
+      snpmat <- haplotype_paternal + haplotype_maternal
+      return(snpmat)
+    },
+
+    .initialise_data = function() {
+      sex <- rep(0:1, times = self$n_pairs())
+      sibling_id <- rep(1:self$n_pairs(), each = 2)
+      snps_paternal <- private$.initial_ancestral_snps()
+      snps_maternal <- private$.initial_ancestral_snps()
+      snps_init <- private$.generate_snp_matrix(snps_paternal, snps_maternal)
+      private$.genotype_data <- snps_init
     },
 
     .check_compiled = function() {

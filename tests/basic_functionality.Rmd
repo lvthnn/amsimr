@@ -12,15 +12,9 @@ bmi <- Phenotype$new(name = "bmi",
                      heritability = 0.42,
                      n_loci = 1e2)
 
-population <- Population$new(n_population = 1e5, n_loci = 1e3)
+population <- Population$new(n_population = 1e5, n_loci = 4e3)
 population$add_phenotype(height)
 population$add_phenotype(bmi)
-```
 
-
-```{r}
-# Test the generate_snp_matrix function
-devtools::load_all()
-
-generate_snp_matrix(1000, 100, c(0.5, 0.2))
+population$compile()
 ```

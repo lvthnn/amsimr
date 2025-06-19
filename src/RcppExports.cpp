@@ -11,16 +11,17 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// generate_gene_matrix
-void generate_gene_matrix(int n_population, int n_loci, Rcpp::NumericVector snp_mafs);
-RcppExport SEXP _amsimr_generate_gene_matrix(SEXP n_populationSEXP, SEXP n_lociSEXP, SEXP snp_mafsSEXP) {
+// generate_snp_matrix
+arma::umat generate_snp_matrix(int n_population, int n_loci, Rcpp::NumericVector snp_mafs);
+RcppExport SEXP _amsimr_generate_snp_matrix(SEXP n_populationSEXP, SEXP n_lociSEXP, SEXP snp_mafsSEXP) {
 BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< int >::type n_population(n_populationSEXP);
     Rcpp::traits::input_parameter< int >::type n_loci(n_lociSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type snp_mafs(snp_mafsSEXP);
-    generate_gene_matrix(n_population, n_loci, snp_mafs);
-    return R_NilValue;
+    rcpp_result_gen = Rcpp::wrap(generate_snp_matrix(n_population, n_loci, snp_mafs));
+    return rcpp_result_gen;
 END_RCPP
 }
 // optim_matching
@@ -45,7 +46,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_amsimr_generate_gene_matrix", (DL_FUNC) &_amsimr_generate_gene_matrix, 3},
+    {"_amsimr_generate_snp_matrix", (DL_FUNC) &_amsimr_generate_snp_matrix, 3},
     {"_amsimr_optim_matching", (DL_FUNC) &_amsimr_optim_matching, 10},
     {NULL, NULL, 0}
 };
