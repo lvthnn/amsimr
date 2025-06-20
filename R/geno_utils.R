@@ -23,7 +23,7 @@
     nrow        = n_population,
     ncol        = n_loci,
     type        = "unsigned short",
-    backingfile = "genotypes"
+    backingfile = "genotypes_gen0"
   )
 
   # Create a list of chunks to fill the matrix
@@ -33,6 +33,7 @@
 
   future::plan(future::multisession, workers = ncores)
 
+  cli::cli_alert_info("Generating male genotype data...")
   furrr::future_walk(seq_along(chunk_data$start), ~ {
     start_row <- chunk_data$start[.x]
     end_row   <- chunk_data$end[.x]
@@ -50,11 +51,13 @@
     genotypes_fbm[start_row:end_row, ] <- male_chunk
   }, .options = furrr::furrr_options(seed = TRUE))
 
+  cli::cli_alert_info("Computing correlation matrix for genotype data...")
   bigparallelr::set_blas_ncores(ncores)
   cor_male   <- bigstatsr::big_cor(genotypes_fbm, ind.row = 1:n_sex)
   chunk_data <- list(start = start_rows + n_sex, end = end_rows + n_sex)
 
   # Update chunk data for generation of female SNPs
+  cli::cli_alert_info("Generating female genotype data...")
   furrr::future_walk(seq_along(chunk_data$start), ~ {
     start_row    <- chunk_data$start[.x]
     end_row      <- chunk_data$end[.x]
@@ -76,30 +79,12 @@
       female_chunk[, j] <- findInterval(scores_j, vec = breaks) - 1
     }
     genotypes_fbm[start_row:end_row, ] <- female_chunk
-
   }, .options = furrr::furrr_options(seed = TRUE))
-
   future::plan(future::sequential)
   return(genotypes_fbm)
 }
 
-#' Generate haplotype matrix given
+#' Generates offspring for a Population object
 #'
-.generate_haplotypes <- function() {
-
-}
-
-#'
-#'
-#'
-#'
-.generate_offspring <- function(genotypes_fbm, female_idx) {
-  checkmate::assert_class(genotypes_fbm, "FBM")
-
-
-  haplotypes_male     <- .generate_haplotypes(genotypes_female / 2)
-  haplotypes_female   <- .generate_haplotypes(genotypes_male / 2)
-  genotypes_offspring <- hapotypes_female + haplotypes_male
-
-  return(genotypes_offspring)
-}
+#' @param population A Population instance
+#' @param ncores Number of cores to use for parallel processing
