@@ -8,9 +8,10 @@ Phenotype <- R6::R6Class(
       checkmate::assert_numeric(heritability, len = 1, lower = 0, upper = 1,
                                 null.ok = FALSE)
       if (missing(n_loci)) {
-        checkmate::assert_character(causal_snps, pattern = "rs[0-9]+$")
+        checkmate::assert_integer(causal_snps, any.missing = FALSE,
+                                  all.missing = FALSE)
         checkmate::assert_numeric(causal_effects, len = length(causal_snps))
-        private$.causal_snps    <- causal_snps
+        private$.causal_snps    <- gsub("rs", "", causal_snps)
         private$.causal_effects <- causal_effects
         private$.n_loci         <- length(causal_snps)
       } else if (missing(causal_snps) && missing(causal_effects)) {
@@ -45,11 +46,15 @@ Phenotype <- R6::R6Class(
 
     # Other
     compute_data = function(snp_matrix) {
-      checkmate::assert_matrix(snp_matrix, mode = "integer",
-                               any.missing = FALSE, all.missing = FALSE,
-                               ncols = self$n_loci())
-      private$.data <- snp_matrix %*% self$causal_effects() +
-        rnorm(nrow(snp_matrix), 0, 1 - self$heritability())
+      scale_fbm  <- bigstatsr::big_scale()
+      scale_data <- scale_fbm(snp_matrix)[self$causal_snps(), ]
+
+      private$.data  <- bigstatsr::big_prodVec(X       = snp_matrix,
+                                               y.col   = self$causal_effects(),
+                                               ind.col = self$causal_snps(),
+                                               center  = scale_data$center,
+                                               scale   = scale_data$scale) # +
+        # rnorm(nrow(snp_matrix), sd = sqrt(1 - self$heritability()))
     }
   ),
 
