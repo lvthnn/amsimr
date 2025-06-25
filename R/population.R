@@ -173,10 +173,12 @@ Population <- R6::R6Class(
     compile = function(verbose = TRUE) {
       private$.check_compiled()
       cli::cli_h1("Compiling Population object:")
-      cli::cli_h2("Initialising population data")
-      private$.initialise_data()
+      cli::cli_h2("Initialising genotype data")
+      private$.initialise_genotypes()
       cli::cli_h2("Generating sibling pairs")
       private$.update()
+      cli::cli_h2("Initialising haplotype data")
+      private$.initialise_haplotypes()
       cli::cli_h2("Setting up phenotypes")
       private$.setup_phenotypes()
       private$.compiled <- TRUE
@@ -246,8 +248,8 @@ Population <- R6::R6Class(
     #   using parallel processing. It generates correlated genotype data for
     #   males and females separately, ensuring realistic population structure
     #   and linkage disequilibrium patterns.
-    .initialise_data = function(ncores = parallel::detectCores() - 1,
-                                seed = NULL) {
+    .initialise_genotypes = function(ncores = parallel::detectCores() - 1,
+                                     seed = NULL) {
       # Add validation to ensure even population size
       checkmate::assert(self$n_population() %% 2 == 0,
                         .var.name = "even population size")
@@ -295,9 +297,9 @@ Population <- R6::R6Class(
 
       cli::cli_alert_info("Generating female genotype data...")
       furrr::future_walk(seq_along(chunk_data$start), ~ {
-        start_row    <- chunk_data$start[.x]
-        end_row      <- chunk_data$end[.x]
-        n_row        <- end_row - start_row + 1
+        i1           <- chunk_data$start[.x]
+        i2           <- chunk_data$end[.x]
+        n_row        <- i2 - i1 + 1
         scores_chunk <- MASS::mvrnorm(
           n_row,
           mu    = rep(0, self$n_loci()),
@@ -324,13 +326,67 @@ Population <- R6::R6Class(
 
         female_chunk <- (scores_chunk > p0_matrix) + (scores_chunk > p1_matrix)
 
-        genotypes_fbm[start_row:end_row, ] <- female_chunk
+        genotypes_fbm[i1:i2, ] <- female_chunk
       }, .options = furrr::furrr_options(seed = TRUE))
 
       future::plan(future::sequential)
       private$.genotype_data <- genotypes_fbm
+    },
 
-      # Generate the initial haplotypes
+    .initialise_haplotypes = function(ncores = parallel::detectCores() - 1,
+                                      seed = NULL) {
+      n_pop  <- self$n_population()
+      n_loci <- self$n_loci()
+      haplo_fbm <- bigstatsr::FBM(
+        nrow = n_pop,
+        ncol = 2 * n_loci,
+        type = "unsigned short",
+        backingfile = "haplotypes_gen0"
+      )
+
+      chunk_size <- 10000
+      start_rows <- seq(1, n_pop, by = chunk_size)
+      end_rows   <- pmin(start_rows + chunk_size - 1, n_pop)
+      chunk_data <- list(start = start_rows, end = end_rows)
+
+      future::plan(future::multisession, workers = ncores)
+
+      furrr::future_walk(seq_along(chunk_data$start), function(idx) {
+        i1         <- chunk_data$start[idx]
+        i2         <- chunk_data$end[idx]
+        rows       <- i2 - i1 + 1
+        geno_chunk <- self$genotype_data()[i1:i2, , drop = FALSE]
+
+        # Vectorised haplotype assignment
+        # For g == 0: both haplotypes 0
+        # For g == 2: both haplotypes 1
+        # For g == 1: randomly assign 1/0 or 0/1
+        hap1 <- matrix(0L, nrow = rows, ncol = n_loci)
+        hap2 <- matrix(0L, nrow = rows, ncol = n_loci)
+
+        idx0 <- geno_chunk == 0
+        idx2 <- geno_chunk == 2
+        idx1 <- geno_chunk == 1
+
+        hap1[idx2] <- 1L
+        hap2[idx2] <- 1L
+
+        if (any(idx1)) {
+          # For heterozygotes, randomly assign which haplotype gets the 1
+          rand    <- matrix(runif(sum(idx1)), nrow = sum(idx1))
+          assign1 <- rand < 0.5
+          # Assign 1 to hap1, 0 to hap2 where assign1 is TRUE, else reverse
+          hap1[idx1][assign1]  <- 1L
+          hap2[idx1][!assign1] <- 1L
+        }
+
+        # Combine haplotypes into one matrix for this chunk
+        hap_chunk <- cbind(hap1, hap2)
+        haplo_fbm[i1:i2, ] <- hap_chunk
+      }, .options = furrr::furrr_options(seed = TRUE))
+
+      future::plan(future::sequential)
+      private$.haplotype_data <- haplo_fbm
     },
 
     # @description Update the population to the next generation
