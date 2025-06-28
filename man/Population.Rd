@@ -11,7 +11,7 @@ phenotype and mating model classes for flexible simulation workflows.
 }
 \details{
 The Population class simulates genomic populations with realistic genetic
-structure. Generates correlated genotype data, supports multiple phenotypes,
+structure. It generates correlated genotype data, supports multiple phenotypes,
 and can advance through generations via mating simulations. The class uses
 parallel processing and file-backed matrices for scalability. Once compiled,
 the object becomes immutable.
@@ -20,44 +20,49 @@ the object becomes immutable.
 
 \itemize{
 \item \code{initialize()}: Set up the initial population state.
-\item \code{genotype_data()}: Get the genotype data matrix.
-\item \code{phenotype_data()}: Get the phenotype data.
-\item \code{haplotype_data()}: Get the haplotype data.
-\item \code{recombination_rate()}: Get the recombination rate.
-\item \code{n_population()}: Get the number of individuals in the population.
-\item \code{n_loci()}: Get the number of loci.
-\item \code{mating_model()}: Get the mating model.
-\item \code{snp_mafs()}: Get the SNP minor allele frequencies.
-\item \code{phenotypes()}: Get the list of phenotypes.
-\item \code{generation()}: Get the current generation.
-\item \code{set_mating_model()}: Set the mating model.
 \item \code{add_phenotype()}: Add a phenotype to the population.
 \item \code{remove_phenotype()}: Remove a phenotype from the population.
-\item \code{compile()}: Compile and initialize the population data.
+\item \code{compile()}: Compile and initialise the population data.
+\item \code{update()}: Advance the population one generation with mate matching.
 }
 }
 
 \seealso{
 Other related classes and functions: \code{Phenotype}, \code{MatingModel}
 }
+\section{Active bindings}{
+\if{html}{\out{<div class="r6-active-bindings">}}
+\describe{
+\item{\code{genotypes}}{Get the genotype data matrix.}
+
+\item{\code{haplotypes}}{Get the haplotype data.}
+
+\item{\code{recomb_rate}}{Get the recombination rate.}
+
+\item{\code{mutation_rate}}{Get the mutation rate.}
+
+\item{\code{size}}{Get the number of individuals in the population.}
+
+\item{\code{n_loci}}{Get the number of loci.}
+
+\item{\code{mating_model}}{Get or set the mating model.}
+
+\item{\code{phenotypes}}{Get or set the list of phenotypes.}
+
+\item{\code{snp_mafs}}{Get the SNP minor allele frequencies.}
+
+\item{\code{generation}}{Get the current generation.}
+}
+\if{html}{\out{</div>}}
+}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-Population-new}{\code{Population$new()}}
-\item \href{#method-Population-genotype_data}{\code{Population$genotype_data()}}
-\item \href{#method-Population-phenotype_data}{\code{Population$phenotype_data()}}
-\item \href{#method-Population-haplotype_data}{\code{Population$haplotype_data()}}
-\item \href{#method-Population-recombination_rate}{\code{Population$recombination_rate()}}
-\item \href{#method-Population-n_population}{\code{Population$n_population()}}
-\item \href{#method-Population-n_loci}{\code{Population$n_loci()}}
-\item \href{#method-Population-mating_model}{\code{Population$mating_model()}}
-\item \href{#method-Population-snp_mafs}{\code{Population$snp_mafs()}}
-\item \href{#method-Population-phenotypes}{\code{Population$phenotypes()}}
-\item \href{#method-Population-generation}{\code{Population$generation()}}
-\item \href{#method-Population-set_mating_model}{\code{Population$set_mating_model()}}
 \item \href{#method-Population-add_phenotype}{\code{Population$add_phenotype()}}
 \item \href{#method-Population-remove_phenotype}{\code{Population$remove_phenotype()}}
 \item \href{#method-Population-compile}{\code{Population$compile()}}
+\item \href{#method-Population-update}{\code{Population$update()}}
 \item \href{#method-Population-clone}{\code{Population$clone()}}
 }
 }
@@ -65,12 +70,13 @@ Other related classes and functions: \code{Phenotype}, \code{MatingModel}
 \if{html}{\out{<a id="method-Population-new"></a>}}
 \if{latex}{\out{\hypertarget{method-Population-new}{}}}
 \subsection{Method \code{new()}}{
-Initialize a new Population object
+Initialise a new Population object
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Population$new(
-  n_population,
+  size,
   n_loci,
-  recombination_rate = 1e-08,
+  recomb_rate = 1e-08,
+  mutation_rate = 1e-08,
   snp_dist = "beta",
   snp_params = c(5, 5),
   phenotypes = NULL,
@@ -81,13 +87,16 @@ Initialize a new Population object
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{n_population}}{Integer. The number of individuals in the population.
+\item{\code{size}}{Integer. The number of individuals in the population.
 Must be even.}
 
 \item{\code{n_loci}}{Integer. The number of genetic loci to simulate.}
 
-\item{\code{recombination_rate}}{Numeric. The recombination rate between loci
+\item{\code{recomb_rate}}{Numeric. The recombination rate between loci
 (default: 1e-8).}
+
+\item{\code{mutation_rate}}{Numeric. The probability of mutation at loci.
+(default: 1e-8)}
 
 \item{\code{snp_dist}}{Character. Distribution for SNP minor allele frequencies
 ("beta" or "unif").}
@@ -105,163 +114,6 @@ the population.}
 }
 \subsection{Returns}{
 A new Population object.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Population-genotype_data"></a>}}
-\if{latex}{\out{\hypertarget{method-Population-genotype_data}{}}}
-\subsection{Method \code{genotype_data()}}{
-Get the genotype data matrix
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Population$genotype_data()}\if{html}{\out{</div>}}
-}
-
-\subsection{Returns}{
-Matrix or FBM object containing genotype data for all individuals
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Population-phenotype_data"></a>}}
-\if{latex}{\out{\hypertarget{method-Population-phenotype_data}{}}}
-\subsection{Method \code{phenotype_data()}}{
-Get the phenotype data
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Population$phenotype_data()}\if{html}{\out{</div>}}
-}
-
-\subsection{Returns}{
-Data frame or matrix containing phenotype values for all
-individuals
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Population-haplotype_data"></a>}}
-\if{latex}{\out{\hypertarget{method-Population-haplotype_data}{}}}
-\subsection{Method \code{haplotype_data()}}{
-Get the haplotype data
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Population$haplotype_data()}\if{html}{\out{</div>}}
-}
-
-\subsection{Returns}{
-Matrix containing haplotype data for all individuals
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Population-recombination_rate"></a>}}
-\if{latex}{\out{\hypertarget{method-Population-recombination_rate}{}}}
-\subsection{Method \code{recombination_rate()}}{
-Get the recombination rate
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Population$recombination_rate()}\if{html}{\out{</div>}}
-}
-
-\subsection{Returns}{
-Numeric value representing the recombination rate between loci
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Population-n_population"></a>}}
-\if{latex}{\out{\hypertarget{method-Population-n_population}{}}}
-\subsection{Method \code{n_population()}}{
-Get the number of individuals in the population
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Population$n_population()}\if{html}{\out{</div>}}
-}
-
-\subsection{Returns}{
-Integer number of individuals in the population
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Population-n_loci"></a>}}
-\if{latex}{\out{\hypertarget{method-Population-n_loci}{}}}
-\subsection{Method \code{n_loci()}}{
-Get the number of genetic loci
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Population$n_loci()}\if{html}{\out{</div>}}
-}
-
-\subsection{Returns}{
-Integer number of loci being simulated
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Population-mating_model"></a>}}
-\if{latex}{\out{\hypertarget{method-Population-mating_model}{}}}
-\subsection{Method \code{mating_model()}}{
-Get the mating model
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Population$mating_model()}\if{html}{\out{</div>}}
-}
-
-\subsection{Returns}{
-MatingModel object or NULL if no mating model is set
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Population-snp_mafs"></a>}}
-\if{latex}{\out{\hypertarget{method-Population-snp_mafs}{}}}
-\subsection{Method \code{snp_mafs()}}{
-Get the SNP minor allele frequencies
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Population$snp_mafs()}\if{html}{\out{</div>}}
-}
-
-\subsection{Returns}{
-Named numeric vector of minor allele frequencies for each SNP
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Population-phenotypes"></a>}}
-\if{latex}{\out{\hypertarget{method-Population-phenotypes}{}}}
-\subsection{Method \code{phenotypes()}}{
-Get the list of phenotypes
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Population$phenotypes()}\if{html}{\out{</div>}}
-}
-
-\subsection{Returns}{
-Named list of Phenotype objects associated with the population
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Population-generation"></a>}}
-\if{latex}{\out{\hypertarget{method-Population-generation}{}}}
-\subsection{Method \code{generation()}}{
-Get the current generation number
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Population$generation()}\if{html}{\out{</div>}}
-}
-
-\subsection{Returns}{
-Integer representing the current generation (0 for initial
-generation)
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Population-set_mating_model"></a>}}
-\if{latex}{\out{\hypertarget{method-Population-set_mating_model}{}}}
-\subsection{Method \code{set_mating_model()}}{
-Set the mating model for the population
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Population$set_mating_model(mating_model)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{mating_model}}{MatingModel object to be used for mating decisions}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Details}{
-This method can only be called before the population is
-compiled.
-}
-
-\subsection{Returns}{
-No return value. Modifies the population's mating model.
 }
 }
 \if{html}{\out{<hr>}}
@@ -321,7 +173,7 @@ of phenotypes.
 \if{html}{\out{<a id="method-Population-compile"></a>}}
 \if{latex}{\out{\hypertarget{method-Population-compile}{}}}
 \subsection{Method \code{compile()}}{
-Compile and initialize the population data
+Compile and initialise the population data
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Population$compile(verbose = TRUE)}\if{html}{\out{</div>}}
 }
@@ -336,7 +188,7 @@ compilation (default: TRUE)}
 }
 \subsection{Details}{
 This method must be called after all phenotypes and mating
-models have been set up. It initializes the genotype data, generates
+models have been set up. It initialises the genotype data, generates
 sibling pairs, and sets up phenotypes. Once compiled, the population
 object cannot be modified.
 }
@@ -344,6 +196,25 @@ object cannot be modified.
 \subsection{Returns}{
 No return value. Compiles the population object and initialises
 all data structures.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Population-update"></a>}}
+\if{latex}{\out{\hypertarget{method-Population-update}{}}}
+\subsection{Method \code{update()}}{
+Advance the population one generation with mate matching
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Population$update(ncores = parallel::detectCores() - 1, overwrite = TRUE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{ncores}}{Integer. Number of cores to use for parallel computing.}
+
+\item{\code{overwrite}}{Logical. Should existing output files be overwritten?}
+}
+\if{html}{\out{</div>}}
 }
 }
 \if{html}{\out{<hr>}}
