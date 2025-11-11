@@ -1,0 +1,19 @@
+Package: amsimr
+Title: Assortative Mating Simulations in R
+Version: 0.0.0.9000
+Authors@R: 
+    person("Kári", "Hlynsson", , "kari.hlynsson@gmail.com", role = c("aut", "cre"))
+Description: The amsimr R package exposes bindings to the amsimcpp C++ library,
+  which allows the user to perform highly efficient and customisable simulations
+  of genetic data under assortative mating.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+LinkingTo: 
+    Rcpp
+Imports: 
+    Rcpp
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
