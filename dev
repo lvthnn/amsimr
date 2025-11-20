@@ -1,0 +1,47 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+  update)
+    echo "[dev] Syncing headers..."
+    rm -rf inst/include/amsim
+    mkdir -p inst/include
+    cp -r ../include/amsim inst/include/
+
+    echo "[dev] Syncing backend sources..."
+    mkdir -p src
+    for f in ../src/*.cc; do
+      fn="$(basename ${f} | cut -d. -f1)"
+      cp "${f}" "src/$(basename ${fn}).cpp"
+    done
+
+    echo "[dev] Syncing .clangd file"
+    R_INCLUDE=$(R RHOME)/include
+    RCPP_INCLUDE=$(Rscript -e 'cat(Rcpp:::CxxFlags())')
+    cat > .clangd <<EOF
+CompileFlags:
+  Add:
+    - "-std=c++20"
+    - "-I$(pwd)/inst/include"
+    - "-I${R_INCLUDE}"
+    - "${RCPP_INCLUDE}"
+EOF
+    echo "[dev] Done."
+    ;;
+
+  clean)
+    echo "[dev] Cleaning build artefacts and synced files..."
+    rm -rf inst/include/amsim
+    for f in ../src/*.cc; do
+      fn="$(basename ${f} | cut -d. -f1)"
+      rm "src/$(basename ${fn}).cpp"
+    done
+    echo "[dev] Done."
+    ;;
+
+  *)
+    echo "Usage: ./dev {update|clean}"
+    exit 1
+    ;;
+esac
+
