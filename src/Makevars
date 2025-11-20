@@ -1,0 +1,12 @@
+PKG_CPPFLAGS = -I../inst/include
+CXX_STD = CXX20
+
+PKG_CXXFLAGS = -O3 -DNDEBUG
+PKG_CFLAGS = -O3 -DNDEBUG
+
+ifeq ($(shell uname),Darwin)
+  PKG_LIBS = -framework Accelerate
+  PKG_CPPFLAGS += -DACCELERATE_NEW_LAPACK
+else
+  PKG_LIBS = -lblas -llapack
+endif

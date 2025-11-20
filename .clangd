@@ -1,0 +1,6 @@
+CompileFlags:
+  Add:
+    - "-std=c++20"
+    - "-I/Users/karihlynsson/Github/amsimcpp/r/inst/include"
+    - "-I/opt/homebrew/Cellar/r/4.5.2_1/lib/R/include"
+    - "-I/opt/homebrew/lib/R/4.5/site-library/Rcpp/include"
