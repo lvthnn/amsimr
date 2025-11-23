@@ -6,8 +6,9 @@
 \description{
 An R6 class for configuring and running genetic simulations with assortative
 mating. This class provides a builder pattern interface for setting update
-simulation parameters including genome architecture, phenotypic traits, bit
-mating strategies.
+simulation parameters including genome architecture, phenotypic traits,
+mating strategies, as well as the metrics and statistics used to produce
+output data for analysis.
 }
 \details{
 The Simulation class allows configuration of:
@@ -109,6 +110,8 @@ sim$run(
 \item{\code{temp_init}}{Initial annealing temperature}
 
 \item{\code{temp_decay}}{Annealing temperature decay rate}
+
+\item{\code{results}}{Summary statistic of metrics from simulation}
 }
 \if{html}{\out{</div>}}
 }
@@ -225,13 +228,15 @@ Configure phenome (trait) architecture
 
 \item{\code{h2_genetic}}{Numeric vector. Narrow-sense heritabilities.}
 
-\item{\code{h2_environmental}}{Numeric vector. Environmental variance components.}
+\item{\code{h2_environmental}}{Numeric vector. Environmental variance
+components.}
 
 \item{\code{h2_vertical}}{Numeric vector. Vertical transmission components.}
 
 \item{\code{genetic_cor}}{Numeric matrix. Genetic correlation matrix.}
 
-\item{\code{environmental_cor}}{Numeric matrix. Environmental correlation matrix.}
+\item{\code{environmental_cor}}{Numeric matrix. Environmental correlation
+matrix.}
 }
 \if{html}{\out{</div>}}
 }
@@ -356,7 +361,9 @@ The simulation proceeds through the following steps for each generation:
 }
 
 \subsection{Returns}{
-NULL (invisibly). Results are written to the output directory.
+Self (invisibly). Results are written to the output directory. If
+the summarise argument is TRUE, the data are aggregated into summary
+statistic tables and are made accesssible under the results field.
 }
 \subsection{Examples}{
 \if{html}{\out{<div class="r example copy">}}
