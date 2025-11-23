@@ -10,6 +10,22 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// custom_metric
+SEXP custom_metric(const std::string& name, const Rcpp::Function& r_metric_func, SEXP r_n_rows, SEXP r_n_cols, SEXP r_labels, const bool require_lat);
+RcppExport SEXP _amsimr_custom_metric(SEXP nameSEXP, SEXP r_metric_funcSEXP, SEXP r_n_rowsSEXP, SEXP r_n_colsSEXP, SEXP r_labelsSEXP, SEXP require_latSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type name(nameSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::Function& >::type r_metric_func(r_metric_funcSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type r_n_rows(r_n_rowsSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type r_n_cols(r_n_colsSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type r_labels(r_labelsSEXP);
+    Rcpp::traits::input_parameter< const bool >::type require_lat(require_latSEXP);
+    rcpp_result_gen = Rcpp::wrap(custom_metric(name, r_metric_func, r_n_rows, r_n_cols, r_labels, require_lat));
+    return rcpp_result_gen;
+END_RCPP
+}
 // pheno_h2
 SEXP pheno_h2();
 RcppExport SEXP _amsimr_pheno_h2() {
@@ -118,34 +134,91 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__new
-SEXP SimulationConfig__new();
-RcppExport SEXP _amsimr_SimulationConfig__new() {
+// SimulationResults_new
+SEXP SimulationResults_new(const std::string& output_dir);
+RcppExport SEXP _amsimr_SimulationResults_new(SEXP output_dirSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__new());
+    Rcpp::traits::input_parameter< const std::string& >::type output_dir(output_dirSEXP);
+    rcpp_result_gen = Rcpp::wrap(SimulationResults_new(output_dir));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__simulation
-SEXP SimulationConfig__simulation(SEXP ptr, std::size_t n_generations, std::size_t n_individuals, std::string output_dir, SEXP random_seed);
-RcppExport SEXP _amsimr_SimulationConfig__simulation(SEXP ptrSEXP, SEXP n_generationsSEXP, SEXP n_individualsSEXP, SEXP output_dirSEXP, SEXP random_seedSEXP) {
+// SimulationResults_summarise
+void SimulationResults_summarise(SEXP ptr);
+RcppExport SEXP _amsimr_SimulationResults_summarise(SEXP ptrSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
+    SimulationResults_summarise(ptr);
+    return R_NilValue;
+END_RCPP
+}
+// SimulationResults_save
+void SimulationResults_save(SEXP ptr, SEXP metrics, SEXP out_dir, bool overwrite);
+RcppExport SEXP _amsimr_SimulationResults_save(SEXP ptrSEXP, SEXP metricsSEXP, SEXP out_dirSEXP, SEXP overwriteSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type metrics(metricsSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type out_dir(out_dirSEXP);
+    Rcpp::traits::input_parameter< bool >::type overwrite(overwriteSEXP);
+    SimulationResults_save(ptr, metrics, out_dir, overwrite);
+    return R_NilValue;
+END_RCPP
+}
+// SimulationResults_load
+Rcpp::DataFrame SimulationResults_load(SEXP ptr, const std::string& metric_name);
+RcppExport SEXP _amsimr_SimulationResults_load(SEXP ptrSEXP, SEXP metric_nameSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type metric_name(metric_nameSEXP);
+    rcpp_result_gen = Rcpp::wrap(SimulationResults_load(ptr, metric_name));
+    return rcpp_result_gen;
+END_RCPP
+}
+// SimulationResults_metric_names
+std::vector<std::string> SimulationResults_metric_names(SEXP ptr);
+RcppExport SEXP _amsimr_SimulationResults_metric_names(SEXP ptrSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
+    rcpp_result_gen = Rcpp::wrap(SimulationResults_metric_names(ptr));
+    return rcpp_result_gen;
+END_RCPP
+}
+// SimulationConfig_new
+SEXP SimulationConfig_new();
+RcppExport SEXP _amsimr_SimulationConfig_new() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_new());
+    return rcpp_result_gen;
+END_RCPP
+}
+// SimulationConfig_simulation
+SEXP SimulationConfig_simulation(SEXP ptr, std::size_t n_generations, std::size_t n_individuals, const std::string& output_dir, SEXP random_seed);
+RcppExport SEXP _amsimr_SimulationConfig_simulation(SEXP ptrSEXP, SEXP n_generationsSEXP, SEXP n_individualsSEXP, SEXP output_dirSEXP, SEXP random_seedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
     Rcpp::traits::input_parameter< std::size_t >::type n_generations(n_generationsSEXP);
     Rcpp::traits::input_parameter< std::size_t >::type n_individuals(n_individualsSEXP);
-    Rcpp::traits::input_parameter< std::string >::type output_dir(output_dirSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type output_dir(output_dirSEXP);
     Rcpp::traits::input_parameter< SEXP >::type random_seed(random_seedSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__simulation(ptr, n_generations, n_individuals, output_dir, random_seed));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_simulation(ptr, n_generations, n_individuals, output_dir, random_seed));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__genome
-SEXP SimulationConfig__genome(SEXP ptr, std::size_t n_loci, std::vector<double> locus_maf, std::vector<double> locus_recombination, std::vector<double> locus_mutation);
-RcppExport SEXP _amsimr_SimulationConfig__genome(SEXP ptrSEXP, SEXP n_lociSEXP, SEXP locus_mafSEXP, SEXP locus_recombinationSEXP, SEXP locus_mutationSEXP) {
+// SimulationConfig_genome
+SEXP SimulationConfig_genome(SEXP ptr, std::size_t n_loci, std::vector<double> locus_maf, std::vector<double> locus_recombination, std::vector<double> locus_mutation);
+RcppExport SEXP _amsimr_SimulationConfig_genome(SEXP ptrSEXP, SEXP n_lociSEXP, SEXP locus_mafSEXP, SEXP locus_recombinationSEXP, SEXP locus_mutationSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -154,43 +227,43 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::vector<double> >::type locus_maf(locus_mafSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type locus_recombination(locus_recombinationSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type locus_mutation(locus_mutationSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__genome(ptr, n_loci, locus_maf, locus_recombination, locus_mutation));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_genome(ptr, n_loci, locus_maf, locus_recombination, locus_mutation));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__phenome
-SEXP SimulationConfig__phenome(SEXP ptr, std::size_t n_phenotypes, std::vector<std::string> names, std::vector<std::size_t> n_causal_loci, std::vector<double> h2_genetic, std::vector<double> h2_environmental, std::vector<double> h2_vertical, std::vector<double> genetic_cor, std::vector<double> environmental_cor);
-RcppExport SEXP _amsimr_SimulationConfig__phenome(SEXP ptrSEXP, SEXP n_phenotypesSEXP, SEXP namesSEXP, SEXP n_causal_lociSEXP, SEXP h2_geneticSEXP, SEXP h2_environmentalSEXP, SEXP h2_verticalSEXP, SEXP genetic_corSEXP, SEXP environmental_corSEXP) {
+// SimulationConfig_phenome
+SEXP SimulationConfig_phenome(SEXP ptr, std::size_t n_phenotypes, const std::vector<std::string>& names, std::vector<std::size_t> n_causal_loci, std::vector<double> h2_genetic, std::vector<double> h2_environmental, std::vector<double> h2_vertical, std::vector<double> genetic_cor, std::vector<double> environmental_cor);
+RcppExport SEXP _amsimr_SimulationConfig_phenome(SEXP ptrSEXP, SEXP n_phenotypesSEXP, SEXP namesSEXP, SEXP n_causal_lociSEXP, SEXP h2_geneticSEXP, SEXP h2_environmentalSEXP, SEXP h2_verticalSEXP, SEXP genetic_corSEXP, SEXP environmental_corSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
     Rcpp::traits::input_parameter< std::size_t >::type n_phenotypes(n_phenotypesSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type names(namesSEXP);
+    Rcpp::traits::input_parameter< const std::vector<std::string>& >::type names(namesSEXP);
     Rcpp::traits::input_parameter< std::vector<std::size_t> >::type n_causal_loci(n_causal_lociSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type h2_genetic(h2_geneticSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type h2_environmental(h2_environmentalSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type h2_vertical(h2_verticalSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type genetic_cor(genetic_corSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type environmental_cor(environmental_corSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__phenome(ptr, n_phenotypes, names, n_causal_loci, h2_genetic, h2_environmental, h2_vertical, genetic_cor, environmental_cor));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_phenome(ptr, n_phenotypes, names, n_causal_loci, h2_genetic, h2_environmental, h2_vertical, genetic_cor, environmental_cor));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__random_mating
-SEXP SimulationConfig__random_mating(SEXP ptr);
-RcppExport SEXP _amsimr_SimulationConfig__random_mating(SEXP ptrSEXP) {
+// SimulationConfig_random_mating
+SEXP SimulationConfig_random_mating(SEXP ptr);
+RcppExport SEXP _amsimr_SimulationConfig_random_mating(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__random_mating(ptr));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_random_mating(ptr));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__assortative_mating
-SEXP SimulationConfig__assortative_mating(SEXP ptr, std::vector<double> mate_cor, SEXP tol_inf, SEXP n_iterations, SEXP temp_init, SEXP temp_decay);
-RcppExport SEXP _amsimr_SimulationConfig__assortative_mating(SEXP ptrSEXP, SEXP mate_corSEXP, SEXP tol_infSEXP, SEXP n_iterationsSEXP, SEXP temp_initSEXP, SEXP temp_decaySEXP) {
+// SimulationConfig_assortative_mating
+SEXP SimulationConfig_assortative_mating(SEXP ptr, std::vector<double> mate_cor, SEXP tol_inf, SEXP n_iterations, SEXP temp_init, SEXP temp_decay);
+RcppExport SEXP _amsimr_SimulationConfig_assortative_mating(SEXP ptrSEXP, SEXP mate_corSEXP, SEXP tol_infSEXP, SEXP n_iterationsSEXP, SEXP temp_initSEXP, SEXP temp_decaySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -200,255 +273,255 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< SEXP >::type n_iterations(n_iterationsSEXP);
     Rcpp::traits::input_parameter< SEXP >::type temp_init(temp_initSEXP);
     Rcpp::traits::input_parameter< SEXP >::type temp_decay(temp_decaySEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__assortative_mating(ptr, mate_cor, tol_inf, n_iterations, temp_init, temp_decay));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_assortative_mating(ptr, mate_cor, tol_inf, n_iterations, temp_init, temp_decay));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__metrics
-SEXP SimulationConfig__metrics(SEXP ptr, Rcpp::List metrics);
-RcppExport SEXP _amsimr_SimulationConfig__metrics(SEXP ptrSEXP, SEXP metricsSEXP) {
+// SimulationConfig_metrics
+SEXP SimulationConfig_metrics(SEXP ptr, Rcpp::List metrics);
+RcppExport SEXP _amsimr_SimulationConfig_metrics(SEXP ptrSEXP, SEXP metricsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type metrics(metricsSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__metrics(ptr, metrics));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_metrics(ptr, metrics));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__n_generations
-std::size_t SimulationConfig__n_generations(SEXP ptr);
-RcppExport SEXP _amsimr_SimulationConfig__n_generations(SEXP ptrSEXP) {
+// SimulationConfig_n_generations
+std::size_t SimulationConfig_n_generations(SEXP ptr);
+RcppExport SEXP _amsimr_SimulationConfig_n_generations(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__n_generations(ptr));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_n_generations(ptr));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__n_individuals
-std::size_t SimulationConfig__n_individuals(SEXP ptr);
-RcppExport SEXP _amsimr_SimulationConfig__n_individuals(SEXP ptrSEXP) {
+// SimulationConfig_n_individuals
+std::size_t SimulationConfig_n_individuals(SEXP ptr);
+RcppExport SEXP _amsimr_SimulationConfig_n_individuals(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__n_individuals(ptr));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_n_individuals(ptr));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__n_loci
-std::size_t SimulationConfig__n_loci(SEXP ptr);
-RcppExport SEXP _amsimr_SimulationConfig__n_loci(SEXP ptrSEXP) {
+// SimulationConfig_n_loci
+std::size_t SimulationConfig_n_loci(SEXP ptr);
+RcppExport SEXP _amsimr_SimulationConfig_n_loci(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__n_loci(ptr));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_n_loci(ptr));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__output_dir
-std::string SimulationConfig__output_dir(SEXP ptr);
-RcppExport SEXP _amsimr_SimulationConfig__output_dir(SEXP ptrSEXP) {
+// SimulationConfig_output_dir
+std::string SimulationConfig_output_dir(SEXP ptr);
+RcppExport SEXP _amsimr_SimulationConfig_output_dir(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__output_dir(ptr));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_output_dir(ptr));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__random_seed
-std::size_t SimulationConfig__random_seed(SEXP ptr);
-RcppExport SEXP _amsimr_SimulationConfig__random_seed(SEXP ptrSEXP) {
+// SimulationConfig_random_seed
+std::size_t SimulationConfig_random_seed(SEXP ptr);
+RcppExport SEXP _amsimr_SimulationConfig_random_seed(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__random_seed(ptr));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_random_seed(ptr));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__locus_maf
-std::vector<double> SimulationConfig__locus_maf(SEXP ptr);
-RcppExport SEXP _amsimr_SimulationConfig__locus_maf(SEXP ptrSEXP) {
+// SimulationConfig_locus_maf
+std::vector<double> SimulationConfig_locus_maf(SEXP ptr);
+RcppExport SEXP _amsimr_SimulationConfig_locus_maf(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__locus_maf(ptr));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_locus_maf(ptr));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__locus_recombination
-std::vector<double> SimulationConfig__locus_recombination(SEXP ptr);
-RcppExport SEXP _amsimr_SimulationConfig__locus_recombination(SEXP ptrSEXP) {
+// SimulationConfig_locus_recombination
+std::vector<double> SimulationConfig_locus_recombination(SEXP ptr);
+RcppExport SEXP _amsimr_SimulationConfig_locus_recombination(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__locus_recombination(ptr));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_locus_recombination(ptr));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__locus_mutation
-std::vector<double> SimulationConfig__locus_mutation(SEXP ptr);
-RcppExport SEXP _amsimr_SimulationConfig__locus_mutation(SEXP ptrSEXP) {
+// SimulationConfig_locus_mutation
+std::vector<double> SimulationConfig_locus_mutation(SEXP ptr);
+RcppExport SEXP _amsimr_SimulationConfig_locus_mutation(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__locus_mutation(ptr));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_locus_mutation(ptr));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__n_phenotypes
-std::size_t SimulationConfig__n_phenotypes(SEXP ptr);
-RcppExport SEXP _amsimr_SimulationConfig__n_phenotypes(SEXP ptrSEXP) {
+// SimulationConfig_n_phenotypes
+std::size_t SimulationConfig_n_phenotypes(SEXP ptr);
+RcppExport SEXP _amsimr_SimulationConfig_n_phenotypes(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__n_phenotypes(ptr));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_n_phenotypes(ptr));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__phenotype_names
-std::vector<std::string> SimulationConfig__phenotype_names(SEXP ptr);
-RcppExport SEXP _amsimr_SimulationConfig__phenotype_names(SEXP ptrSEXP) {
+// SimulationConfig_phenotype_names
+std::vector<std::string> SimulationConfig_phenotype_names(SEXP ptr);
+RcppExport SEXP _amsimr_SimulationConfig_phenotype_names(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__phenotype_names(ptr));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_phenotype_names(ptr));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__n_causal_loci
-std::vector<std::size_t> SimulationConfig__n_causal_loci(SEXP ptr);
-RcppExport SEXP _amsimr_SimulationConfig__n_causal_loci(SEXP ptrSEXP) {
+// SimulationConfig_n_causal_loci
+std::vector<std::size_t> SimulationConfig_n_causal_loci(SEXP ptr);
+RcppExport SEXP _amsimr_SimulationConfig_n_causal_loci(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__n_causal_loci(ptr));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_n_causal_loci(ptr));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__h2_genetic
-std::vector<double> SimulationConfig__h2_genetic(SEXP ptr);
-RcppExport SEXP _amsimr_SimulationConfig__h2_genetic(SEXP ptrSEXP) {
+// SimulationConfig_h2_genetic
+std::vector<double> SimulationConfig_h2_genetic(SEXP ptr);
+RcppExport SEXP _amsimr_SimulationConfig_h2_genetic(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__h2_genetic(ptr));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_h2_genetic(ptr));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__h2_environmental
-std::vector<double> SimulationConfig__h2_environmental(SEXP ptr);
-RcppExport SEXP _amsimr_SimulationConfig__h2_environmental(SEXP ptrSEXP) {
+// SimulationConfig_h2_environmental
+std::vector<double> SimulationConfig_h2_environmental(SEXP ptr);
+RcppExport SEXP _amsimr_SimulationConfig_h2_environmental(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__h2_environmental(ptr));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_h2_environmental(ptr));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__h2_vertical
-std::vector<double> SimulationConfig__h2_vertical(SEXP ptr);
-RcppExport SEXP _amsimr_SimulationConfig__h2_vertical(SEXP ptrSEXP) {
+// SimulationConfig_h2_vertical
+std::vector<double> SimulationConfig_h2_vertical(SEXP ptr);
+RcppExport SEXP _amsimr_SimulationConfig_h2_vertical(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__h2_vertical(ptr));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_h2_vertical(ptr));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__genetic_cor
-std::vector<double> SimulationConfig__genetic_cor(SEXP ptr);
-RcppExport SEXP _amsimr_SimulationConfig__genetic_cor(SEXP ptrSEXP) {
+// SimulationConfig_genetic_cor
+std::vector<double> SimulationConfig_genetic_cor(SEXP ptr);
+RcppExport SEXP _amsimr_SimulationConfig_genetic_cor(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__genetic_cor(ptr));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_genetic_cor(ptr));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__environmental_cor
-std::vector<double> SimulationConfig__environmental_cor(SEXP ptr);
-RcppExport SEXP _amsimr_SimulationConfig__environmental_cor(SEXP ptrSEXP) {
+// SimulationConfig_environmental_cor
+std::vector<double> SimulationConfig_environmental_cor(SEXP ptr);
+RcppExport SEXP _amsimr_SimulationConfig_environmental_cor(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__environmental_cor(ptr));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_environmental_cor(ptr));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__mate_cor
-std::vector<double> SimulationConfig__mate_cor(SEXP ptr);
-RcppExport SEXP _amsimr_SimulationConfig__mate_cor(SEXP ptrSEXP) {
+// SimulationConfig_mate_cor
+std::vector<double> SimulationConfig_mate_cor(SEXP ptr);
+RcppExport SEXP _amsimr_SimulationConfig_mate_cor(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__mate_cor(ptr));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_mate_cor(ptr));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__tol_inf
-double SimulationConfig__tol_inf(SEXP ptr);
-RcppExport SEXP _amsimr_SimulationConfig__tol_inf(SEXP ptrSEXP) {
+// SimulationConfig_tol_inf
+double SimulationConfig_tol_inf(SEXP ptr);
+RcppExport SEXP _amsimr_SimulationConfig_tol_inf(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__tol_inf(ptr));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_tol_inf(ptr));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__n_iterations
-std::size_t SimulationConfig__n_iterations(SEXP ptr);
-RcppExport SEXP _amsimr_SimulationConfig__n_iterations(SEXP ptrSEXP) {
+// SimulationConfig_n_iterations
+std::size_t SimulationConfig_n_iterations(SEXP ptr);
+RcppExport SEXP _amsimr_SimulationConfig_n_iterations(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__n_iterations(ptr));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_n_iterations(ptr));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__temp_init
-double SimulationConfig__temp_init(SEXP ptr);
-RcppExport SEXP _amsimr_SimulationConfig__temp_init(SEXP ptrSEXP) {
+// SimulationConfig_temp_init
+double SimulationConfig_temp_init(SEXP ptr);
+RcppExport SEXP _amsimr_SimulationConfig_temp_init(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__temp_init(ptr));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_temp_init(ptr));
     return rcpp_result_gen;
 END_RCPP
 }
-// SimulationConfig__temp_decay
-double SimulationConfig__temp_decay(SEXP ptr);
-RcppExport SEXP _amsimr_SimulationConfig__temp_decay(SEXP ptrSEXP) {
+// SimulationConfig_temp_decay
+double SimulationConfig_temp_decay(SEXP ptr);
+RcppExport SEXP _amsimr_SimulationConfig_temp_decay(SEXP ptrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig__temp_decay(ptr));
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_temp_decay(ptr));
     return rcpp_result_gen;
 END_RCPP
 }
 // run_simulations
-void run_simulations(SEXP ptr, std::size_t n_replicates, std::size_t n_threads, bool summarise, bool log_file, std::string log_level);
+void run_simulations(SEXP ptr, std::size_t n_replicates, std::size_t n_threads, bool summarise, bool log_file, const std::string& log_level);
 RcppExport SEXP _amsimr_run_simulations(SEXP ptrSEXP, SEXP n_replicatesSEXP, SEXP n_threadsSEXP, SEXP summariseSEXP, SEXP log_fileSEXP, SEXP log_levelSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -457,13 +530,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::size_t >::type n_threads(n_threadsSEXP);
     Rcpp::traits::input_parameter< bool >::type summarise(summariseSEXP);
     Rcpp::traits::input_parameter< bool >::type log_file(log_fileSEXP);
-    Rcpp::traits::input_parameter< std::string >::type log_level(log_levelSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type log_level(log_levelSEXP);
     run_simulations(ptr, n_replicates, n_threads, summarise, log_file, log_level);
     return R_NilValue;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_amsimr_custom_metric", (DL_FUNC) &_amsimr_custom_metric, 6},
     {"_amsimr_pheno_h2", (DL_FUNC) &_amsimr_pheno_h2, 0},
     {"_amsimr_pheno_comp_mean", (DL_FUNC) &_amsimr_pheno_comp_mean, 1},
     {"_amsimr_pheno_comp_var", (DL_FUNC) &_amsimr_pheno_comp_var, 1},
@@ -474,34 +548,39 @@ static const R_CallMethodDef CallEntries[] = {
     {"_amsimr_pheno_latent_comp_var", (DL_FUNC) &_amsimr_pheno_latent_comp_var, 1},
     {"_amsimr_pheno_latent_comp_cor", (DL_FUNC) &_amsimr_pheno_latent_comp_cor, 1},
     {"_amsimr_pheno_latent_comp_xcor", (DL_FUNC) &_amsimr_pheno_latent_comp_xcor, 1},
-    {"_amsimr_SimulationConfig__new", (DL_FUNC) &_amsimr_SimulationConfig__new, 0},
-    {"_amsimr_SimulationConfig__simulation", (DL_FUNC) &_amsimr_SimulationConfig__simulation, 5},
-    {"_amsimr_SimulationConfig__genome", (DL_FUNC) &_amsimr_SimulationConfig__genome, 5},
-    {"_amsimr_SimulationConfig__phenome", (DL_FUNC) &_amsimr_SimulationConfig__phenome, 9},
-    {"_amsimr_SimulationConfig__random_mating", (DL_FUNC) &_amsimr_SimulationConfig__random_mating, 1},
-    {"_amsimr_SimulationConfig__assortative_mating", (DL_FUNC) &_amsimr_SimulationConfig__assortative_mating, 6},
-    {"_amsimr_SimulationConfig__metrics", (DL_FUNC) &_amsimr_SimulationConfig__metrics, 2},
-    {"_amsimr_SimulationConfig__n_generations", (DL_FUNC) &_amsimr_SimulationConfig__n_generations, 1},
-    {"_amsimr_SimulationConfig__n_individuals", (DL_FUNC) &_amsimr_SimulationConfig__n_individuals, 1},
-    {"_amsimr_SimulationConfig__n_loci", (DL_FUNC) &_amsimr_SimulationConfig__n_loci, 1},
-    {"_amsimr_SimulationConfig__output_dir", (DL_FUNC) &_amsimr_SimulationConfig__output_dir, 1},
-    {"_amsimr_SimulationConfig__random_seed", (DL_FUNC) &_amsimr_SimulationConfig__random_seed, 1},
-    {"_amsimr_SimulationConfig__locus_maf", (DL_FUNC) &_amsimr_SimulationConfig__locus_maf, 1},
-    {"_amsimr_SimulationConfig__locus_recombination", (DL_FUNC) &_amsimr_SimulationConfig__locus_recombination, 1},
-    {"_amsimr_SimulationConfig__locus_mutation", (DL_FUNC) &_amsimr_SimulationConfig__locus_mutation, 1},
-    {"_amsimr_SimulationConfig__n_phenotypes", (DL_FUNC) &_amsimr_SimulationConfig__n_phenotypes, 1},
-    {"_amsimr_SimulationConfig__phenotype_names", (DL_FUNC) &_amsimr_SimulationConfig__phenotype_names, 1},
-    {"_amsimr_SimulationConfig__n_causal_loci", (DL_FUNC) &_amsimr_SimulationConfig__n_causal_loci, 1},
-    {"_amsimr_SimulationConfig__h2_genetic", (DL_FUNC) &_amsimr_SimulationConfig__h2_genetic, 1},
-    {"_amsimr_SimulationConfig__h2_environmental", (DL_FUNC) &_amsimr_SimulationConfig__h2_environmental, 1},
-    {"_amsimr_SimulationConfig__h2_vertical", (DL_FUNC) &_amsimr_SimulationConfig__h2_vertical, 1},
-    {"_amsimr_SimulationConfig__genetic_cor", (DL_FUNC) &_amsimr_SimulationConfig__genetic_cor, 1},
-    {"_amsimr_SimulationConfig__environmental_cor", (DL_FUNC) &_amsimr_SimulationConfig__environmental_cor, 1},
-    {"_amsimr_SimulationConfig__mate_cor", (DL_FUNC) &_amsimr_SimulationConfig__mate_cor, 1},
-    {"_amsimr_SimulationConfig__tol_inf", (DL_FUNC) &_amsimr_SimulationConfig__tol_inf, 1},
-    {"_amsimr_SimulationConfig__n_iterations", (DL_FUNC) &_amsimr_SimulationConfig__n_iterations, 1},
-    {"_amsimr_SimulationConfig__temp_init", (DL_FUNC) &_amsimr_SimulationConfig__temp_init, 1},
-    {"_amsimr_SimulationConfig__temp_decay", (DL_FUNC) &_amsimr_SimulationConfig__temp_decay, 1},
+    {"_amsimr_SimulationResults_new", (DL_FUNC) &_amsimr_SimulationResults_new, 1},
+    {"_amsimr_SimulationResults_summarise", (DL_FUNC) &_amsimr_SimulationResults_summarise, 1},
+    {"_amsimr_SimulationResults_save", (DL_FUNC) &_amsimr_SimulationResults_save, 4},
+    {"_amsimr_SimulationResults_load", (DL_FUNC) &_amsimr_SimulationResults_load, 2},
+    {"_amsimr_SimulationResults_metric_names", (DL_FUNC) &_amsimr_SimulationResults_metric_names, 1},
+    {"_amsimr_SimulationConfig_new", (DL_FUNC) &_amsimr_SimulationConfig_new, 0},
+    {"_amsimr_SimulationConfig_simulation", (DL_FUNC) &_amsimr_SimulationConfig_simulation, 5},
+    {"_amsimr_SimulationConfig_genome", (DL_FUNC) &_amsimr_SimulationConfig_genome, 5},
+    {"_amsimr_SimulationConfig_phenome", (DL_FUNC) &_amsimr_SimulationConfig_phenome, 9},
+    {"_amsimr_SimulationConfig_random_mating", (DL_FUNC) &_amsimr_SimulationConfig_random_mating, 1},
+    {"_amsimr_SimulationConfig_assortative_mating", (DL_FUNC) &_amsimr_SimulationConfig_assortative_mating, 6},
+    {"_amsimr_SimulationConfig_metrics", (DL_FUNC) &_amsimr_SimulationConfig_metrics, 2},
+    {"_amsimr_SimulationConfig_n_generations", (DL_FUNC) &_amsimr_SimulationConfig_n_generations, 1},
+    {"_amsimr_SimulationConfig_n_individuals", (DL_FUNC) &_amsimr_SimulationConfig_n_individuals, 1},
+    {"_amsimr_SimulationConfig_n_loci", (DL_FUNC) &_amsimr_SimulationConfig_n_loci, 1},
+    {"_amsimr_SimulationConfig_output_dir", (DL_FUNC) &_amsimr_SimulationConfig_output_dir, 1},
+    {"_amsimr_SimulationConfig_random_seed", (DL_FUNC) &_amsimr_SimulationConfig_random_seed, 1},
+    {"_amsimr_SimulationConfig_locus_maf", (DL_FUNC) &_amsimr_SimulationConfig_locus_maf, 1},
+    {"_amsimr_SimulationConfig_locus_recombination", (DL_FUNC) &_amsimr_SimulationConfig_locus_recombination, 1},
+    {"_amsimr_SimulationConfig_locus_mutation", (DL_FUNC) &_amsimr_SimulationConfig_locus_mutation, 1},
+    {"_amsimr_SimulationConfig_n_phenotypes", (DL_FUNC) &_amsimr_SimulationConfig_n_phenotypes, 1},
+    {"_amsimr_SimulationConfig_phenotype_names", (DL_FUNC) &_amsimr_SimulationConfig_phenotype_names, 1},
+    {"_amsimr_SimulationConfig_n_causal_loci", (DL_FUNC) &_amsimr_SimulationConfig_n_causal_loci, 1},
+    {"_amsimr_SimulationConfig_h2_genetic", (DL_FUNC) &_amsimr_SimulationConfig_h2_genetic, 1},
+    {"_amsimr_SimulationConfig_h2_environmental", (DL_FUNC) &_amsimr_SimulationConfig_h2_environmental, 1},
+    {"_amsimr_SimulationConfig_h2_vertical", (DL_FUNC) &_amsimr_SimulationConfig_h2_vertical, 1},
+    {"_amsimr_SimulationConfig_genetic_cor", (DL_FUNC) &_amsimr_SimulationConfig_genetic_cor, 1},
+    {"_amsimr_SimulationConfig_environmental_cor", (DL_FUNC) &_amsimr_SimulationConfig_environmental_cor, 1},
+    {"_amsimr_SimulationConfig_mate_cor", (DL_FUNC) &_amsimr_SimulationConfig_mate_cor, 1},
+    {"_amsimr_SimulationConfig_tol_inf", (DL_FUNC) &_amsimr_SimulationConfig_tol_inf, 1},
+    {"_amsimr_SimulationConfig_n_iterations", (DL_FUNC) &_amsimr_SimulationConfig_n_iterations, 1},
+    {"_amsimr_SimulationConfig_temp_init", (DL_FUNC) &_amsimr_SimulationConfig_temp_init, 1},
+    {"_amsimr_SimulationConfig_temp_decay", (DL_FUNC) &_amsimr_SimulationConfig_temp_decay, 1},
     {"_amsimr_run_simulations", (DL_FUNC) &_amsimr_run_simulations, 6},
     {NULL, NULL, 0}
 };
