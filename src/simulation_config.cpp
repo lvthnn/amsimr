@@ -2,6 +2,7 @@
 #include <amsim/simulation_config.h>
 #include <amsim/utils.h>
 
+#include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <filesystem>
@@ -12,7 +13,7 @@ namespace amsim {
 SimulationConfig& SimulationConfig::simulation(
     std::size_t n_gen_,
     std::size_t n_ind_,
-    std::string out_dir_,
+    const std::string& out_dir_,
     std::optional<std::uint64_t> rng_seed_) {
   if (n_ind_ % 2 != 0) {
     n_ind_ += 1;
@@ -57,7 +58,7 @@ SimulationConfig& SimulationConfig::genome(
 
 SimulationConfig& SimulationConfig::phenome(
     std::size_t n_pheno_,
-    std::vector<std::string> v_name_,
+    const std::vector<std::string>& v_name_,
     std::vector<std::size_t> v_n_loc_,
     std::vector<double> v_h2_gen_,
     std::vector<double> v_h2_env_,
@@ -77,8 +78,8 @@ SimulationConfig& SimulationConfig::phenome(
   if (v_h2_vert_.size() != n_pheno_)
     throw std::invalid_argument("must specify vertical h2 for all phenotypes");
 
-  for (const std::size_t& n_loc_ : v_n_loc_)
-    if (n_loc_ > n_loc)
+  for (const std::size_t& nl : v_n_loc_)
+    if (nl > n_loc)
       throw std::invalid_argument(
           "number of causal loci exceeds number of modelled loci");
 
@@ -141,10 +142,8 @@ SimulationConfig& SimulationConfig::assortative_mating(
 
 SimulationConfig& SimulationConfig::metrics(std::vector<MetricSpec> specs_) {
   specs = std::move(specs_);
-  require_lat =
-      std::any_of(specs.begin(), specs.end(), [](const MetricSpec& s) {
-        return s.require_lat;
-      });
+  require_lat = std::ranges::any_of(
+      specs, [](const MetricSpec& s) { return s.require_lat; });
   return *this;
 }
 

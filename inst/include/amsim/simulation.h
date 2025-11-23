@@ -1,8 +1,6 @@
 #ifndef AMSIMCPP_SIMULATION_H
 #define AMSIMCPP_SIMULATION_H
 
-#pragma once
-
 #include <amsim/genome.h>
 #include <amsim/log_level.h>
 #include <amsim/mating.h>
@@ -20,7 +18,7 @@ namespace amsim {
 
 class Simulation {
  public:
-  Simulation(
+  explicit Simulation(
       const SimulationConfig& config,
       std::optional<std::filesystem::path> out_dir_ = std::nullopt,
       std::optional<std::uint64_t> rng_seed_ = std::nullopt);
@@ -67,7 +65,7 @@ class Simulation {
   std::vector<Metric> metrics_;
   std::vector<std::unique_ptr<std::ofstream>> streams_;
 
-  void stream_(std::size_t gen);
+  void stream(std::size_t gen);
 };
 
 void run_simulations(
