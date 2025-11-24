@@ -6,25 +6,25 @@
 \usage{
 custom_metric(
   name,
-  r_metric_func,
-  r_n_rows,
-  r_n_cols = NULL,
-  r_labels = NULL,
+  metric_func,
+  n_rows,
+  n_cols = NULL,
+  labels = NULL,
   require_lat = FALSE
 )
 }
 \arguments{
 \item{name}{String. Unique identifier for the metric.}
 
-\item{r_metric_func}{Function. An R function that accepts the simulation
+\item{metric_func}{Function. An R function that accepts the simulation
 context list and returns a numeric vector.}
 
-\item{r_n_rows}{Integer. Number of rows in the metric output.}
+\item{n_rows}{Integer. Number of rows in the metric output.}
 
-\item{r_n_cols}{Integer or NULL. Number of columns in the metric output
+\item{n_cols}{Integer or NULL. Number of columns in the metric output
 (default: 1).}
 
-\item{r_labels}{Character vector or NULL. Labels for metric components
+\item{labels}{Character vector or NULL. Labels for metric components
 (default: empty).}
 
 \item{require_lat}{Logical. Whether the metric requires linkage

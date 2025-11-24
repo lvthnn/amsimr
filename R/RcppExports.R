@@ -74,12 +74,12 @@ NULL
 #' }
 #'
 #' @param name String. Unique identifier for the metric.
-#' @param r_metric_func Function. An R function that accepts the simulation
+#' @param metric_func Function. An R function that accepts the simulation
 #'   context list and returns a numeric vector.
-#' @param r_n_rows Integer. Number of rows in the metric output.
-#' @param r_n_cols Integer or NULL. Number of columns in the metric output
+#' @param n_rows Integer. Number of rows in the metric output.
+#' @param n_cols Integer or NULL. Number of columns in the metric output
 #'   (default: 1).
-#' @param r_labels Character vector or NULL. Labels for metric components
+#' @param labels Character vector or NULL. Labels for metric components
 #'   (default: empty).
 #' @param require_lat Logical. Whether the metric requires linkage
 #'   disequilibrium tracking (default: FALSE).
@@ -87,8 +87,8 @@ NULL
 #' @return An external pointer to a MetricSpec object for use with
 #'   Simulation$metrics().
 #'
-custom_metric <- function(name, r_metric_func, r_n_rows, r_n_cols = NULL, r_labels = NULL, require_lat = FALSE) {
-    .Call(`_amsimr_custom_metric`, name, r_metric_func, r_n_rows, r_n_cols, r_labels, require_lat)
+custom_metric <- function(name, metric_func, n_rows, n_cols = NULL, labels = NULL, require_lat = FALSE) {
+    .Call(`_amsimr_custom_metric`, name, metric_func, n_rows, n_cols, labels, require_lat)
 }
 
 #' Phenotype heritability metric

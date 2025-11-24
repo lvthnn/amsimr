@@ -11,18 +11,18 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // custom_metric
-SEXP custom_metric(const std::string& name, const Rcpp::Function& r_metric_func, SEXP r_n_rows, SEXP r_n_cols, SEXP r_labels, const bool require_lat);
-RcppExport SEXP _amsimr_custom_metric(SEXP nameSEXP, SEXP r_metric_funcSEXP, SEXP r_n_rowsSEXP, SEXP r_n_colsSEXP, SEXP r_labelsSEXP, SEXP require_latSEXP) {
+SEXP custom_metric(const std::string& name, const Rcpp::Function& metric_func, SEXP n_rows, SEXP n_cols, SEXP labels, const bool require_lat);
+RcppExport SEXP _amsimr_custom_metric(SEXP nameSEXP, SEXP metric_funcSEXP, SEXP n_rowsSEXP, SEXP n_colsSEXP, SEXP labelsSEXP, SEXP require_latSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const std::string& >::type name(nameSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::Function& >::type r_metric_func(r_metric_funcSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type r_n_rows(r_n_rowsSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type r_n_cols(r_n_colsSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type r_labels(r_labelsSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::Function& >::type metric_func(metric_funcSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type n_rows(n_rowsSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type n_cols(n_colsSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type labels(labelsSEXP);
     Rcpp::traits::input_parameter< const bool >::type require_lat(require_latSEXP);
-    rcpp_result_gen = Rcpp::wrap(custom_metric(name, r_metric_func, r_n_rows, r_n_cols, r_labels, require_lat));
+    rcpp_result_gen = Rcpp::wrap(custom_metric(name, metric_func, n_rows, n_cols, labels, require_lat));
     return rcpp_result_gen;
 END_RCPP
 }
