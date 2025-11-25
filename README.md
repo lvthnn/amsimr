@@ -23,7 +23,7 @@ install.packages("amsimr")
 if (!require("devtools")) {
   install.packages("devtools")
 }
-devtools::install_github("stan-dev/bayesplot", dependencies = TRUE, build_vignettes = FALSE)
+devtools::install_github("lvthnn/amsimr", dependencies = TRUE, build_vignettes = FALSE)
 ```
 This installation won't include the vignettes (they take some time to build).
 
