@@ -1,4 +1,4 @@
-# amsimr <img src="man/figures/logo.svg" align="right" width="120" />
+# amsimr <img src="man/figures/logo.png" align="right" width="120" />
 
 ### Overview
 **amsimr** is an R package which exposes bindings to the amsimcpp C++ library
