@@ -7,6 +7,13 @@ for forward-time genetic simulations of populations exhibiting assortative
 mating. Simulations can be configured in a multitude of ways, such as locus
 properties and phenotype architectures and covariance structures.
 
+Users more familiar with Python are invited to use the
+[amsimpy](https://github.com/lvthnn/amsimpy) package instead, which is nearly
+identically implemented in terms of the user API, albeit with more sophisticated
+multithreaded capabilities which are not available to the R language, resulting
+in faster replicate simulations when using [user-specified metric summary
+functions].
+
 ### Getting started
 
 If you are new to the **amsim** simulation family we recommend starting with the

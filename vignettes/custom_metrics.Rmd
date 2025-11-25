@@ -1,8 +1,8 @@
 ---
-title: "Configuring a Simulation"
+title: "Specifying a Custom Metric"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{configuring_a_simulation}
+  %\VignetteIndexEntry{custom_metrics.Rmd}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
