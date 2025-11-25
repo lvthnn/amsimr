@@ -12,7 +12,7 @@ Users more familiar with Python are invited to use the
 identically implemented in terms of the user API, albeit with more sophisticated
 multithreaded capabilities which are not available to the R language, resulting
 in faster replicate simulations when using [user-specified metric summary
-functions].
+functions](vignettes/custom_metrics.Rmd).
 
 ### Getting started
 
