@@ -1,7 +1,8 @@
 # amsimr <img src="man/figures/logo.png" align="right" width="120" />
 
 ### Overview
-**amsimr** is an R package which exposes bindings to the amsimcpp C++ library
+**amsimr** is an R package which exposes bindings to the
+[amsimcpp](https://github.com/lvthnn/amsimcpp) C++ library
 for forward-time genetic simulations of populations exhibiting assortative
 mating. Simulations can be configured in a multitude of ways, such as locus
 properties and phenotype architectures and covariance structures.
