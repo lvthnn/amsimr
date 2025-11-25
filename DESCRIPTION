@@ -17,6 +17,8 @@ Imports:
     R6,
     checkmate
 Suggests: 
+    knitr,
+    rmarkdown,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Collate: 
@@ -25,3 +27,4 @@ Collate:
     'results.R'
     'utils.R'
     'simulation.R'
+VignetteBuilder: knitr
