@@ -1,4 +1,5 @@
 #' Simulation Configuration
+#'
 #' @description
 #' An R6 class for configuring and running genetic simulations with assortative
 #' mating. This class provides a builder pattern interface for setting update
@@ -52,7 +53,7 @@ Simulation <- R6::R6Class(
     #' @description
     #' Create a new Simulation object
     initialize = function() {
-      private$.config <- .SimulationConfig_new()
+      private$.config <- list()
     },
 
     #' @description
@@ -62,6 +63,7 @@ Simulation <- R6::R6Class(
     #' @param n_individuals Integer. Population size.
     #' @param output_dir String. Directory path for output files.
     #' @param random_seed Integer or NULL. Random seed for reproducibility.
+    #'
     #' @return Self, invisibly, for method chaining.
     simulation = function(
       n_generations,
@@ -74,8 +76,7 @@ Simulation <- R6::R6Class(
       checkmate::assert_string(output_dir)
       checkmate::assert_count(random_seed, positive = TRUE, null.ok = TRUE)
 
-      .SimulationConfig_simulation(
-        ptr = private$.config,
+      private$.config[["simulation"]] <- list(
         n_generations = n_generations,
         n_individuals = n_individuals,
         output_dir = output_dir,
@@ -95,6 +96,7 @@ Simulation <- R6::R6Class(
     #'   Can be a single value (recycled) or a vector of length `n_loci`.
     #' @param locus_mutation Numeric vector. Mutation probabilities.
     #'   Can be a single value (recycled) or a vector of length `n_loci`.
+    #'
     #' @return Self, invisibly, for method chaining.
     genome = function(
       n_loci,
@@ -118,8 +120,7 @@ Simulation <- R6::R6Class(
       assert_probs(locus_recombination, len = n_loci)
       assert_probs(locus_mutation, len = n_loci)
 
-      .SimulationConfig_genome(
-        ptr = private$.config,
+      private$.config[["genome"]] <- list(
         n_loci = n_loci,
         locus_maf = locus_maf,
         locus_recombination = locus_recombination,
@@ -142,6 +143,7 @@ Simulation <- R6::R6Class(
     #' @param genetic_cor Numeric matrix. Genetic correlation matrix.
     #' @param environmental_cor Numeric matrix. Environmental correlation
     #'   matrix.
+    #'
     #' @return Self, invisibly, for method chaining.
     phenome = function(
       n_phenotypes,
@@ -153,6 +155,18 @@ Simulation <- R6::R6Class(
       genetic_cor,
       environmental_cor
     ) {
+      if (length(n_causal_loci) == 1) {
+        n_causal_loci <- rep(n_causal_loci, n_phenotypes)
+      }
+      if (length(h2_genetic == 1)) {
+        h2_genetic <- rep(h2_genetic, n_phenotypes)
+      }
+      if (length(h2_environmental == 1)) {
+        h2_environmental <- rep(h2_environmental, n_phenotypes)
+      }
+      if (length(h2_vertical == 1)) {
+        h2_vertical <- rep(h2_vertical, n_phenotypes)
+      }
       checkmate::assert_count(n_phenotypes)
       checkmate::assert_character(names, len = n_phenotypes, unique = TRUE)
       checkmate::assert_integerish(
@@ -178,8 +192,7 @@ Simulation <- R6::R6Class(
         all.missing = FALSE
       )
 
-      .SimulationConfig_phenome(
-        private$.config,
+      private$.config[["phenome"]] <- list(
         n_phenotypes = n_phenotypes,
         names = names,
         n_causal_loci = n_causal_loci,
@@ -198,7 +211,7 @@ Simulation <- R6::R6Class(
     #'
     #' @return Self, invisibly, for method chaining.
     random_mating = function() {
-      .SimulationConfig_random_mating(private$.config)
+      private$.config[["mating"]] <- list(type = "random")
 
       invisible(self)
     },
@@ -211,6 +224,7 @@ Simulation <- R6::R6Class(
     #' @param n_iterations Integer or NULL. Maximum annealing iterations.
     #' @param temp_init Numeric or NULL. Initial annealing temperature.
     #' @param temp_decay Numeric or NULL. Temperature decay rate.
+    #'
     #' @return Self, invisibly, for method chaining.
     assortative_mating = function(
       mate_cor = mate_cor,
@@ -234,8 +248,8 @@ Simulation <- R6::R6Class(
         null.ok = TRUE
       )
 
-      .SimulationConfig_assortative_mating(
-        private$.config,
+      private$.config[["mating"]] <- list(
+        type = "assortative",
         mate_cor = mate_cor,
         tol_inf = tol_inf,
         n_iterations = n_iterations,
@@ -243,23 +257,25 @@ Simulation <- R6::R6Class(
         temp_decay = temp_decay
       )
 
-      invisible(self)
+      return(invisible(self))
     },
 
     #' @description
     #' Configure simulation metrics
     #'
     #' @param metrics List. List of metric specification objects.
+    #'
     #' @return Self, invisibly, for method chaining.
     metrics = function(metrics = list()) {
-      checkmate::assert_list(metrics)
-      .SimulationConfig_metrics(private$.config, metrics = metrics)
+      checkmate::assert_list(metrics, types = "Metric")
+
+      private$.config[["metrics"]] <- list(metrics = metrics)
 
       invisible(self)
     },
 
     #' @description
-    #' Run the configured genetic simulation
+    #' Run the simulation
     #'
     #' @details
     #' Executes the simulation pipeline with the configured parameters. The
@@ -275,7 +291,7 @@ Simulation <- R6::R6Class(
     #' 5. Write output data
     #'
     #' @param n_replicates Integer. Number of independent simulation replicates.
-    #' @param n_threads Integer. Number of parallel threads for execution.
+    #' @param n_processes Integer. Number of parallel processes for execution.
     #' @param summarise Logical. If TRUE, aggregate results across replicates
     #'   (default: TRUE).
     #' @param log_file Logical. If TRUE, write log messages to file
@@ -293,32 +309,105 @@ Simulation <- R6::R6Class(
     #' # ... configure simulation ...
     #' sim$run(
     #'   n_replicates = 10,
-    #'   n_threads = 4,
+    #'   n_processes = 4,
     #'   summarise = TRUE,
     #'   log_level = "info"
     #' )
     #' }
     run = function(
       n_replicates,
-      n_threads,
+      n_processes,
       summarise = TRUE,
       log_file = TRUE,
       log_level = "info"
     ) {
       checkmate::assert_count(n_replicates)
-      checkmate::assert_count(n_threads)
+      checkmate::assert_count(n_processes)
       checkmate::assert_logical(summarise)
       checkmate::assert_logical(log_file)
       checkmate::assert_string(log_level)
 
-      .run_simulations(
-        private$.config,
-        n_replicates = n_replicates,
-        n_threads = n_threads,
-        summarise = summarise,
-        log_file = log_file,
-        log_level = log_level
-      )
+      # ensure the base directory exists
+      fs::dir_create(self$output_dir)
+
+      future::plan(future::multisession, workers = n_processes)
+
+      futures <- lapply(seq_len(n_replicates), function(rep) {
+        future::future(
+          {
+            library(amsimr)
+
+            config <- SimulationConfig_new()
+            simulation <- private$.config$simulation
+            genome <- private$.config$genome
+            phenome <- private$.config$phenome
+            mating <- private$.config$mating
+            metrics <- private$.config$metrics
+            rep_dir <- paste0(
+              normalizePath(simulation$output_dir, mustWork = FALSE),
+              "/rep_",
+              sprintf("%03d", rep)
+            )
+
+            SimulationConfig_simulation(
+              config,
+              n_generations = simulation$n_generations,
+              n_individuals = simulation$n_individuals,
+              output_dir = rep_dir,
+              random_seed = simulation$random_seed
+            )
+
+            SimulationConfig_shuffle_random_seed(config, rep)
+
+            SimulationConfig_genome(
+              config,
+              n_loci = genome$n_loci,
+              locus_maf = genome$locus_maf,
+              locus_recombination = genome$locus_recombination,
+              locus_mutation = genome$locus_mutation
+            )
+
+            SimulationConfig_phenome(
+              config,
+              n_phenotypes = phenome$n_phenotypes,
+              names = phenome$names,
+              n_causal_loci = phenome$n_causal_loci,
+              h2_genetic = phenome$h2_genetic,
+              h2_environmental = phenome$h2_environmental,
+              h2_vertical = phenome$h2_vertical,
+              genetic_cor = phenome$genetic_cor,
+              environmental_cor = phenome$environmental_cor
+            )
+
+            if (mating$type == "random") {
+              SimulationConfig_random_mating(config)
+            } else {
+              SimulationConfig_assortative_mating(
+                config,
+                mate_cor = mating$mate_cor,
+                tol_inf = mating$tol_inf,
+                n_iterations = mating$n_iterations,
+                temp_init = mating$temp_init,
+                temp_decay = mating$temp_decay
+              )
+            }
+
+            metric_specs <- lapply(metrics$metrics, function(metric) {
+              metric$build()
+            })
+
+            SimulationConfig_metrics(config, metrics = metric_specs)
+
+            # @TODO: allow specification of unified log file in C++ backend
+            # as optional type
+            run_simulation(config, rep_dir, FALSE, log_level)
+          },
+          seed = NULL
+        )
+      })
+
+      # wait until all futures are done running
+      lapply(futures, future::value)
 
       if (summarise) {
         private$.results <- SimulationResults$new(self$output_dir)
@@ -336,87 +425,87 @@ Simulation <- R6::R6Class(
   active = list(
     #' @field n_generations Number of generations
     n_generations = function() {
-      .SimulationConfig_n_generations(private$.config)
+      private$.config[["simulation"]][["n_generations"]]
     },
     #' @field n_individuals Population size
     n_individuals = function() {
-      .SimulationConfig_n_individuals(private$.config)
+      private$.config[["simulation"]][["n_individuals"]]
     },
     #' @field output_dir Output directory path
     output_dir = function() {
-      .SimulationConfig_output_dir(private$.config)
+      private$.config[["simulation"]][["output_dir"]]
     },
     #' @field random_seed Random seed value
     random_seed = function() {
-      .SimulationConfig_random_seed(private$.config)
+      private$.config[["simulation"]][["random_seed"]]
     },
     #' @field n_loci Number of genetic loci
     n_loci = function() {
-      .SimulationConfig_n_loci(private$.config)
+      private$.config[["genome"]][["n_loci"]]
     },
     #' @field locus_maf Vector of locus minor allele frequencies
     locus_maf = function() {
-      .SimulationConfig_locus_maf(private$.config)
+      private$.config[["genome"]][["locus_maf"]]
     },
     #' @field locus_recombination Vector of locus recombination probabilities
     locus_recombination = function() {
-      .SimulationConfig_locus_recombination(private$.config)
+      private$.config[["genome"]][["locus_recombination"]]
     },
     #' @field locus_mutation Vector of locus mutation probabilities
     locus_mutation = function() {
-      .SimulationConfig_locus_mutation(private$.config)
+      private$.config[["genome"]][["locus_mutation"]]
     },
     #' @field n_phenotypes Number of phenotypes
     n_phenotypes = function() {
-      .SimulationConfig_n_phenotypes(private$.config)
+      private$.config[["phenome"]][["n_phenotypes"]]
     },
     #' @field phenotype_names Vector of phenotype names
     phenotype_names = function() {
-      .SimulationConfig_phenotype_names(private$.config)
+      private$.config[["phenome"]][["names"]]
     },
     #' @field n_causal_loci Vector of causal loci counts per phenotype
     n_causal_loci = function() {
-      .SimulationConfig_n_causal_loci(private$.config)
+      private$.config[["phenome"]][["n_causal_loci"]]
     },
     #' @field h2_genetic Vector of narrow-sense heritabilities
     h2_genetic = function() {
-      .SimulationConfig_h2_genetic(private$.config)
+      private$.config[["phenome"]][["h2_genetic"]]
     },
     #' @field h2_environmental Vector of environmental variance components
     h2_environmental = function() {
-      .SimulationConfig_h2_environmental(private$.config)
+      private$.config[["phenome"]][["h2_environmental"]]
     },
     #' @field h2_vertical Vector of vertical transmission components
     h2_vertical = function() {
-      .SimulationConfig_h2_vertical(private$.config)
+      private$.config[["phenome"]][["h2_vertical"]]
     },
     #' @field genetic_cor Genetic correlation matrix
     genetic_cor = function() {
-      .SimulationConfig_genetic_cor(private$.config)
+      private$.config[["phenome"]][["genetic_cor"]]
     },
     #' @field environmental_cor Environmental correlation matrix
     environmental_cor = function() {
-      .SimulationConfig_environmental_cor(private$.config)
+      private$.config[["phenome"]][["environmental_cor"]]
     },
     #' @field mate_cor Mating correlation matrix
     mate_cor = function() {
-      .SimulationConfig_mate_cor(private$.config)
+      private$.config[["mating"]][["mate_cor"]]
     },
     #' @field tol_inf Annealing tolerance threshold
     tol_inf = function() {
-      .SimulationConfig_tol_inf(private$.config)
+      private$.config[["mating"]][["tol_inf"]]
     },
     #' @field n_iterations Maximum number of annealing iterations
     n_iterations = function() {
-      .SimulationConfig_n_iterations(private$.config)
+      private$.config[["mating"]][["n_iterations"]]
     },
     #' @field temp_init Initial annealing temperature
     temp_init = function() {
-      .SimulationConfig_temp_init(private$.config)
+      private$.config[["mating"]][["temp_init"]]
     },
     #' @field temp_decay Annealing temperature decay rate
     temp_decay = function() {
-      .SimulationConfig_temp_decay(private$.config)
+      private$.config[["mating"]][["temp_decay"]]
     },
     #' @field results Summary statistic of metrics from simulation
     results = function() {
