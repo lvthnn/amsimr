@@ -153,34 +153,36 @@ amsim::MetricFunc wrap_metric(const Rcpp::Function& r_func) {
 //' @return An external pointer to a MetricSpec object for use with
 //'   Simulation$metrics().
 //'
+//' @noRd
+//'
 // [[Rcpp::export]]
-SEXP custom_metric(
+SEXP MetricSpec_custom_metric(
     const std::string& name,
-    const Rcpp::Function& r_metric_func,
-    SEXP r_n_rows,
-    SEXP r_n_cols = R_NilValue,
-    SEXP r_labels = R_NilValue,
+    const Rcpp::Function& metric_func,
+    SEXP n_rows,
+    SEXP n_cols = R_NilValue,
+    SEXP labels = R_NilValue,
     const bool require_lat = false) {
-  std::size_t n_cols;
-  std::vector<std::string> labels;
-  if (r_n_cols == R_NilValue) n_cols = 1;
-  else n_cols = Rcpp::as<std::size_t>(r_n_cols);
+  std::size_t cpp_n_cols;
+  std::vector<std::string> cpp_labels;
+  if (n_cols == R_NilValue) cpp_n_cols = 1;
+  else cpp_n_cols = Rcpp::as<std::size_t>(n_cols);
 
-  if (r_labels == R_NilValue) labels = {};
-  else labels = Rcpp::as<std::vector<std::string>>(r_labels);
+  if (labels == R_NilValue) cpp_labels = {};
+  else cpp_labels = Rcpp::as<std::vector<std::string>>(labels);
 
-  auto n_rows = Rcpp::as<std::size_t>(r_n_rows);
+  auto cpp_n_rows = Rcpp::as<std::size_t>(n_rows);
 
-  amsim::MetricFunc metric_func = wrap_metric(r_metric_func);
+  amsim::MetricFunc cpp_metric_func = wrap_metric(metric_func);
 
   amsim::MetricSetup metric_setup =
-      [name, metric_func, n_rows, n_cols, labels, require_lat](
+      [name, cpp_metric_func, cpp_n_rows, cpp_n_cols, cpp_labels, require_lat](
           const amsim::SimulationContext& /*ctx*/) -> amsim::Metric {
     return amsim::Metric(
-        metric_func, name, n_rows, n_cols, labels, require_lat);
+        cpp_metric_func, name, cpp_n_rows, cpp_n_cols, cpp_labels, require_lat);
   };
 
-  amsim::MetricSpec spec(name, metric_func, metric_setup, require_lat);
+  amsim::MetricSpec spec(name, cpp_metric_func, metric_setup, require_lat);
   auto ptr_unique = std::make_unique<amsim::MetricSpec>(spec);
 
   Rcpp::XPtr<amsim::MetricSpec> ptr(ptr_unique.release(), true);
