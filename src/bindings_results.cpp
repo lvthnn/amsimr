@@ -8,7 +8,9 @@
 //'
 //' @return A new SimulationResults instance.
 //'
-// [[Rcpp::export(".SimulationResults_new")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 SEXP SimulationResults_new(const std::string& output_dir) {
   auto results = std::make_unique<amsim::SimulationResults>(output_dir);
   Rcpp::XPtr<amsim::SimulationResults> ptr(results.release(), true);
@@ -19,7 +21,9 @@ SEXP SimulationResults_new(const std::string& output_dir) {
 //'
 //' @param ptr An external pointer to a SimulationResults instance.
 //'
-// [[Rcpp::export(".SimulationResults_summarise")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 void SimulationResults_summarise(SEXP ptr) {
   Rcpp::XPtr<amsim::SimulationResults> results(ptr);
   results->summarise();
@@ -32,7 +36,9 @@ void SimulationResults_summarise(SEXP ptr) {
 //' @param out_dir Output directory to write data out to.
 //' @param overwrite Specifies whether directory should be overwritten.
 //'
-// [[Rcpp::export(".SimulationResults_save")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 void SimulationResults_save(
     SEXP ptr,
     SEXP metrics = R_NilValue,
@@ -40,8 +46,8 @@ void SimulationResults_save(
     bool overwrite = false) {
   Rcpp::XPtr<amsim::SimulationResults> results(ptr);
   results->save(
-      optional<std::vector<std::string>>(metrics),
-      optional<std::string>(out_dir),
+      rOptional<std::vector<std::string>>(metrics),
+      rOptional<std::string>(out_dir),
       overwrite);
 }
 
@@ -53,7 +59,9 @@ void SimulationResults_save(
 //' @return A DataFrame comprising the summarised results data for the specified
 //'   metric.
 //'
-// [[Rcpp::export(".SimulationResults_load")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 Rcpp::DataFrame SimulationResults_load(
     SEXP ptr, const std::string& metric_name) {
   Rcpp::XPtr<amsim::SimulationResults> results(ptr);
@@ -93,7 +101,9 @@ Rcpp::DataFrame SimulationResults_load(
 //'
 //' @return A vector of the metric names recognised by the results instance.
 //'
-// [[Rcpp::export(".SimulationResults_metric_names")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 std::vector<std::string> SimulationResults_metric_names(SEXP ptr) {
   Rcpp::XPtr<amsim::SimulationResults> results(ptr);
   return results->metric_names();

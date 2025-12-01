@@ -4,6 +4,8 @@
 #include <amsim/simulation_config.h>
 
 #include <utility>
+#include <cstdint>
+#include <filesystem>
 
 #include "bindings_utils.h"
 
@@ -11,7 +13,9 @@
 //'
 //' @return A new SimulationConfig instance.
 //'
-// [[Rcpp::export(".SimulationConfig_new")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 SEXP SimulationConfig_new() {
   auto config = std::make_unique<amsim::SimulationConfig>();
   Rcpp::XPtr<amsim::SimulationConfig> ptr(config.release(), true);
@@ -28,7 +32,9 @@ SEXP SimulationConfig_new() {
 //'
 //' @return Self, for method chaining.
 //'
-// [[Rcpp::export(".SimulationConfig_simulation")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 SEXP SimulationConfig_simulation(
     SEXP ptr,
     std::size_t n_generations,
@@ -40,7 +46,7 @@ SEXP SimulationConfig_simulation(
       n_generations,
       n_individuals,
       output_dir,
-      optional<std::size_t>(random_seed));
+      rOptional<std::size_t>(random_seed));
   return config;
 }
 
@@ -54,7 +60,9 @@ SEXP SimulationConfig_simulation(
 //'
 //' @return Self, for method chaining.
 //'
-// [[Rcpp::export(".SimulationConfig_genome")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 SEXP SimulationConfig_genome(
     SEXP ptr,
     std::size_t n_loci,
@@ -84,7 +92,9 @@ SEXP SimulationConfig_genome(
 //'
 //' @return Self, for method chaining.
 //'
-// [[Rcpp::export(".SimulationConfig_phenome")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 SEXP SimulationConfig_phenome(
     SEXP ptr,
     std::size_t n_phenotypes,
@@ -112,7 +122,9 @@ SEXP SimulationConfig_phenome(
 //'
 //' @return Self, for method chaining.
 //'
-// [[Rcpp::export(".SimulationConfig_random_mating")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 SEXP SimulationConfig_random_mating(SEXP ptr) {
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
   config->random_mating();
@@ -130,7 +142,9 @@ SEXP SimulationConfig_random_mating(SEXP ptr) {
 //'
 //' @return Self, for method chaining
 //'
-// [[Rcpp::export(".SimulationConfig_assortative_mating")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 SEXP SimulationConfig_assortative_mating(
     SEXP ptr,
     std::vector<double> mate_cor,
@@ -141,10 +155,10 @@ SEXP SimulationConfig_assortative_mating(
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
   config->assortative_mating(
       std::move(mate_cor),
-      optional<double>(tol_inf),
-      optional<std::size_t>(n_iterations),
-      optional<double>(temp_init),
-      optional<double>(temp_decay));
+      rOptional<double>(tol_inf),
+      rOptional<std::size_t>(n_iterations),
+      rOptional<double>(temp_init),
+      rOptional<double>(temp_decay));
   return config;
 }
 
@@ -155,7 +169,9 @@ SEXP SimulationConfig_assortative_mating(
 //'
 //' @return Self, for method chaining.
 //'
-// [[Rcpp::export(".SimulationConfig_metrics")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 SEXP SimulationConfig_metrics(SEXP ptr, Rcpp::List metrics) {
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
 
@@ -178,7 +194,9 @@ SEXP SimulationConfig_metrics(SEXP ptr, Rcpp::List metrics) {
 //'
 //' @return Integer specifying the number of generations to simulate.
 //'
-// [[Rcpp::export(".SimulationConfig_n_generations")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 std::size_t SimulationConfig_n_generations(SEXP ptr) {
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
   return config->n_gen;
@@ -190,7 +208,9 @@ std::size_t SimulationConfig_n_generations(SEXP ptr) {
 //'
 //' @return Integer specifying the population size.
 //'
-// [[Rcpp::export(".SimulationConfig_n_individuals")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 std::size_t SimulationConfig_n_individuals(SEXP ptr) {
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
   return config->n_ind;
@@ -202,7 +222,9 @@ std::size_t SimulationConfig_n_individuals(SEXP ptr) {
 //'
 //' @return Integer specifying the number of genetic loci.
 //'
-// [[Rcpp::export(".SimulationConfig_n_loci")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 std::size_t SimulationConfig_n_loci(SEXP ptr) {
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
   return config->n_loc;
@@ -214,7 +236,9 @@ std::size_t SimulationConfig_n_loci(SEXP ptr) {
 //'
 //' @return String specifying the output directory path.
 //'
-// [[Rcpp::export(".SimulationConfig_output_dir")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 std::string SimulationConfig_output_dir(SEXP ptr) {
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
   return config->out_dir;
@@ -226,11 +250,27 @@ std::string SimulationConfig_output_dir(SEXP ptr) {
 //'
 //' @return Integer specifying the random number generator seed.
 //'
-// [[Rcpp::export(".SimulationConfig_random_seed")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 std::size_t SimulationConfig_random_seed(SEXP ptr) {
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
   return config->rng_seed;
 }
+
+//' Shuffle RNG seed for replicate simulations
+//'
+//' @param ptr An external pointer to a SimulationConfig instance.
+//' @param rep_id New seed 
+//'
+//' @noRd
+//'
+// [[Rcpp::export]]
+void SimulationConfig_shuffle_random_seed(SEXP ptr, std::size_t rep_id) {
+  Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
+  config->rng_seed = amsim::shuffle_seed(config->rng_seed, rep_id);
+}
+
 
 //' Get the locus MAF vector
 //'
@@ -238,7 +278,9 @@ std::size_t SimulationConfig_random_seed(SEXP ptr) {
 //'
 //' @return Numeric vector of minor allele frequencies for each locus.
 //'
-// [[Rcpp::export(".SimulationConfig_locus_maf")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 std::vector<double> SimulationConfig_locus_maf(SEXP ptr) {
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
   return config->v_maf;
@@ -250,7 +292,9 @@ std::vector<double> SimulationConfig_locus_maf(SEXP ptr) {
 //'
 //' @return Numeric vector of recombination probabilities for each locus.
 //'
-// [[Rcpp::export(".SimulationConfig_locus_recombination")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 std::vector<double> SimulationConfig_locus_recombination(SEXP ptr) {
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
   return config->v_rec;
@@ -262,7 +306,9 @@ std::vector<double> SimulationConfig_locus_recombination(SEXP ptr) {
 //'
 //' @return Numeric vector of mutation probabilities for each locus.
 //'
-// [[Rcpp::export(".SimulationConfig_locus_mutation")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 std::vector<double> SimulationConfig_locus_mutation(SEXP ptr) {
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
   return config->v_mut;
@@ -274,7 +320,9 @@ std::vector<double> SimulationConfig_locus_mutation(SEXP ptr) {
 //'
 //' @return Integer specifying the number of phenotypic traits.
 //'
-// [[Rcpp::export(".SimulationConfig_n_phenotypes")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 std::size_t SimulationConfig_n_phenotypes(SEXP ptr) {
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
   return config->n_pheno;
@@ -286,7 +334,9 @@ std::size_t SimulationConfig_n_phenotypes(SEXP ptr) {
 //'
 //' @return Character vector of phenotype names.
 //'
-// [[Rcpp::export(".SimulationConfig_phenotype_names")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 std::vector<std::string> SimulationConfig_phenotype_names(SEXP ptr) {
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
   return config->v_name;
@@ -298,7 +348,9 @@ std::vector<std::string> SimulationConfig_phenotype_names(SEXP ptr) {
 //'
 //' @return Integer vector specifying the number of causal loci per phenotype.
 //'
-// [[Rcpp::export(".SimulationConfig_n_causal_loci")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 std::vector<std::size_t> SimulationConfig_n_causal_loci(SEXP ptr) {
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
   return config->v_n_loc;
@@ -310,7 +362,9 @@ std::vector<std::size_t> SimulationConfig_n_causal_loci(SEXP ptr) {
 //'
 //' @return Numeric vector of narrow-sense heritabilities for each phenotype.
 //'
-// [[Rcpp::export(".SimulationConfig_h2_genetic")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 std::vector<double> SimulationConfig_h2_genetic(SEXP ptr) {
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
   return config->v_h2_gen;
@@ -323,7 +377,9 @@ std::vector<double> SimulationConfig_h2_genetic(SEXP ptr) {
 //' @return Numeric vector of environmental variance components for each
 //'   phenotype.
 //'
-// [[Rcpp::export(".SimulationConfig_h2_environmental")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 std::vector<double> SimulationConfig_h2_environmental(SEXP ptr) {
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
   return config->v_h2_env;
@@ -336,7 +392,9 @@ std::vector<double> SimulationConfig_h2_environmental(SEXP ptr) {
 //' @return Numeric vector of vertical transmission components for each
 //'   phenotype.
 //'
-// [[Rcpp::export(".SimulationConfig_h2_vertical")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 std::vector<double> SimulationConfig_h2_vertical(SEXP ptr) {
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
   return config->v_h2_vert;
@@ -349,7 +407,9 @@ std::vector<double> SimulationConfig_h2_vertical(SEXP ptr) {
 //' @return Numeric vector representing the genetic correlation matrix in
 //'   column-major order.
 //'
-// [[Rcpp::export(".SimulationConfig_genetic_cor")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 std::vector<double> SimulationConfig_genetic_cor(SEXP ptr) {
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
   return config->gen_cor;
@@ -362,7 +422,9 @@ std::vector<double> SimulationConfig_genetic_cor(SEXP ptr) {
 //' @return Numeric vector representing the environmental correlation matrix in
 //'   column-major order.
 //'
-// [[Rcpp::export(".SimulationConfig_environmental_cor")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 std::vector<double> SimulationConfig_environmental_cor(SEXP ptr) {
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
   return config->env_cor;
@@ -375,7 +437,9 @@ std::vector<double> SimulationConfig_environmental_cor(SEXP ptr) {
 //' @return Numeric vector representing the mating correlation matrix in
 //'   column-major order.
 //'
-// [[Rcpp::export(".SimulationConfig_mate_cor")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 std::vector<double> SimulationConfig_mate_cor(SEXP ptr) {
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
   return config->mate_cor;
@@ -388,7 +452,9 @@ std::vector<double> SimulationConfig_mate_cor(SEXP ptr) {
 //' @return Numeric value specifying the termination threshold for the
 //'   annealing routine.
 //'
-// [[Rcpp::export(".SimulationConfig_tol_inf")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 double SimulationConfig_tol_inf(SEXP ptr) {
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
   return config->tol_inf;
@@ -400,7 +466,9 @@ double SimulationConfig_tol_inf(SEXP ptr) {
 //'
 //' @return Integer specifying the maximum number of annealing iterations.
 //'
-// [[Rcpp::export(".SimulationConfig_n_iterations")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 std::size_t SimulationConfig_n_iterations(SEXP ptr) {
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
   return config->n_itr;
@@ -412,7 +480,9 @@ std::size_t SimulationConfig_n_iterations(SEXP ptr) {
 //'
 //' @return Numeric value specifying the initial annealing temperature.
 //'
-// [[Rcpp::export(".SimulationConfig_temp_init")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 double SimulationConfig_temp_init(SEXP ptr) {
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
   return config->temp_init;
@@ -424,25 +494,54 @@ double SimulationConfig_temp_init(SEXP ptr) {
 //'
 //' @return Numeric value specifying the temperature decay rate.
 //'
-// [[Rcpp::export(".SimulationConfig_temp_decay")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 double SimulationConfig_temp_decay(SEXP ptr) {
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
   return config->temp_decay;
 }
 
+
+//' Run a single simulation
+//'
+//' @param ptr An external pointer to a SimulationConfig instance.
+//' @param output_dir Output directory to overwrite configuration.
+//' @param ransom_seed Random seed to overwrite configuration
+//' @param log_file Whether to write log output to file.
+//' @param log_level Logging verbosity level.
+//'
+//' @noRd
+//'
+// [[Rcpp::export]]
+void run_simulation(
+    SEXP ptr,
+    SEXP output_dir,
+    bool log_file,
+    const std::string& log_level) {
+  Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
+  amsim::LogLevel level = strLogLevel(log_level);
+  amsim::run_simulation(
+      *config,
+      rOptional<std::string>(output_dir),
+      log_file,
+      level);
+}
+
+
 //' Run (multithreaded) simulations
 //'
 //' @param ptr An external pointer to a SimulationConfig instance.
-//' @param n_replicates Integer. Number of independent simulation replicates to
+//' @param n_replicates Number of independent simulation replicates to
 //'   run.
-//' @param n_threads Integer. Number of parallel threads to use for execution.
-//' @param summarise Logical. Whether to summarize results across replicates
-//'   (default: TRUE).
-//' @param log_file Logical. Whether to write log output to a file (default:
-//'   FALSE).
+//' @param n_threads Number of parallel threads to use for execution.
+//' @param summarise Whether to summarize results across replicates.
+//' @param log_file Whether to write log output to a file.
 //' @param log_level String. Logging verbosity level.
 //'
-// [[Rcpp::export(".run_simulations")]]
+//' @noRd
+//'
+// [[Rcpp::export]]
 void run_simulations(
     SEXP ptr,
     std::size_t n_replicates,
