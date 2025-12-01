@@ -62,16 +62,18 @@ SimulationResults <- R6::R6Class(
     #' @return A new `SimulationResults` instance with all metrics loaded.
     initialize = function(output_dir) {
       checkmate::assert_string(output_dir)
-      private$.results_obj <- .SimulationResults_new(output_dir)
-      .SimulationResults_summarise(private$.results_obj)
+      private$.results_obj <- SimulationResults_new(output_dir)
+      SimulationResults_summarise(private$.results_obj)
 
-      metric_names <- .SimulationResults_metric_names(private$.results_obj)
+      metric_names <- SimulationResults_metric_names(private$.results_obj)
       for (metric_name in metric_names) {
-        private$.results_dat[[metric_name]] <- .SimulationResults_load(
+        private$.results_dat[[metric_name]] <- SimulationResults_load(
           private$.results_obj,
           metric_name
         )
       }
+
+      SimulationResults_save(private$.results_obj)
     },
 
     #' @description
@@ -100,7 +102,7 @@ SimulationResults <- R6::R6Class(
   active = list(
     #' @field metric_names Character vector of available metric names
     metric_names = function() {
-      .SimulationResults_metric_names(private$.results_obj)
+      SimulationResults_metric_names(private$.results_obj)
     }
   )
 )
