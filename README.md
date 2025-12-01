@@ -8,11 +8,7 @@ mating. Simulations can be configured in a multitude of ways, such as locus
 properties and phenotype architectures and covariance structures.
 
 Users more familiar with Python are also encouraged to use the
-[amsimpy](https://github.com/lvthnn/amsimpy) package instead, which is nearly
-identically implemented in terms of the user API, albeit with more sophisticated
-multithreaded capabilities which are not available to the R language, resulting
-in faster replicate simulations when using [user-specified metric summary
-functions](vignettes/custom_metrics.Rmd).
+[amsimpy](https://github.com/lvthnn/amsimpy) package. 
 
 ### Installation
 Install the latest stable version from GitHub (requires the
