@@ -1,4 +1,5 @@
 #' Metric Specification
+#'
 #' @description
 #' An R6 class for specifying metrics to collect during genetic simulations.
 #' Metrics are statistics calculated and recorded at each generation, such as
