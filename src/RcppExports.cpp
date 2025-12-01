@@ -10,9 +10,9 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// custom_metric
-SEXP custom_metric(const std::string& name, const Rcpp::Function& metric_func, SEXP n_rows, SEXP n_cols, SEXP labels, const bool require_lat);
-RcppExport SEXP _amsimr_custom_metric(SEXP nameSEXP, SEXP metric_funcSEXP, SEXP n_rowsSEXP, SEXP n_colsSEXP, SEXP labelsSEXP, SEXP require_latSEXP) {
+// MetricSpec_custom_metric
+SEXP MetricSpec_custom_metric(const std::string& name, const Rcpp::Function& metric_func, SEXP n_rows, SEXP n_cols, SEXP labels, const bool require_lat);
+RcppExport SEXP _amsimr_MetricSpec_custom_metric(SEXP nameSEXP, SEXP metric_funcSEXP, SEXP n_rowsSEXP, SEXP n_colsSEXP, SEXP labelsSEXP, SEXP require_latSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -22,115 +22,115 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< SEXP >::type n_cols(n_colsSEXP);
     Rcpp::traits::input_parameter< SEXP >::type labels(labelsSEXP);
     Rcpp::traits::input_parameter< const bool >::type require_lat(require_latSEXP);
-    rcpp_result_gen = Rcpp::wrap(custom_metric(name, metric_func, n_rows, n_cols, labels, require_lat));
+    rcpp_result_gen = Rcpp::wrap(MetricSpec_custom_metric(name, metric_func, n_rows, n_cols, labels, require_lat));
     return rcpp_result_gen;
 END_RCPP
 }
-// pheno_h2
-SEXP pheno_h2();
-RcppExport SEXP _amsimr_pheno_h2() {
+// MetricSpec_pheno_h2
+SEXP MetricSpec_pheno_h2();
+RcppExport SEXP _amsimr_MetricSpec_pheno_h2() {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(pheno_h2());
+    rcpp_result_gen = Rcpp::wrap(MetricSpec_pheno_h2());
     return rcpp_result_gen;
 END_RCPP
 }
-// pheno_comp_mean
-SEXP pheno_comp_mean(const std::string& component_type);
-RcppExport SEXP _amsimr_pheno_comp_mean(SEXP component_typeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const std::string& >::type component_type(component_typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(pheno_comp_mean(component_type));
-    return rcpp_result_gen;
-END_RCPP
-}
-// pheno_comp_var
-SEXP pheno_comp_var(const std::string& component_type);
-RcppExport SEXP _amsimr_pheno_comp_var(SEXP component_typeSEXP) {
+// MetricSpec_pheno_comp_mean
+SEXP MetricSpec_pheno_comp_mean(const std::string& component_type);
+RcppExport SEXP _amsimr_MetricSpec_pheno_comp_mean(SEXP component_typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const std::string& >::type component_type(component_typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(pheno_comp_var(component_type));
+    rcpp_result_gen = Rcpp::wrap(MetricSpec_pheno_comp_mean(component_type));
     return rcpp_result_gen;
 END_RCPP
 }
-// pheno_comp_cor
-SEXP pheno_comp_cor(const std::string& component_type);
-RcppExport SEXP _amsimr_pheno_comp_cor(SEXP component_typeSEXP) {
+// MetricSpec_pheno_comp_var
+SEXP MetricSpec_pheno_comp_var(const std::string& component_type);
+RcppExport SEXP _amsimr_MetricSpec_pheno_comp_var(SEXP component_typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const std::string& >::type component_type(component_typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(pheno_comp_cor(component_type));
+    rcpp_result_gen = Rcpp::wrap(MetricSpec_pheno_comp_var(component_type));
     return rcpp_result_gen;
 END_RCPP
 }
-// pheno_comp_xcor
-SEXP pheno_comp_xcor(const std::string& component_type);
-RcppExport SEXP _amsimr_pheno_comp_xcor(SEXP component_typeSEXP) {
+// MetricSpec_pheno_comp_cor
+SEXP MetricSpec_pheno_comp_cor(const std::string& component_type);
+RcppExport SEXP _amsimr_MetricSpec_pheno_comp_cor(SEXP component_typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const std::string& >::type component_type(component_typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(pheno_comp_xcor(component_type));
+    rcpp_result_gen = Rcpp::wrap(MetricSpec_pheno_comp_cor(component_type));
     return rcpp_result_gen;
 END_RCPP
 }
-// pheno_latent_h2
-SEXP pheno_latent_h2();
-RcppExport SEXP _amsimr_pheno_latent_h2() {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(pheno_latent_h2());
-    return rcpp_result_gen;
-END_RCPP
-}
-// pheno_latent_comp_mean
-SEXP pheno_latent_comp_mean(const std::string& component_type);
-RcppExport SEXP _amsimr_pheno_latent_comp_mean(SEXP component_typeSEXP) {
+// MetricSpec_pheno_comp_xcor
+SEXP MetricSpec_pheno_comp_xcor(const std::string& component_type);
+RcppExport SEXP _amsimr_MetricSpec_pheno_comp_xcor(SEXP component_typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const std::string& >::type component_type(component_typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(pheno_latent_comp_mean(component_type));
+    rcpp_result_gen = Rcpp::wrap(MetricSpec_pheno_comp_xcor(component_type));
     return rcpp_result_gen;
 END_RCPP
 }
-// pheno_latent_comp_var
-SEXP pheno_latent_comp_var(const std::string& component_type);
-RcppExport SEXP _amsimr_pheno_latent_comp_var(SEXP component_typeSEXP) {
+// MetricSpec_pheno_latent_h2
+SEXP MetricSpec_pheno_latent_h2();
+RcppExport SEXP _amsimr_MetricSpec_pheno_latent_h2() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(MetricSpec_pheno_latent_h2());
+    return rcpp_result_gen;
+END_RCPP
+}
+// MetricSpec_pheno_latent_comp_mean
+SEXP MetricSpec_pheno_latent_comp_mean(const std::string& component_type);
+RcppExport SEXP _amsimr_MetricSpec_pheno_latent_comp_mean(SEXP component_typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const std::string& >::type component_type(component_typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(pheno_latent_comp_var(component_type));
+    rcpp_result_gen = Rcpp::wrap(MetricSpec_pheno_latent_comp_mean(component_type));
     return rcpp_result_gen;
 END_RCPP
 }
-// pheno_latent_comp_cor
-SEXP pheno_latent_comp_cor(const std::string& component_type);
-RcppExport SEXP _amsimr_pheno_latent_comp_cor(SEXP component_typeSEXP) {
+// MetricSpec_pheno_latent_comp_var
+SEXP MetricSpec_pheno_latent_comp_var(const std::string& component_type);
+RcppExport SEXP _amsimr_MetricSpec_pheno_latent_comp_var(SEXP component_typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const std::string& >::type component_type(component_typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(pheno_latent_comp_cor(component_type));
+    rcpp_result_gen = Rcpp::wrap(MetricSpec_pheno_latent_comp_var(component_type));
     return rcpp_result_gen;
 END_RCPP
 }
-// pheno_latent_comp_xcor
-SEXP pheno_latent_comp_xcor(const std::string& component_type);
-RcppExport SEXP _amsimr_pheno_latent_comp_xcor(SEXP component_typeSEXP) {
+// MetricSpec_pheno_latent_comp_cor
+SEXP MetricSpec_pheno_latent_comp_cor(const std::string& component_type);
+RcppExport SEXP _amsimr_MetricSpec_pheno_latent_comp_cor(SEXP component_typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const std::string& >::type component_type(component_typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(pheno_latent_comp_xcor(component_type));
+    rcpp_result_gen = Rcpp::wrap(MetricSpec_pheno_latent_comp_cor(component_type));
+    return rcpp_result_gen;
+END_RCPP
+}
+// MetricSpec_pheno_latent_comp_xcor
+SEXP MetricSpec_pheno_latent_comp_xcor(const std::string& component_type);
+RcppExport SEXP _amsimr_MetricSpec_pheno_latent_comp_xcor(SEXP component_typeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type component_type(component_typeSEXP);
+    rcpp_result_gen = Rcpp::wrap(MetricSpec_pheno_latent_comp_xcor(component_type));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -344,6 +344,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// SimulationConfig_shuffle_random_seed
+void SimulationConfig_shuffle_random_seed(SEXP ptr, std::size_t rep_id);
+RcppExport SEXP _amsimr_SimulationConfig_shuffle_random_seed(SEXP ptrSEXP, SEXP rep_idSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
+    Rcpp::traits::input_parameter< std::size_t >::type rep_id(rep_idSEXP);
+    SimulationConfig_shuffle_random_seed(ptr, rep_id);
+    return R_NilValue;
+END_RCPP
+}
 // SimulationConfig_locus_maf
 std::vector<double> SimulationConfig_locus_maf(SEXP ptr);
 RcppExport SEXP _amsimr_SimulationConfig_locus_maf(SEXP ptrSEXP) {
@@ -520,6 +531,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// run_simulation
+void run_simulation(SEXP ptr, SEXP output_dir, bool log_file, const std::string& log_level);
+RcppExport SEXP _amsimr_run_simulation(SEXP ptrSEXP, SEXP output_dirSEXP, SEXP log_fileSEXP, SEXP log_levelSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type output_dir(output_dirSEXP);
+    Rcpp::traits::input_parameter< bool >::type log_file(log_fileSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type log_level(log_levelSEXP);
+    run_simulation(ptr, output_dir, log_file, log_level);
+    return R_NilValue;
+END_RCPP
+}
 // run_simulations
 void run_simulations(SEXP ptr, std::size_t n_replicates, std::size_t n_threads, bool summarise, bool log_file, const std::string& log_level);
 RcppExport SEXP _amsimr_run_simulations(SEXP ptrSEXP, SEXP n_replicatesSEXP, SEXP n_threadsSEXP, SEXP summariseSEXP, SEXP log_fileSEXP, SEXP log_levelSEXP) {
@@ -537,17 +561,17 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_amsimr_custom_metric", (DL_FUNC) &_amsimr_custom_metric, 6},
-    {"_amsimr_pheno_h2", (DL_FUNC) &_amsimr_pheno_h2, 0},
-    {"_amsimr_pheno_comp_mean", (DL_FUNC) &_amsimr_pheno_comp_mean, 1},
-    {"_amsimr_pheno_comp_var", (DL_FUNC) &_amsimr_pheno_comp_var, 1},
-    {"_amsimr_pheno_comp_cor", (DL_FUNC) &_amsimr_pheno_comp_cor, 1},
-    {"_amsimr_pheno_comp_xcor", (DL_FUNC) &_amsimr_pheno_comp_xcor, 1},
-    {"_amsimr_pheno_latent_h2", (DL_FUNC) &_amsimr_pheno_latent_h2, 0},
-    {"_amsimr_pheno_latent_comp_mean", (DL_FUNC) &_amsimr_pheno_latent_comp_mean, 1},
-    {"_amsimr_pheno_latent_comp_var", (DL_FUNC) &_amsimr_pheno_latent_comp_var, 1},
-    {"_amsimr_pheno_latent_comp_cor", (DL_FUNC) &_amsimr_pheno_latent_comp_cor, 1},
-    {"_amsimr_pheno_latent_comp_xcor", (DL_FUNC) &_amsimr_pheno_latent_comp_xcor, 1},
+    {"_amsimr_MetricSpec_custom_metric", (DL_FUNC) &_amsimr_MetricSpec_custom_metric, 6},
+    {"_amsimr_MetricSpec_pheno_h2", (DL_FUNC) &_amsimr_MetricSpec_pheno_h2, 0},
+    {"_amsimr_MetricSpec_pheno_comp_mean", (DL_FUNC) &_amsimr_MetricSpec_pheno_comp_mean, 1},
+    {"_amsimr_MetricSpec_pheno_comp_var", (DL_FUNC) &_amsimr_MetricSpec_pheno_comp_var, 1},
+    {"_amsimr_MetricSpec_pheno_comp_cor", (DL_FUNC) &_amsimr_MetricSpec_pheno_comp_cor, 1},
+    {"_amsimr_MetricSpec_pheno_comp_xcor", (DL_FUNC) &_amsimr_MetricSpec_pheno_comp_xcor, 1},
+    {"_amsimr_MetricSpec_pheno_latent_h2", (DL_FUNC) &_amsimr_MetricSpec_pheno_latent_h2, 0},
+    {"_amsimr_MetricSpec_pheno_latent_comp_mean", (DL_FUNC) &_amsimr_MetricSpec_pheno_latent_comp_mean, 1},
+    {"_amsimr_MetricSpec_pheno_latent_comp_var", (DL_FUNC) &_amsimr_MetricSpec_pheno_latent_comp_var, 1},
+    {"_amsimr_MetricSpec_pheno_latent_comp_cor", (DL_FUNC) &_amsimr_MetricSpec_pheno_latent_comp_cor, 1},
+    {"_amsimr_MetricSpec_pheno_latent_comp_xcor", (DL_FUNC) &_amsimr_MetricSpec_pheno_latent_comp_xcor, 1},
     {"_amsimr_SimulationResults_new", (DL_FUNC) &_amsimr_SimulationResults_new, 1},
     {"_amsimr_SimulationResults_summarise", (DL_FUNC) &_amsimr_SimulationResults_summarise, 1},
     {"_amsimr_SimulationResults_save", (DL_FUNC) &_amsimr_SimulationResults_save, 4},
@@ -565,6 +589,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_amsimr_SimulationConfig_n_loci", (DL_FUNC) &_amsimr_SimulationConfig_n_loci, 1},
     {"_amsimr_SimulationConfig_output_dir", (DL_FUNC) &_amsimr_SimulationConfig_output_dir, 1},
     {"_amsimr_SimulationConfig_random_seed", (DL_FUNC) &_amsimr_SimulationConfig_random_seed, 1},
+    {"_amsimr_SimulationConfig_shuffle_random_seed", (DL_FUNC) &_amsimr_SimulationConfig_shuffle_random_seed, 2},
     {"_amsimr_SimulationConfig_locus_maf", (DL_FUNC) &_amsimr_SimulationConfig_locus_maf, 1},
     {"_amsimr_SimulationConfig_locus_recombination", (DL_FUNC) &_amsimr_SimulationConfig_locus_recombination, 1},
     {"_amsimr_SimulationConfig_locus_mutation", (DL_FUNC) &_amsimr_SimulationConfig_locus_mutation, 1},
@@ -581,6 +606,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_amsimr_SimulationConfig_n_iterations", (DL_FUNC) &_amsimr_SimulationConfig_n_iterations, 1},
     {"_amsimr_SimulationConfig_temp_init", (DL_FUNC) &_amsimr_SimulationConfig_temp_init, 1},
     {"_amsimr_SimulationConfig_temp_decay", (DL_FUNC) &_amsimr_SimulationConfig_temp_decay, 1},
+    {"_amsimr_run_simulation", (DL_FUNC) &_amsimr_run_simulation, 4},
     {"_amsimr_run_simulations", (DL_FUNC) &_amsimr_run_simulations, 6},
     {NULL, NULL, 0}
 };
