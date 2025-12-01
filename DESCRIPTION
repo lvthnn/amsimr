@@ -15,15 +15,18 @@ LinkingTo:
 Imports: 
     Rcpp,
     R6,
-    checkmate
+    checkmate,
+    fs
 Suggests: 
     knitr,
     rmarkdown,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    future
 Config/testthat/edition: 3
 Collate: 
     'RcppExports.R'
     'amsimr-package.R'
+    'metrics.R'
     'results.R'
     'utils.R'
     'simulation.R'

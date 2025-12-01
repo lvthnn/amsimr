@@ -13,8 +13,10 @@
 //' @return An external pointer to a MetricSpec object for use with
 //'   Simulation$metrics().
 //'
+//' @noRd
+//'
 // [[Rcpp::export]]
-SEXP pheno_h2() {
+SEXP MetricSpec_pheno_h2() {
   amsim::MetricSpec pheno_h2 = amsim::pheno_h2();
   auto metric = std::make_unique<amsim::MetricSpec>(pheno_h2);
   Rcpp::XPtr<amsim::MetricSpec> ptr(metric.release(), true);
@@ -33,8 +35,10 @@ SEXP pheno_h2() {
 //' @return An external pointer to a MetricSpec object for use with
 //'   Simulation$metrics().
 //'
+//' @noRd
+//'
 // [[Rcpp::export]]
-SEXP pheno_comp_mean(const std::string& component_type) {
+SEXP MetricSpec_pheno_comp_mean(const std::string& component_type) {
   amsim::ComponentType type = strComponentType(component_type);
   amsim::MetricSpec pheno_comp_mean = amsim::pheno_comp_mean(type);
   auto metric = std::make_unique<amsim::MetricSpec>(pheno_comp_mean);
@@ -54,8 +58,10 @@ SEXP pheno_comp_mean(const std::string& component_type) {
 //' @return An external pointer to a MetricSpec object for use with
 //'   Simulation$metrics().
 //'
+//' @noRd
+//'
 // [[Rcpp::export]]
-SEXP pheno_comp_var(const std::string& component_type) {
+SEXP MetricSpec_pheno_comp_var(const std::string& component_type) {
   amsim::ComponentType type = strComponentType(component_type);
   amsim::MetricSpec pheno_comp_var = amsim::pheno_comp_var(type);
   auto metric = std::make_unique<amsim::MetricSpec>(pheno_comp_var);
@@ -76,8 +82,10 @@ SEXP pheno_comp_var(const std::string& component_type) {
 //' @return An external pointer to a MetricSpec object for use with
 //'   Simulation$metrics().
 //'
+//' @noRd
+//'
 // [[Rcpp::export]]
-SEXP pheno_comp_cor(const std::string& component_type) {
+SEXP MetricSpec_pheno_comp_cor(const std::string& component_type) {
   amsim::ComponentType type = strComponentType(component_type);
   amsim::MetricSpec pheno_comp_cor = amsim::pheno_comp_cor(type);
   auto metric = std::make_unique<amsim::MetricSpec>(pheno_comp_cor);
@@ -98,8 +106,10 @@ SEXP pheno_comp_cor(const std::string& component_type) {
 //' @return An external pointer to a MetricSpec object for use with
 //'   Simulation$metrics().
 //'
+//' @noRd
+//'
 // [[Rcpp::export]]
-SEXP pheno_comp_xcor(const std::string& component_type) {
+SEXP MetricSpec_pheno_comp_xcor(const std::string& component_type) {
   amsim::ComponentType type = strComponentType(component_type);
   amsim::MetricSpec pheno_comp_xcor = amsim::pheno_comp_xcor(type);
   auto metric = std::make_unique<amsim::MetricSpec>(pheno_comp_xcor);
@@ -117,8 +127,10 @@ SEXP pheno_comp_xcor(const std::string& component_type) {
 //' @return An external pointer to a MetricSpec object for use with
 //'   Simulation$metrics().
 //'
+//' @noRd
+//'
 // [[Rcpp::export]]
-SEXP pheno_latent_h2() {
+SEXP MetricSpec_pheno_latent_h2() {
   amsim::MetricSpec pheno_latent_h2 = amsim::pheno_latent_h2();
   auto metric = std::make_unique<amsim::MetricSpec>(pheno_latent_h2);
   Rcpp::XPtr<amsim::MetricSpec> ptr(metric.release(), true);
@@ -137,8 +149,10 @@ SEXP pheno_latent_h2() {
 //' @return An external pointer to a MetricSpec object for use with
 //'   Simulation$metrics().
 //'
+//' @noRd
+//'
 // [[Rcpp::export]]
-SEXP pheno_latent_comp_mean(const std::string& component_type) {
+SEXP MetricSpec_pheno_latent_comp_mean(const std::string& component_type) {
   amsim::ComponentType type = strComponentType(component_type);
   amsim::MetricSpec pheno_comp_mean = amsim::pheno_latent_comp_mean(type);
   auto metric = std::make_unique<amsim::MetricSpec>(pheno_comp_mean);
@@ -158,8 +172,10 @@ SEXP pheno_latent_comp_mean(const std::string& component_type) {
 //' @return An external pointer to a MetricSpec object for use with
 //'   Simulation$metrics().
 //'
+//' @noRd
+//'
 // [[Rcpp::export]]
-SEXP pheno_latent_comp_var(const std::string& component_type) {
+SEXP MetricSpec_pheno_latent_comp_var(const std::string& component_type) {
   amsim::ComponentType type = strComponentType(component_type);
   amsim::MetricSpec pheno_comp_var = amsim::pheno_latent_comp_var(type);
   auto metric = std::make_unique<amsim::MetricSpec>(pheno_comp_var);
@@ -179,8 +195,10 @@ SEXP pheno_latent_comp_var(const std::string& component_type) {
 //' @return An external pointer to a MetricSpec object for use with
 //'   Simulation$metrics().
 //'
+//' @noRd
+//'
 // [[Rcpp::export]]
-SEXP pheno_latent_comp_cor(const std::string& component_type) {
+SEXP MetricSpec_pheno_latent_comp_cor(const std::string& component_type) {
   amsim::ComponentType type = strComponentType(component_type);
   amsim::MetricSpec pheno_comp_cor = amsim::pheno_latent_comp_cor(type);
   auto metric = std::make_unique<amsim::MetricSpec>(pheno_comp_cor);
@@ -200,8 +218,10 @@ SEXP pheno_latent_comp_cor(const std::string& component_type) {
 //' @return An external pointer to a MetricSpec object for use with
 //'   Simulation$metrics().
 //'
+//' @noRd
+//'
 // [[Rcpp::export]]
-SEXP pheno_latent_comp_xcor(const std::string& component_type) {
+SEXP MetricSpec_pheno_latent_comp_xcor(const std::string& component_type) {
   amsim::ComponentType type = strComponentType(component_type);
   amsim::MetricSpec pheno_comp_xcor = amsim::pheno_latent_comp_xcor(type);
   auto metric = std::make_unique<amsim::MetricSpec>(pheno_comp_xcor);
