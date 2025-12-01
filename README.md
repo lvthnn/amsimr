@@ -77,3 +77,17 @@ sim$run(
   log_level = "warning"
 )
 ```
+
+### Citation
+
+If you use amsimr in your research, please cite amsimcpp:
+
+```bibtex
+@software{hlynsson2024_amsimcpp,
+  author = {Hlynsson, Kári},
+  title = {amsimcpp: A C++ library for forward-time assortative mating simulations},
+  year = {2025},
+  version = {0.1.0},
+  url = {https://github.com/lvthnn/amsimcpp}
+}
+```
