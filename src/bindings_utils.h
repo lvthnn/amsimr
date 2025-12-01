@@ -12,7 +12,7 @@
 #include <string>
 
 template<typename T>
-inline std::optional<T> optional(SEXP x) {
+inline std::optional<T> rOptional(SEXP x) {
   if (x == R_NilValue) return std::nullopt;
   return Rcpp::as<T>(x);
 }
