@@ -14,11 +14,6 @@ multithreaded capabilities which are not available to the R language, resulting
 in faster replicate simulations when using [user-specified metric summary
 functions](vignettes/custom_metrics.Rmd).
 
-### Getting started
-
-If you are new to the **amsim** simulation family we recommend starting with the
-tutorial vignettes and documentation available on the package site.
-
 ### Installation
 Install the latest stable version from GitHub (requires the
 [devtools](https://github.com/r-lib/devtools) package):
