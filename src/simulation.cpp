@@ -174,7 +174,7 @@ void run_simulation(
   Simulation sim(config, out_dir_);
 
   if (log_file)
-    LOG_FILE((out_dir_ ? *out_dir_ : config.out_dir) / "amsim.log", log_level);
+    LOG_FILE((out_dir_ ? *out_dir_ : config.out_dir), log_level);
   else
     LOG_STREAM(std::cout, log_level);
 
