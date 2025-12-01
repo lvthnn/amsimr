@@ -74,12 +74,12 @@ NULL
 #' }
 #'
 #' @param name String. Unique identifier for the metric.
-#' @param metric_func Function. An R function that accepts the simulation
+#' @param r_metric_func Function. An R function that accepts the simulation
 #'   context list and returns a numeric vector.
-#' @param n_rows Integer. Number of rows in the metric output.
-#' @param n_cols Integer or NULL. Number of columns in the metric output
+#' @param r_n_rows Integer. Number of rows in the metric output.
+#' @param r_n_cols Integer or NULL. Number of columns in the metric output
 #'   (default: 1).
-#' @param labels Character vector or NULL. Labels for metric components
+#' @param r_labels Character vector or NULL. Labels for metric components
 #'   (default: empty).
 #' @param require_lat Logical. Whether the metric requires linkage
 #'   disequilibrium tracking (default: FALSE).
@@ -87,8 +87,10 @@ NULL
 #' @return An external pointer to a MetricSpec object for use with
 #'   Simulation$metrics().
 #'
-custom_metric <- function(name, metric_func, n_rows, n_cols = NULL, labels = NULL, require_lat = FALSE) {
-    .Call(`_amsimr_custom_metric`, name, metric_func, n_rows, n_cols, labels, require_lat)
+#' @noRd
+#'
+MetricSpec_custom_metric <- function(name, metric_func, n_rows, n_cols = NULL, labels = NULL, require_lat = FALSE) {
+    .Call(`_amsimr_MetricSpec_custom_metric`, name, metric_func, n_rows, n_cols, labels, require_lat)
 }
 
 #' Phenotype heritability metric
@@ -100,8 +102,10 @@ custom_metric <- function(name, metric_func, n_rows, n_cols = NULL, labels = NUL
 #' @return An external pointer to a MetricSpec object for use with
 #'   Simulation$metrics().
 #'
-pheno_h2 <- function() {
-    .Call(`_amsimr_pheno_h2`)
+#' @noRd
+#'
+MetricSpec_pheno_h2 <- function() {
+    .Call(`_amsimr_MetricSpec_pheno_h2`)
 }
 
 #' Phenotype component mean metric
@@ -116,8 +120,10 @@ pheno_h2 <- function() {
 #' @return An external pointer to a MetricSpec object for use with
 #'   Simulation$metrics().
 #'
-pheno_comp_mean <- function(component_type) {
-    .Call(`_amsimr_pheno_comp_mean`, component_type)
+#' @noRd
+#'
+MetricSpec_pheno_comp_mean <- function(component_type) {
+    .Call(`_amsimr_MetricSpec_pheno_comp_mean`, component_type)
 }
 
 #' Phenotype component variance metric
@@ -132,8 +138,10 @@ pheno_comp_mean <- function(component_type) {
 #' @return An external pointer to a MetricSpec object for use with
 #'   Simulation$metrics().
 #'
-pheno_comp_var <- function(component_type) {
-    .Call(`_amsimr_pheno_comp_var`, component_type)
+#' @noRd
+#'
+MetricSpec_pheno_comp_var <- function(component_type) {
+    .Call(`_amsimr_MetricSpec_pheno_comp_var`, component_type)
 }
 
 #' Phenotype component correlation metric
@@ -149,8 +157,10 @@ pheno_comp_var <- function(component_type) {
 #' @return An external pointer to a MetricSpec object for use with
 #'   Simulation$metrics().
 #'
-pheno_comp_cor <- function(component_type) {
-    .Call(`_amsimr_pheno_comp_cor`, component_type)
+#' @noRd
+#'
+MetricSpec_pheno_comp_cor <- function(component_type) {
+    .Call(`_amsimr_MetricSpec_pheno_comp_cor`, component_type)
 }
 
 #' Phenotype component cross-correlation metric
@@ -166,8 +176,10 @@ pheno_comp_cor <- function(component_type) {
 #' @return An external pointer to a MetricSpec object for use with
 #'   Simulation$metrics().
 #'
-pheno_comp_xcor <- function(component_type) {
-    .Call(`_amsimr_pheno_comp_xcor`, component_type)
+#' @noRd
+#'
+MetricSpec_pheno_comp_xcor <- function(component_type) {
+    .Call(`_amsimr_MetricSpec_pheno_comp_xcor`, component_type)
 }
 
 #' Latent phenotype heritability metric
@@ -180,8 +192,10 @@ pheno_comp_xcor <- function(component_type) {
 #' @return An external pointer to a MetricSpec object for use with
 #'   Simulation$metrics().
 #'
-pheno_latent_h2 <- function() {
-    .Call(`_amsimr_pheno_latent_h2`)
+#' @noRd
+#'
+MetricSpec_pheno_latent_h2 <- function() {
+    .Call(`_amsimr_MetricSpec_pheno_latent_h2`)
 }
 
 #' Latent phenotype component mean metric
@@ -196,8 +210,10 @@ pheno_latent_h2 <- function() {
 #' @return An external pointer to a MetricSpec object for use with
 #'   Simulation$metrics().
 #'
-pheno_latent_comp_mean <- function(component_type) {
-    .Call(`_amsimr_pheno_latent_comp_mean`, component_type)
+#' @noRd
+#'
+MetricSpec_pheno_latent_comp_mean <- function(component_type) {
+    .Call(`_amsimr_MetricSpec_pheno_latent_comp_mean`, component_type)
 }
 
 #' Latent phenotype component variance metric
@@ -212,8 +228,10 @@ pheno_latent_comp_mean <- function(component_type) {
 #' @return An external pointer to a MetricSpec object for use with
 #'   Simulation$metrics().
 #'
-pheno_latent_comp_var <- function(component_type) {
-    .Call(`_amsimr_pheno_latent_comp_var`, component_type)
+#' @noRd
+#'
+MetricSpec_pheno_latent_comp_var <- function(component_type) {
+    .Call(`_amsimr_MetricSpec_pheno_latent_comp_var`, component_type)
 }
 
 #' Latent phenotype component correlation metric
@@ -228,8 +246,10 @@ pheno_latent_comp_var <- function(component_type) {
 #' @return An external pointer to a MetricSpec object for use with
 #'   Simulation$metrics().
 #'
-pheno_latent_comp_cor <- function(component_type) {
-    .Call(`_amsimr_pheno_latent_comp_cor`, component_type)
+#' @noRd
+#'
+MetricSpec_pheno_latent_comp_cor <- function(component_type) {
+    .Call(`_amsimr_MetricSpec_pheno_latent_comp_cor`, component_type)
 }
 
 #' Latent phenotype component cross-correlation metric
@@ -244,15 +264,19 @@ pheno_latent_comp_cor <- function(component_type) {
 #' @return An external pointer to a MetricSpec object for use with
 #'   Simulation$metrics().
 #'
-pheno_latent_comp_xcor <- function(component_type) {
-    .Call(`_amsimr_pheno_latent_comp_xcor`, component_type)
+#' @noRd
+#'
+MetricSpec_pheno_latent_comp_xcor <- function(component_type) {
+    .Call(`_amsimr_MetricSpec_pheno_latent_comp_xcor`, component_type)
 }
 
 #' Create a new SimulationResults object reference
 #'
 #' @return A new SimulationResults instance.
 #'
-.SimulationResults_new <- function(output_dir) {
+#' @noRd
+#'
+SimulationResults_new <- function(output_dir) {
     .Call(`_amsimr_SimulationResults_new`, output_dir)
 }
 
@@ -260,7 +284,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #'
 #' @param ptr An external pointer to a SimulationResults instance.
 #'
-.SimulationResults_summarise <- function(ptr) {
+#' @noRd
+#'
+SimulationResults_summarise <- function(ptr) {
     invisible(.Call(`_amsimr_SimulationResults_summarise`, ptr))
 }
 
@@ -271,7 +297,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #' @param out_dir Output directory to write data out to.
 #' @param overwrite Specifies whether directory should be overwritten.
 #'
-.SimulationResults_save <- function(ptr, metrics = NULL, out_dir = NULL, overwrite = FALSE) {
+#' @noRd
+#'
+SimulationResults_save <- function(ptr, metrics = NULL, out_dir = NULL, overwrite = FALSE) {
     invisible(.Call(`_amsimr_SimulationResults_save`, ptr, metrics, out_dir, overwrite))
 }
 
@@ -283,7 +311,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #' @return A DataFrame comprising the summarised results data for the specified
 #'   metric.
 #'
-.SimulationResults_load <- function(ptr, metric_name) {
+#' @noRd
+#'
+SimulationResults_load <- function(ptr, metric_name) {
     .Call(`_amsimr_SimulationResults_load`, ptr, metric_name)
 }
 
@@ -293,7 +323,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #'
 #' @return A vector of the metric names recognised by the results instance.
 #'
-.SimulationResults_metric_names <- function(ptr) {
+#' @noRd
+#'
+SimulationResults_metric_names <- function(ptr) {
     .Call(`_amsimr_SimulationResults_metric_names`, ptr)
 }
 
@@ -301,7 +333,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #'
 #' @return A new SimulationConfig instance.
 #'
-.SimulationConfig_new <- function() {
+#' @noRd
+#'
+SimulationConfig_new <- function() {
     .Call(`_amsimr_SimulationConfig_new`)
 }
 
@@ -315,7 +349,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #'
 #' @return Self, for method chaining.
 #'
-.SimulationConfig_simulation <- function(ptr, n_generations, n_individuals, output_dir, random_seed) {
+#' @noRd
+#'
+SimulationConfig_simulation <- function(ptr, n_generations, n_individuals, output_dir, random_seed) {
     .Call(`_amsimr_SimulationConfig_simulation`, ptr, n_generations, n_individuals, output_dir, random_seed)
 }
 
@@ -329,7 +365,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #'
 #' @return Self, for method chaining.
 #'
-.SimulationConfig_genome <- function(ptr, n_loci, locus_maf, locus_recombination, locus_mutation) {
+#' @noRd
+#'
+SimulationConfig_genome <- function(ptr, n_loci, locus_maf, locus_recombination, locus_mutation) {
     .Call(`_amsimr_SimulationConfig_genome`, ptr, n_loci, locus_maf, locus_recombination, locus_mutation)
 }
 
@@ -347,7 +385,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #'
 #' @return Self, for method chaining.
 #'
-.SimulationConfig_phenome <- function(ptr, n_phenotypes, names, n_causal_loci, h2_genetic, h2_environmental, h2_vertical, genetic_cor, environmental_cor) {
+#' @noRd
+#'
+SimulationConfig_phenome <- function(ptr, n_phenotypes, names, n_causal_loci, h2_genetic, h2_environmental, h2_vertical, genetic_cor, environmental_cor) {
     .Call(`_amsimr_SimulationConfig_phenome`, ptr, n_phenotypes, names, n_causal_loci, h2_genetic, h2_environmental, h2_vertical, genetic_cor, environmental_cor)
 }
 
@@ -355,7 +395,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #'
 #' @return Self, for method chaining.
 #'
-.SimulationConfig_random_mating <- function(ptr) {
+#' @noRd
+#'
+SimulationConfig_random_mating <- function(ptr) {
     .Call(`_amsimr_SimulationConfig_random_mating`, ptr)
 }
 
@@ -370,7 +412,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #'
 #' @return Self, for method chaining
 #'
-.SimulationConfig_assortative_mating <- function(ptr, mate_cor, tol_inf = NULL, n_iterations = NULL, temp_init = NULL, temp_decay = NULL) {
+#' @noRd
+#'
+SimulationConfig_assortative_mating <- function(ptr, mate_cor, tol_inf = NULL, n_iterations = NULL, temp_init = NULL, temp_decay = NULL) {
     .Call(`_amsimr_SimulationConfig_assortative_mating`, ptr, mate_cor, tol_inf, n_iterations, temp_init, temp_decay)
 }
 
@@ -381,7 +425,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #'
 #' @return Self, for method chaining.
 #'
-.SimulationConfig_metrics <- function(ptr, metrics) {
+#' @noRd
+#'
+SimulationConfig_metrics <- function(ptr, metrics) {
     .Call(`_amsimr_SimulationConfig_metrics`, ptr, metrics)
 }
 
@@ -391,7 +437,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #'
 #' @return Integer specifying the number of generations to simulate.
 #'
-.SimulationConfig_n_generations <- function(ptr) {
+#' @noRd
+#'
+SimulationConfig_n_generations <- function(ptr) {
     .Call(`_amsimr_SimulationConfig_n_generations`, ptr)
 }
 
@@ -401,7 +449,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #'
 #' @return Integer specifying the population size.
 #'
-.SimulationConfig_n_individuals <- function(ptr) {
+#' @noRd
+#'
+SimulationConfig_n_individuals <- function(ptr) {
     .Call(`_amsimr_SimulationConfig_n_individuals`, ptr)
 }
 
@@ -411,7 +461,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #'
 #' @return Integer specifying the number of genetic loci.
 #'
-.SimulationConfig_n_loci <- function(ptr) {
+#' @noRd
+#'
+SimulationConfig_n_loci <- function(ptr) {
     .Call(`_amsimr_SimulationConfig_n_loci`, ptr)
 }
 
@@ -421,7 +473,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #'
 #' @return String specifying the output directory path.
 #'
-.SimulationConfig_output_dir <- function(ptr) {
+#' @noRd
+#'
+SimulationConfig_output_dir <- function(ptr) {
     .Call(`_amsimr_SimulationConfig_output_dir`, ptr)
 }
 
@@ -431,8 +485,21 @@ pheno_latent_comp_xcor <- function(component_type) {
 #'
 #' @return Integer specifying the random number generator seed.
 #'
-.SimulationConfig_random_seed <- function(ptr) {
+#' @noRd
+#'
+SimulationConfig_random_seed <- function(ptr) {
     .Call(`_amsimr_SimulationConfig_random_seed`, ptr)
+}
+
+#' Shuffle RNG seed for replicate simulations
+#'
+#' @param ptr An external pointer to a SimulationConfig instance.
+#' @param rep_id New seed 
+#'
+#' @noRd
+#'
+SimulationConfig_shuffle_random_seed <- function(ptr, rep_id) {
+    invisible(.Call(`_amsimr_SimulationConfig_shuffle_random_seed`, ptr, rep_id))
 }
 
 #' Get the locus MAF vector
@@ -441,7 +508,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #'
 #' @return Numeric vector of minor allele frequencies for each locus.
 #'
-.SimulationConfig_locus_maf <- function(ptr) {
+#' @noRd
+#'
+SimulationConfig_locus_maf <- function(ptr) {
     .Call(`_amsimr_SimulationConfig_locus_maf`, ptr)
 }
 
@@ -451,7 +520,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #'
 #' @return Numeric vector of recombination probabilities for each locus.
 #'
-.SimulationConfig_locus_recombination <- function(ptr) {
+#' @noRd
+#'
+SimulationConfig_locus_recombination <- function(ptr) {
     .Call(`_amsimr_SimulationConfig_locus_recombination`, ptr)
 }
 
@@ -461,7 +532,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #'
 #' @return Numeric vector of mutation probabilities for each locus.
 #'
-.SimulationConfig_locus_mutation <- function(ptr) {
+#' @noRd
+#'
+SimulationConfig_locus_mutation <- function(ptr) {
     .Call(`_amsimr_SimulationConfig_locus_mutation`, ptr)
 }
 
@@ -471,7 +544,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #'
 #' @return Integer specifying the number of phenotypic traits.
 #'
-.SimulationConfig_n_phenotypes <- function(ptr) {
+#' @noRd
+#'
+SimulationConfig_n_phenotypes <- function(ptr) {
     .Call(`_amsimr_SimulationConfig_n_phenotypes`, ptr)
 }
 
@@ -481,7 +556,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #'
 #' @return Character vector of phenotype names.
 #'
-.SimulationConfig_phenotype_names <- function(ptr) {
+#' @noRd
+#'
+SimulationConfig_phenotype_names <- function(ptr) {
     .Call(`_amsimr_SimulationConfig_phenotype_names`, ptr)
 }
 
@@ -491,7 +568,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #'
 #' @return Integer vector specifying the number of causal loci per phenotype.
 #'
-.SimulationConfig_n_causal_loci <- function(ptr) {
+#' @noRd
+#'
+SimulationConfig_n_causal_loci <- function(ptr) {
     .Call(`_amsimr_SimulationConfig_n_causal_loci`, ptr)
 }
 
@@ -501,7 +580,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #'
 #' @return Numeric vector of narrow-sense heritabilities for each phenotype.
 #'
-.SimulationConfig_h2_genetic <- function(ptr) {
+#' @noRd
+#'
+SimulationConfig_h2_genetic <- function(ptr) {
     .Call(`_amsimr_SimulationConfig_h2_genetic`, ptr)
 }
 
@@ -512,7 +593,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #' @return Numeric vector of environmental variance components for each
 #'   phenotype.
 #'
-.SimulationConfig_h2_environmental <- function(ptr) {
+#' @noRd
+#'
+SimulationConfig_h2_environmental <- function(ptr) {
     .Call(`_amsimr_SimulationConfig_h2_environmental`, ptr)
 }
 
@@ -523,7 +606,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #' @return Numeric vector of vertical transmission components for each
 #'   phenotype.
 #'
-.SimulationConfig_h2_vertical <- function(ptr) {
+#' @noRd
+#'
+SimulationConfig_h2_vertical <- function(ptr) {
     .Call(`_amsimr_SimulationConfig_h2_vertical`, ptr)
 }
 
@@ -534,7 +619,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #' @return Numeric vector representing the genetic correlation matrix in
 #'   column-major order.
 #'
-.SimulationConfig_genetic_cor <- function(ptr) {
+#' @noRd
+#'
+SimulationConfig_genetic_cor <- function(ptr) {
     .Call(`_amsimr_SimulationConfig_genetic_cor`, ptr)
 }
 
@@ -545,7 +632,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #' @return Numeric vector representing the environmental correlation matrix in
 #'   column-major order.
 #'
-.SimulationConfig_environmental_cor <- function(ptr) {
+#' @noRd
+#'
+SimulationConfig_environmental_cor <- function(ptr) {
     .Call(`_amsimr_SimulationConfig_environmental_cor`, ptr)
 }
 
@@ -556,7 +645,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #' @return Numeric vector representing the mating correlation matrix in
 #'   column-major order.
 #'
-.SimulationConfig_mate_cor <- function(ptr) {
+#' @noRd
+#'
+SimulationConfig_mate_cor <- function(ptr) {
     .Call(`_amsimr_SimulationConfig_mate_cor`, ptr)
 }
 
@@ -567,7 +658,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #' @return Numeric value specifying the termination threshold for the
 #'   annealing routine.
 #'
-.SimulationConfig_tol_inf <- function(ptr) {
+#' @noRd
+#'
+SimulationConfig_tol_inf <- function(ptr) {
     .Call(`_amsimr_SimulationConfig_tol_inf`, ptr)
 }
 
@@ -577,7 +670,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #'
 #' @return Integer specifying the maximum number of annealing iterations.
 #'
-.SimulationConfig_n_iterations <- function(ptr) {
+#' @noRd
+#'
+SimulationConfig_n_iterations <- function(ptr) {
     .Call(`_amsimr_SimulationConfig_n_iterations`, ptr)
 }
 
@@ -587,7 +682,9 @@ pheno_latent_comp_xcor <- function(component_type) {
 #'
 #' @return Numeric value specifying the initial annealing temperature.
 #'
-.SimulationConfig_temp_init <- function(ptr) {
+#' @noRd
+#'
+SimulationConfig_temp_init <- function(ptr) {
     .Call(`_amsimr_SimulationConfig_temp_init`, ptr)
 }
 
@@ -597,23 +694,39 @@ pheno_latent_comp_xcor <- function(component_type) {
 #'
 #' @return Numeric value specifying the temperature decay rate.
 #'
-.SimulationConfig_temp_decay <- function(ptr) {
+#' @noRd
+#'
+SimulationConfig_temp_decay <- function(ptr) {
     .Call(`_amsimr_SimulationConfig_temp_decay`, ptr)
+}
+
+#' Run a single simulation
+#'
+#' @param ptr An external pointer to a SimulationConfig instance.
+#' @param output_dir Output directory to overwrite configuration.
+#' @param ransom_seed Random seed to overwrite configuration
+#' @param log_file Whether to write log output to file.
+#' @param log_level Logging verbosity level.
+#'
+#' @noRd
+#'
+run_simulation <- function(ptr, output_dir, log_file, log_level) {
+    invisible(.Call(`_amsimr_run_simulation`, ptr, output_dir, log_file, log_level))
 }
 
 #' Run (multithreaded) simulations
 #'
 #' @param ptr An external pointer to a SimulationConfig instance.
-#' @param n_replicates Integer. Number of independent simulation replicates to
+#' @param n_replicates Number of independent simulation replicates to
 #'   run.
-#' @param n_threads Integer. Number of parallel threads to use for execution.
-#' @param summarise Logical. Whether to summarize results across replicates
-#'   (default: TRUE).
-#' @param log_file Logical. Whether to write log output to a file (default:
-#'   FALSE).
+#' @param n_threads Number of parallel threads to use for execution.
+#' @param summarise Whether to summarize results across replicates.
+#' @param log_file Whether to write log output to a file.
 #' @param log_level String. Logging verbosity level.
 #'
-.run_simulations <- function(ptr, n_replicates, n_threads, summarise = TRUE, log_file = FALSE, log_level = "info") {
+#' @noRd
+#'
+run_simulations <- function(ptr, n_replicates, n_threads, summarise = TRUE, log_file = FALSE, log_level = "info") {
     invisible(.Call(`_amsimr_run_simulations`, ptr, n_replicates, n_threads, summarise, log_file, log_level))
 }
 

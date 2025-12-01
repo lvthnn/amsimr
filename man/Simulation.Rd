@@ -60,7 +60,7 @@ sim <- Simulation$new()
 # ... configure simulation ...
 sim$run(
   n_replicates = 10,
-  n_threads = 4,
+  n_processes = 4,
   summarise = TRUE,
   log_level = "info"
 )
@@ -315,11 +315,11 @@ Self, invisibly, for method chaining.
 \if{html}{\out{<a id="method-Simulation-run"></a>}}
 \if{latex}{\out{\hypertarget{method-Simulation-run}{}}}
 \subsection{Method \code{run()}}{
-Run the configured genetic simulation
+Run the simulation
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Simulation$run(
   n_replicates,
-  n_threads,
+  n_processes,
   summarise = TRUE,
   log_file = TRUE,
   log_level = "info"
@@ -331,7 +331,7 @@ Run the configured genetic simulation
 \describe{
 \item{\code{n_replicates}}{Integer. Number of independent simulation replicates.}
 
-\item{\code{n_threads}}{Integer. Number of parallel threads for execution.}
+\item{\code{n_processes}}{Integer. Number of parallel processes for execution.}
 
 \item{\code{summarise}}{Logical. If TRUE, aggregate results across replicates
 (default: TRUE).}
@@ -372,7 +372,7 @@ sim <- Simulation$new()
 # ... configure simulation ...
 sim$run(
   n_replicates = 10,
-  n_threads = 4,
+  n_processes = 4,
   summarise = TRUE,
   log_level = "info"
 )
