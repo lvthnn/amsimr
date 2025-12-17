@@ -152,8 +152,10 @@ Simulation <- R6::R6Class(
       h2_genetic,
       h2_environmental,
       h2_vertical,
-      genetic_cor,
-      environmental_cor
+      genetic_cor = NULL,
+      environmental_cor = NULL,
+      rvert_paternal = NULL,
+      rvert_environmental = NULL
     ) {
       if (length(n_causal_loci) == 1) {
         n_causal_loci <- rep(n_causal_loci, n_phenotypes)
@@ -177,20 +179,6 @@ Simulation <- R6::R6Class(
       assert_probs(h2_genetic)
       assert_probs(h2_environmental)
       assert_probs(h2_vertical)
-      checkmate::assert_matrix(
-        genetic_cor,
-        nrows = n_phenotypes,
-        ncols = n_phenotypes,
-        any.missing = FALSE,
-        all.missing = FALSE
-      )
-      checkmate::assert_matrix(
-        environmental_cor,
-        nrows = n_phenotypes,
-        ncols = n_phenotypes,
-        any.missing = FALSE,
-        all.missing = FALSE
-      )
 
       private$.config[["phenome"]] <- list(
         n_phenotypes = n_phenotypes,
@@ -200,7 +188,9 @@ Simulation <- R6::R6Class(
         h2_environmental = h2_environmental,
         h2_vertical = h2_vertical,
         genetic_cor = genetic_cor,
-        environmental_cor = environmental_cor
+        environmental_cor = environmental_cor,
+        rvert_paternal = rvert_paternal,
+        rvert_environmental = rvert_environmental
       )
 
       invisible(self)
