@@ -232,21 +232,23 @@ BEGIN_RCPP
 END_RCPP
 }
 // SimulationConfig_phenome
-SEXP SimulationConfig_phenome(SEXP ptr, std::size_t n_phenotypes, const std::vector<std::string>& names, std::vector<std::size_t> n_causal_loci, std::vector<double> h2_genetic, std::vector<double> h2_environmental, std::vector<double> h2_vertical, std::vector<double> genetic_cor, std::vector<double> environmental_cor);
-RcppExport SEXP _amsimr_SimulationConfig_phenome(SEXP ptrSEXP, SEXP n_phenotypesSEXP, SEXP namesSEXP, SEXP n_causal_lociSEXP, SEXP h2_geneticSEXP, SEXP h2_environmentalSEXP, SEXP h2_verticalSEXP, SEXP genetic_corSEXP, SEXP environmental_corSEXP) {
+SEXP SimulationConfig_phenome(SEXP ptr, std::size_t n_phenotypes, const std::vector<std::string>& names, const std::vector<std::size_t>& n_causal_loci, const std::vector<double>& h2_genetic, const std::vector<double>& h2_environmental, const std::vector<double>& h2_vertical, SEXP genetic_cor, SEXP environmental_cor, SEXP rvert_paternal, SEXP rvert_environmental);
+RcppExport SEXP _amsimr_SimulationConfig_phenome(SEXP ptrSEXP, SEXP n_phenotypesSEXP, SEXP namesSEXP, SEXP n_causal_lociSEXP, SEXP h2_geneticSEXP, SEXP h2_environmentalSEXP, SEXP h2_verticalSEXP, SEXP genetic_corSEXP, SEXP environmental_corSEXP, SEXP rvert_paternalSEXP, SEXP rvert_environmentalSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
     Rcpp::traits::input_parameter< std::size_t >::type n_phenotypes(n_phenotypesSEXP);
     Rcpp::traits::input_parameter< const std::vector<std::string>& >::type names(namesSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::size_t> >::type n_causal_loci(n_causal_lociSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type h2_genetic(h2_geneticSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type h2_environmental(h2_environmentalSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type h2_vertical(h2_verticalSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type genetic_cor(genetic_corSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type environmental_cor(environmental_corSEXP);
-    rcpp_result_gen = Rcpp::wrap(SimulationConfig_phenome(ptr, n_phenotypes, names, n_causal_loci, h2_genetic, h2_environmental, h2_vertical, genetic_cor, environmental_cor));
+    Rcpp::traits::input_parameter< const std::vector<std::size_t>& >::type n_causal_loci(n_causal_lociSEXP);
+    Rcpp::traits::input_parameter< const std::vector<double>& >::type h2_genetic(h2_geneticSEXP);
+    Rcpp::traits::input_parameter< const std::vector<double>& >::type h2_environmental(h2_environmentalSEXP);
+    Rcpp::traits::input_parameter< const std::vector<double>& >::type h2_vertical(h2_verticalSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type genetic_cor(genetic_corSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type environmental_cor(environmental_corSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type rvert_paternal(rvert_paternalSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type rvert_environmental(rvert_environmentalSEXP);
+    rcpp_result_gen = Rcpp::wrap(SimulationConfig_phenome(ptr, n_phenotypes, names, n_causal_loci, h2_genetic, h2_environmental, h2_vertical, genetic_cor, environmental_cor, rvert_paternal, rvert_environmental));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -580,7 +582,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_amsimr_SimulationConfig_new", (DL_FUNC) &_amsimr_SimulationConfig_new, 0},
     {"_amsimr_SimulationConfig_simulation", (DL_FUNC) &_amsimr_SimulationConfig_simulation, 5},
     {"_amsimr_SimulationConfig_genome", (DL_FUNC) &_amsimr_SimulationConfig_genome, 5},
-    {"_amsimr_SimulationConfig_phenome", (DL_FUNC) &_amsimr_SimulationConfig_phenome, 9},
+    {"_amsimr_SimulationConfig_phenome", (DL_FUNC) &_amsimr_SimulationConfig_phenome, 11},
     {"_amsimr_SimulationConfig_random_mating", (DL_FUNC) &_amsimr_SimulationConfig_random_mating, 1},
     {"_amsimr_SimulationConfig_assortative_mating", (DL_FUNC) &_amsimr_SimulationConfig_assortative_mating, 6},
     {"_amsimr_SimulationConfig_metrics", (DL_FUNC) &_amsimr_SimulationConfig_metrics, 2},
