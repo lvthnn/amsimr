@@ -212,8 +212,10 @@ Configure phenome (trait) architecture
   h2_genetic,
   h2_environmental,
   h2_vertical,
-  genetic_cor,
-  environmental_cor
+  genetic_cor = NULL,
+  environmental_cor = NULL,
+  rvert_paternal = NULL,
+  rvert_environmental = NULL
 )}\if{html}{\out{</div>}}
 }
 

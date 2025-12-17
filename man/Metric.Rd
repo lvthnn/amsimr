@@ -16,12 +16,12 @@ Metric objects are created using convenience functions:
 \item \code{pheno_comp_mean()} - Phenotype component means
 \item \code{pheno_comp_var()} - Phenotype component variances
 \item \code{pheno_comp_cor()} - Phenotype component correlations
-\item \code{pheno_comp_xcor()} - Between-mate phenotype component cross-correlations
+\item \code{pheno_comp_xcor()} - Between-mate phenotype component correlations
 \item \code{pheno_latent_h2()} - Latent phenotype heritabilities
 \item \code{pheno_latent_comp_mean()} - Latent phenotype component means
 \item \code{pheno_latent_comp_var()} - Latent phenotype component variances
 \item \code{pheno_latent_comp_cor()} - Latent phenotype component correlations
-\item \code{pheno_latent_comp_xcor()} - Between-mate latent phenotype cross-correlations
+\item \code{pheno_latent_comp_xcor()} - Between-mate latent phenotype correlations
 \item \code{custom_metric()} - User-defined metrics
 }
 }
