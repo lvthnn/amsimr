@@ -11,6 +11,7 @@
 #include <format>
 #include <iostream>
 #include <stdexcept>
+#include <string>
 #include <thread>
 
 namespace amsim {
@@ -42,31 +43,25 @@ Simulation::Simulation(
       n_pheno(config.n_pheno),
       pheno_names(config.v_name),
       out_dir(out_dir_ ? *out_dir_ : config.out_dir),
-      rng_(
-          rng::seed_xoshiro(
-              rng::auto_seed(rng_seed_ ? *rng_seed_ : config.rng_seed))),
-      genome_(n_ind, n_loc, config.v_mut, config.v_rec, config.v_maf, rng_),
+      genome_(n_ind, n_loc, config.v_mut, config.v_rec, config.v_maf),
       arch_(
           n_pheno,
           n_loc,
           config.v_n_loc,
+          config.v_name,
           config.v_h2_gen,
           config.v_h2_env,
+          config.v_h2_vert,
+          config.v_rvert_pat,
+          config.v_rvert_env,
           config.gen_cor,
-          config.env_cor,
-          rng_),
+          config.env_cor),
       buf_(n_ind, n_pheno, config.require_lat),
       phenotypes_([&]() {
         PhenotypeList phenotypes;
         phenotypes.reserve(n_pheno);
         for (std::size_t pheno = 0; pheno < n_pheno; ++pheno) {
-          phenotypes.emplace_back(
-              buf_,
-              arch_,
-              pheno_names[pheno],
-              config.v_h2_gen[pheno],
-              config.v_h2_env[pheno],
-              config.v_h2_vert[pheno]);
+          phenotypes.emplace_back(buf_, arch_, pheno_names[pheno], pheno);
         }
         return phenotypes;
       }()),
@@ -74,7 +69,6 @@ Simulation::Simulation(
           phenotypes_,
           config.mate_cor,
           n_ind / 2,
-          rng_,
           config.n_itr,
           config.temp_init,
           config.temp_decay,
@@ -89,6 +83,7 @@ Simulation::Simulation(
       }()) {
   if (!std::filesystem::exists(out_dir))
     std::filesystem::create_directory(out_dir);
+  rng::set_seed(rng::auto_seed(rng_seed_ ? *rng_seed_ : config.rng_seed));
 }
 
 void Simulation::stream(std::size_t gen) {
@@ -126,11 +121,8 @@ void Simulation::run() {
   std::vector<std::size_t> sib_matching(ctx_.n_ind / 2);
   std::iota(sib_matching.begin(), sib_matching.end(), ctx_.n_ind / 2);
 
+  LOG_DEBUG("Generating haplotypes");
   genome_.generate_haplotypes();
-  genome_.compute_mafs();
-  genome_.compute_stats();
-
-  LoggerTimer timer;
 
   for (std::size_t gen = 0; gen < n_gen; ++gen) {
     LOG_DEBUG("Simulating generation " + std::to_string(gen));
@@ -141,8 +133,12 @@ void Simulation::run() {
 
     for (Phenotype& pheno : phenotypes_) {
       pheno.score(genome_);
+      if (gen == 0) {
+        amsim::PhenoArch::gen_vert(
+            pheno(ComponentType::VERTICAL), n_ind, pheno.h2_vert());
+      }
+      pheno.score_tot();
       pheno.compute_stats();
-      if (gen == 0) pheno.transmit_vert(sib_matching);
     }
 
     if (buf_.has_lat()) buf_.score_latent(model_.cor_U, model_.cor_VT);
@@ -151,12 +147,10 @@ void Simulation::run() {
     model_.update(phenotypes_);
     std::vector<std::size_t> opt_matching = model_.match();
 
-    for (Phenotype& pheno : phenotypes_) pheno.transmit_vert(opt_matching);
-
     stream(gen);
 
     genome_.transpose();
-    genome_.update(opt_matching);
+    genome_.update(opt_matching, arch_, buf_);
     genome_.transpose();
   }
 }
@@ -209,7 +203,7 @@ void run_simulations(
   std::size_t n_metrics = config.specs.size();
 
   // set rlimit or warn user if process hard limit exceeded
-  resolve_rlimit(n_metrics * n_threads);
+  resolve_rlimit((n_metrics * n_threads) + 100);
 
   for (std::size_t ii = 0; ii < n_threads; ++ii) {
     pool.emplace_back([&]() {

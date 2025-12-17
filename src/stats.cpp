@@ -59,7 +59,7 @@ double std(int N, const double* X, int incX, bool population) {
 }
 
 double sem(int N, const double* X, int incX) {
-  return std(N, X, incX, false) / static_cast<double>(N);
+  return std(N, X, incX, false) / std::sqrt(static_cast<double>(N));
 }
 
 void centre(
@@ -144,6 +144,7 @@ void cor(
   std::vector<double> ones(N, 1.0);
   std::vector<double> sx(P);
   std::vector<double> sy(Q);
+
   cblas_dgemv(
       CblasColMajor,
       CblasTrans,
@@ -157,6 +158,7 @@ void cor(
       0.0,
       sx.data(),
       1);
+
   cblas_dgemv(
       CblasColMajor,
       CblasTrans,
