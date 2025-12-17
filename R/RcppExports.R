@@ -387,8 +387,8 @@ SimulationConfig_genome <- function(ptr, n_loci, locus_maf, locus_recombination,
 #'
 #' @noRd
 #'
-SimulationConfig_phenome <- function(ptr, n_phenotypes, names, n_causal_loci, h2_genetic, h2_environmental, h2_vertical, genetic_cor, environmental_cor) {
-    .Call(`_amsimr_SimulationConfig_phenome`, ptr, n_phenotypes, names, n_causal_loci, h2_genetic, h2_environmental, h2_vertical, genetic_cor, environmental_cor)
+SimulationConfig_phenome <- function(ptr, n_phenotypes, names, n_causal_loci, h2_genetic, h2_environmental, h2_vertical, genetic_cor = NULL, environmental_cor = NULL, rvert_paternal = NULL, rvert_environmental = NULL) {
+    .Call(`_amsimr_SimulationConfig_phenome`, ptr, n_phenotypes, names, n_causal_loci, h2_genetic, h2_environmental, h2_vertical, genetic_cor, environmental_cor, rvert_paternal, rvert_environmental)
 }
 
 #' Specify a random mating regime
