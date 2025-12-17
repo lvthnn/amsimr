@@ -4,8 +4,6 @@
 #include <amsim/simulation_config.h>
 
 #include <utility>
-#include <cstdint>
-#include <filesystem>
 
 #include "bindings_utils.h"
 
@@ -46,7 +44,7 @@ SEXP SimulationConfig_simulation(
       n_generations,
       n_individuals,
       output_dir,
-      rOptional<std::size_t>(random_seed));
+      ROptional<std::size_t>(random_seed));
   return config;
 }
 
@@ -99,12 +97,14 @@ SEXP SimulationConfig_phenome(
     SEXP ptr,
     std::size_t n_phenotypes,
     const std::vector<std::string>& names,
-    std::vector<std::size_t> n_causal_loci,
-    std::vector<double> h2_genetic,
-    std::vector<double> h2_environmental,
-    std::vector<double> h2_vertical,
-    std::vector<double> genetic_cor,
-    std::vector<double> environmental_cor) {
+    const std::vector<std::size_t>& n_causal_loci,
+    const std::vector<double>& h2_genetic,
+    const std::vector<double>& h2_environmental,
+    const std::vector<double>& h2_vertical,
+    SEXP genetic_cor = R_NilValue,
+    SEXP environmental_cor = R_NilValue,
+    SEXP rvert_paternal = R_NilValue,
+    SEXP rvert_environmental = R_NilValue) {
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
   config->phenome(
       n_phenotypes,
@@ -113,8 +113,10 @@ SEXP SimulationConfig_phenome(
       std::move(h2_genetic),
       std::move(h2_environmental),
       std::move(h2_vertical),
-      std::move(genetic_cor),
-      std::move(environmental_cor));
+      ROptional<std::vector<double>>(genetic_cor),
+      ROptional<std::vector<double>>(environmental_cor),
+      ROptional<std::vector<double>>(rvert_paternal),
+      ROptional<std::vector<double>>(rvert_environmental));
   return config;
 }
 
@@ -155,10 +157,10 @@ SEXP SimulationConfig_assortative_mating(
   Rcpp::XPtr<amsim::SimulationConfig> config(ptr);
   config->assortative_mating(
       std::move(mate_cor),
-      rOptional<double>(tol_inf),
-      rOptional<std::size_t>(n_iterations),
-      rOptional<double>(temp_init),
-      rOptional<double>(temp_decay));
+      ROptional<double>(tol_inf),
+      ROptional<std::size_t>(n_iterations),
+      ROptional<double>(temp_init),
+      ROptional<double>(temp_decay));
   return config;
 }
 
@@ -523,7 +525,7 @@ void run_simulation(
   amsim::LogLevel level = strLogLevel(log_level);
   amsim::run_simulation(
       *config,
-      rOptional<std::string>(output_dir),
+      ROptional<std::string>(output_dir),
       log_file,
       level);
 }

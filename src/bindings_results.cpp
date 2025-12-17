@@ -46,8 +46,8 @@ void SimulationResults_save(
     bool overwrite = false) {
   Rcpp::XPtr<amsim::SimulationResults> results(ptr);
   results->save(
-      rOptional<std::vector<std::string>>(metrics),
-      rOptional<std::string>(out_dir),
+      ROptional<std::vector<std::string>>(metrics),
+      ROptional<std::string>(out_dir),
       overwrite);
 }
 
