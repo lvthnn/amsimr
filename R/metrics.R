@@ -12,12 +12,12 @@
 #' * `pheno_comp_mean()` - Phenotype component means
 #' * `pheno_comp_var()` - Phenotype component variances
 #' * `pheno_comp_cor()` - Phenotype component correlations
-#' * `pheno_comp_xcor()` - Between-mate phenotype component cross-correlations
+#' * `pheno_comp_xcor()` - Between-mate phenotype component correlations
 #' * `pheno_latent_h2()` - Latent phenotype heritabilities
 #' * `pheno_latent_comp_mean()` - Latent phenotype component means
 #' * `pheno_latent_comp_var()` - Latent phenotype component variances
 #' * `pheno_latent_comp_cor()` - Latent phenotype component correlations
-#' * `pheno_latent_comp_xcor()` - Between-mate latent phenotype cross-correlations
+#' * `pheno_latent_comp_xcor()` - Between-mate latent phenotype correlations
 #' * `custom_metric()` - User-defined metrics
 #'
 #' @examples
