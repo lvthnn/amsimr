@@ -9,5 +9,6 @@ ifeq ($(shell uname),Darwin)
   PKG_LIBS = -framework Accelerate
   PKG_CPPFLAGS += -DACCELERATE_NEW_LAPACK
 else
-  PKG_LIBS = -lblas -llapack
+  PKG_CPPFLAGS += -I/usr/include/openblas
+  PKG_LIBS = -lopenblas
 endif
