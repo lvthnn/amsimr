@@ -27,6 +27,7 @@ Collate:
     'RcppExports.R'
     'amsimr-package.R'
     'metrics.R'
+    'preprocess.R'
     'results.R'
     'utils.R'
     'simulation.R'
