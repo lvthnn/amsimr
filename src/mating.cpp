@@ -31,7 +31,6 @@ AssortativeModel::AssortativeModel(
     const PhenotypeList& phenotypes,
     std::vector<double> cor,
     const std::size_t n_sex,
-    const rng::Xoshiro256ss& rng,
     const std::size_t n_itr,
     double temp_init,
     double temp_decay,
@@ -52,9 +51,6 @@ AssortativeModel::AssortativeModel(
       n_itr_(n_itr),
       temp_init_(temp_init),
       temp_decay_(temp_decay),
-      fuzz_(rng),
-      swap_(rng),
-      acc_(rng),
       cor_S(n_pheno_),
       cor_U(n_pheno_ * n_pheno_),
       cor_VT(n_pheno_ * n_pheno_),
@@ -105,7 +101,7 @@ AssortativeModel::AssortativeModel(
       &clpk_job,
       &clpk_n_pheno,
       &clpk_n_pheno,
-      cor_copy_.data(),
+      cor_copy.data(),
       &clpk_n_pheno,
       cor_S.data(),
       cor_U.data(),
@@ -142,15 +138,15 @@ AssortativeModel::AssortativeModel(
   LAPACK_dgesvd(
       &clpk_job,
       &clpk_job,
-      &clpk_n_pheno_,
-      &clpk_n_pheno_,
-      cor_copy_.data(),
-      &clpk_n_pheno_,
+      &clpk_n_pheno,
+      &clpk_n_pheno,
+      cor_copy.data(),
+      &clpk_n_pheno,
       cor_S.data(),
       cor_U.data(),
-      &clpk_n_pheno_,
+      &clpk_n_pheno,
       cor_VT.data(),
-      &clpk_n_pheno_,
+      &clpk_n_pheno,
       clpk_work.data(),
       &clpk_lwork,
       &clpk_info);
@@ -229,16 +225,6 @@ double AssortativeModel::computeDiffEnergy(
          (2.0 * cblas_ddot(dim, diff.data(), 1, delta.data(), 1));
 }
 
-void AssortativeModel::display_cor() {
-  std::vector<double> cor_mat = computeCor();
-  std::cerr << std::setprecision(5);
-  for (std::size_t el = 0; el < cor_mat.size(); ++el) {
-    if (el % n_pheno_ == 0) std::cerr << "\n";
-    std::cerr << cor_mat[el] << "\t";
-  }
-  std::cerr << "\n";
-}
-
 void AssortativeModel::init_state() {
   // compute dominant latent phenotypes
   double latent_cor = cor_S[0];
@@ -278,7 +264,7 @@ void AssortativeModel::init_state() {
 
   // add noise to get correlation to equal latent_cor
   std::vector<double> latent_fuzz(n_sex_);
-  fuzz_.fill(latent_fuzz.data(), n_sex_);
+  amsim::rng::NormalPolar::fill(latent_fuzz.data(), n_sex_);
   for (std::size_t ind = 0; ind < n_sex_; ++ind)
     latent_female[ind] += latent_noise * latent_fuzz[ind];
 
@@ -303,15 +289,15 @@ std::vector<std::size_t> AssortativeModel::match() {
   std::vector<double> cur = computeCor();
 
   for (std::size_t itr = 0; itr < n_itr_; ++itr) {
-    std::size_t i0 = swap_.sample(n_sex_);
-    std::size_t i1 = swap_.sample(n_sex_);
-    while (i0 == i1) i1 = swap_.sample(n_sex_);
+    std::size_t i0 = amsim::rng::UniformIntRange::sample(n_sex_);
+    std::size_t i1 = amsim::rng::UniformIntRange::sample(n_sex_);
+    while (i0 == i1) i1 = amsim::rng::UniformIntRange::sample(n_sex_);
 
     std::vector<double> delta = computeDelta(i0, i1);
 
     double denergy = computeDiffEnergy(cur, cor_, delta);
     double acc_prob = std::min(1.0, std::exp(-denergy / temp_cur));
-    double u = acc_.sample(1.0);
+    double u = amsim::rng::UniformRange::sample(1.0);
 
     if (u < acc_prob) {
       std::swap(state[i0], state[i1]);

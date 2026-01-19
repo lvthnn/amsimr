@@ -16,9 +16,12 @@
 #include <amsim/component_type.h>
 #include <amsim/genome.h>
 #include <amsim/haplobuf.h>
+#include <amsim/logger.h>
 #include <amsim/phenoarch.h>
 #include <amsim/phenobuf.h>
 #include <amsim/phenotype.h>
+#include <amsim/stats.h>
+#include <amsim/utils.h>
 
 namespace amsim {
 
@@ -34,19 +37,17 @@ Phenotype::Phenotype(
     PhenoBuf& buf,
     PhenoArch& arch,
     std::string name,
-    const double h2_gen,
-    const double h2_env,
-    const double h2_vert,
     const std::optional<std::size_t> id)
     : name_(std::move(name)),
       id_(attach(buf, id)),
       n_ind_(buf.n_ind()),
-      loci_(arch.pheno_mask(id_)),
-      loc_effects_(
-          loci_.size(), std::sqrt(h2_gen / static_cast<double>(loci_.size()))),
-      h2_gen_(h2_gen),
-      h2_env_(h2_env),
-      h2_vert_(h2_vert),
+      loci_(arch.pheno_loc(id_)),
+      loc_effects_(arch.pheno_effects(id_)),
+      h2_gen_(arch.h2_gen(id_)),
+      h2_env_(arch.h2_env(id_)),
+      h2_vert_(arch.h2_vert(id_)),
+      rvert_pat_(arch.rvert_pat(id_)),
+      rvert_env_(arch.rvert_env(id_)),
       ptr_gen_(buf(id_, ComponentType::GENETIC)),
       ptr_env_(buf(id_, ComponentType::ENVIRONMENTAL)),
       ptr_vert_(buf(id_, ComponentType::VERTICAL)),
@@ -60,6 +61,38 @@ Phenotype::Phenotype(
         "sum of phenotype component variances must equal one");
 
   buf.occupy(id_);
+}
+
+void Phenotype::transmit_vert(std::vector<std::size_t> matching) {
+  if (h2_vert_ == 0.0) return;
+  const std::size_t n_sex = n_ind_ / 2;
+
+  for (std::size_t ind = 0; ind < n_sex; ++ind) {
+    ptr_vert_[ind] = rvert_pat_ * (ptr_gen_[ind] + ptr_env_[ind]);
+    ptr_vert_[ind] += (1 - rvert_pat_) * (ptr_gen_[n_sex + matching[ind]] +
+                                          ptr_env_[n_sex + matching[ind]]);
+    ptr_vert_[n_sex + matching[ind]] = ptr_vert_[ind];
+  }
+
+  double var_vert = stats::var(n_ind_, ptr_vert_, 1);
+  LOG_INFO("var_vert: " + std::to_string(var_vert));
+
+  if (h2_vert_ < var_vert)
+    throw std::runtime_error("infeasible vertical variance noise variance");
+
+  double var_noise = h2_vert_ - var_vert;
+  LOG_INFO("var_noise: " + std::to_string(var_noise));
+
+  if (!vert_lock_) {
+    vert_var_ = std::sqrt(var_noise);
+    vert_lock_ = true;
+  }
+
+  for (std::size_t ind = 0; ind < n_sex; ++ind) {
+    std::array<double, 2> env_noise = rng::NormalPolar::two();
+    ptr_vert_[ind] += vert_var_ * env_noise[0];
+    ptr_vert_[n_sex + matching[ind]] += vert_var_ * env_noise[1];
+  }
 }
 
 void Phenotype::score_bitwise(Genome& genome) {
@@ -174,10 +207,7 @@ void Phenotype::score_tiled(Genome& genome) {
   }
 }
 
-void Phenotype::score(Genome& genome) {
-  score_tiled(genome);
-  score_tot();
-}
+void Phenotype::score(Genome& genome) { score_tiled(genome); }
 
 void Phenotype::compute_stats() {
   // compute means and variances of all the components
@@ -186,12 +216,9 @@ void Phenotype::compute_stats() {
        comp <= ComponentType::TOTAL;
        ++comp) {
     const double* ptr = (*this)(comp);
+    comp_means_[comp] = stats::mean(n_ind_, ptr, 1);
+    comp_vars_[comp] = stats::var(n_ind_, ptr, 1);
 
-    const double sum_sq = cblas_ddot(n_ind_, ptr, 1, ptr, 1);
-    const double scale = (1.0 / static_cast<double>(n_ind_));
-
-    comp_means_[comp] = scale * cblas_ddot(n_ind_, ptr, 1, ones.data(), 1);
-    comp_vars_[comp] = scale * sum_sq - comp_means_[comp] * comp_means_[comp];
     if (comp == ComponentType::TOTAL) break;
   }
 }

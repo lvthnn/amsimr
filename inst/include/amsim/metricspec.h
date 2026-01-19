@@ -48,6 +48,15 @@ class MetricSpec {
   MetricSetup setup_;  ///< Metric setup function
 };
 
+// @brief Create spec for locus mean metric
+MetricSpec loc_mean();
+
+// @brief Create spec for locus variance metric
+MetricSpec loc_var();
+
+// @brief Create spec for locus MAF metric
+MetricSpec loc_maf();
+
 /// @brief Create spec for phenotype heritability metric
 MetricSpec pheno_h2();
 
@@ -55,9 +64,19 @@ MetricSpec pheno_h2();
 /// @param type Component type
 MetricSpec pheno_comp_cor(ComponentType type);
 
+/// @brief Create spec for phenotype cross-component correlation metric
+/// @param type Left component type
+/// @param type Right component type
+MetricSpec pheno_comp_cor(ComponentType type_l, ComponentType type_r);
+
 /// @brief Create spec for phenotype component cross-correlation metric
 /// @param type Component type
 MetricSpec pheno_comp_xcor(ComponentType type);
+
+/// @brief Create spec for phenotype cross-component cross-correlation metric
+/// @param type Left component type
+/// @param type Right component type
+MetricSpec pheno_comp_xcor(ComponentType type_l, ComponentType type_r);
 
 /// @brief Create spec for phenotype component mean metric
 /// @param type Component type

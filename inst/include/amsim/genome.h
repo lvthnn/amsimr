@@ -3,6 +3,8 @@
 
 #include <amsim/haplobuf.h>
 #include <amsim/haploview.h>
+#include <amsim/phenoarch.h>
+#include <amsim/phenobuf.h>
 #include <amsim/rng.h>
 
 #include <cstddef>
@@ -29,7 +31,6 @@ class Genome {
   /// @param v_mut Vector of mutation probabilities for genetic loci
   /// @param v_rec Vector of recombination probabilities for genetic loci
   /// @param v_maf vector of locus minor allele frequencies (MAFs)
-  /// @param rng A seeded RNG instance
   ///
   /// @details Allocates two haplotype buffer (`HaploBuf`) instances where
   ///   haplotypes are stored in bit-packed layout initially in locus-major
@@ -44,8 +45,7 @@ class Genome {
       std::size_t n_loc,
       std::vector<double> v_mut,
       std::vector<double> v_rec,
-      std::vector<double> v_maf,
-      const rng::Xoshiro256ss& rng);
+      std::vector<double> v_maf);
 
   /// @brief Return locus means within the current generation
   /// @return A vector of locus means within the current generation
@@ -110,7 +110,8 @@ class Genome {
   void compute_stats();
 
   /// @brief Advance the population using a mate matching
-  void update(std::vector<std::size_t> matching);
+  void update(
+      std::vector<std::size_t> matching, PhenoArch& arch, PhenoBuf& buf);
 
  private:
   const std::vector<double> v_mut_;  ///< Mutation probabilities
@@ -128,7 +129,11 @@ class Genome {
   /// @param ind_h0 Paternal haplotype word index
   /// @param ind_h1 Maternal haplotype word index
   /// @return A 64-bit word representing the gamete genotype
-  uint64_t gamWord(std::uint64_t ind_h0, std::uint64_t ind_h1) noexcept;
+  std::array<std::uint64_t, 2> gamWord(
+      std::uint64_t ind_h0,
+      std::uint64_t ind_h1,
+      const double* v_rec,
+      const double* v_mut) noexcept;
 };
 
 }  // namespace amsim

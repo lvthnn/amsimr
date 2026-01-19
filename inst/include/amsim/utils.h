@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <numeric>
+#include <vector>
 
 /// Utility functions for simulation operations
 namespace amsim::utils {
@@ -62,6 +63,10 @@ void assert_cor(std::size_t N, const double* X, std::size_t ldX);
 /// @param X Pointer to matrix
 /// @param ldX Leading dimension
 void assert_cross_cor(std::size_t N, const double* X, std::size_t ldX);
+
+/// @brief Generate a square unit-diagonal matrix
+/// @param N Matrix dimensions
+std::vector<double> diag(std::size_t N);
 
 /// @brief Generate random effect sizes
 /// @param n_loci Number of loci

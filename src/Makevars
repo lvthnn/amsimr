@@ -1,9 +1,9 @@
 PKG_CPPFLAGS = -I../inst/include
 CXX_STD = CXX20
 
-CXXFLAGS = -O3 -march=native -mtune=native -fPIC
-PKG_CXXFLAGS = -O3 -DNDEBUG -march=native -mtune=native -fPIC
-PKG_CFLAGS = -O3 -DNDEBUG -march=native -mtune=native -fPIC
+# CXXFLAGS = -O3 -march=native -mtune=native -fPIC
+# PKG_CXXFLAGS = -O3 -DNDEBUG -march=native -mtune=native -fPIC
+# PKG_CFLAGS = -O3 -DNDEBUG -march=native -mtune=native -fPIC
 
 ifeq ($(shell uname),Darwin)
   PKG_LIBS = -framework Accelerate

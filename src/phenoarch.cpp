@@ -1,9 +1,8 @@
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <iomanip>
-#include <iostream>
 #include <limits>
 #include <vector>
 
@@ -14,32 +13,45 @@
 #include <lapacke.h>
 #endif
 
+#include <amsim/logger.h>
 #include <amsim/phenoarch.h>
 #include <amsim/rng.h>
 
 namespace amsim {
 PhenoArch::PhenoArch(
     std::size_t n_pheno,
-    std::size_t n_loc_total,
+    std::size_t n_loc_tot,
     std::vector<std::size_t> n_loc,
-    std::vector<double> h2_gen,
-    std::vector<double> h2_env,
+    std::vector<std::string> pheno_names,
+    std::vector<double> v_h2_gen,
+    std::vector<double> v_h2_env,
+    std::vector<double> v_h2_vert,
+    std::vector<double> v_rvert_pat,
+    std::vector<double> v_rvert_env,
     std::vector<double> gen_cor,
-    std::vector<double> env_cor,
-    const rng::Xoshiro256ss& rng)
+    std::vector<double> env_cor)
     : n_pheno_(n_pheno),
-      n_loc_tot_(n_loc_total),
-      n_loc_(std::move(n_loc)),
-      h2_gen_(std::move(h2_gen)),
-      h2_env_(std::move(h2_env)),
+      n_loc_tot_(n_loc_tot),
+      v_n_loc_(std::move(n_loc)),
+      v_names_(std::move(pheno_names)),
+      v_h2_gen_(std::move(v_h2_gen)),
+      v_h2_env_(std::move(v_h2_env)),
+      v_h2_vert_(std::move(v_h2_vert)),
+      v_rvert_pat_(std::move(v_rvert_pat)),
+      v_rvert_env_(std::move(v_rvert_env)),
       gen_cor_(std::move(gen_cor)),
-      env_chol_(std::move(env_cor)),
-      rng_polar_(rng),
-      rng_unf_(rng) {
-  assert(n_loc_.size() == n_pheno_);
-  assert(h2_gen_.size() == n_pheno_);
-  assert(gen_cor_.size() == n_pheno_ * n_pheno_);
-  assert(env_chol_.size() == n_pheno_ * n_pheno_);
+      env_chol_(std::move(env_cor)) {
+  if (v_n_loc_.size() != n_pheno_)
+    throw std::invalid_argument(
+        "must specify number of causal loci for all phenotypes");
+  if (v_h2_gen_.size() != n_pheno_)
+    throw std::invalid_argument("must specify genetic h2 for all phenotypes");
+  if (gen_cor_.size() != n_pheno_ * n_pheno_)
+    throw std::invalid_argument(
+        "matrix gen_cor must be of size n_pheno * n_pheno");
+  if (env_chol_.size() != n_pheno_ * n_pheno_)
+    throw std::invalid_argument(
+        "matrix env_cor must be of size n_pheno * n_pheno");
 
   // cast to LAPACK-legible form
   char clpk_uplo = 'L';
@@ -50,8 +62,8 @@ PhenoArch::PhenoArch(
 #if defined(__APPLE__)
   dpotrf_(&clpk_uplo, &clpk_n_pheno, env_chol_.data(), &clpk_lda, &clpk_out);
 #else
-  LAPACKE_dpotrf(
-      &clpk_uplo_, &clpk_n_pheno_, env_chol_.data(), &clpk_lda_, &clpk_out_);
+  LAPACK_dpotrf(
+      &clpk_uplo, &clpk_n_pheno, env_chol_.data(), &clpk_lda, &clpk_out);
 #endif
 
   for (std::size_t c = 0; c < n_pheno; ++c)
@@ -59,10 +71,30 @@ PhenoArch::PhenoArch(
 
   // add initial state optimisation to make this more reliable
   optim_arch(1e4);
+
+  // setup the noise variance and lock vectors
+  vert_lock_.resize(n_pheno_);
+  vert_scale_.resize(n_pheno_);
+
+  // setup effect masks uniformly (random generation / direct interface later)
+  std::size_t n_effects = 0;
+  for (std::size_t pheno = 0; pheno < n_pheno_; ++pheno)
+    n_effects += v_n_loc_[pheno];
+
+  loc_effects_.resize(n_effects);
+  std::size_t off = 0;
+  for (std::size_t pheno = 0; pheno < n_pheno_; ++pheno) {
+    std::size_t n_loc = v_n_loc_[pheno];
+    std::ranges::fill_n(
+        loc_effects_.data() + off,
+        n_loc,
+        std::sqrt(v_h2_gen_[pheno] / static_cast<double>(n_loc)));
+    off += n_loc;
+  }
 }
 
 void PhenoArch::gen_env(double* ptr_env, const std::size_t n_ind) {
-  rng_polar_.fill(ptr_env, n_ind * n_pheno_);
+  amsim::rng::NormalPolar::fill(ptr_env, n_ind * n_pheno_);
   cblas_dtrmm(
       CblasColMajor,
       CblasRight,
@@ -79,24 +111,13 @@ void PhenoArch::gen_env(double* ptr_env, const std::size_t n_ind) {
 
   // scale environmental components along margins
   for (std::size_t pheno = 0; pheno < n_pheno_; ++pheno)
-    cblas_dscal(n_ind, std::sqrt(h2_env_[pheno]), &ptr_env[pheno * n_ind], 1);
+    cblas_dscal(n_ind, std::sqrt(v_h2_env_[pheno]), &ptr_env[pheno * n_ind], 1);
 }
 
-void PhenoArch::print_correlations(
-    const std::vector<std::size_t>& intersect) const {
-  std::cerr << "Phenotype correlations:\n";
-  std::cerr << std::fixed << std::setprecision(4);
-
-  std::size_t id = 0;
-  for (std::size_t i = 0; i < n_pheno_; ++i) {
-    for (std::size_t j = i + 1; j < n_pheno_; ++j) {
-      const double actual_cor =
-          intersect[id] / std::sqrt(n_loc_[i] * n_loc_[j]);
-      std::cerr << "  Pheno " << i << " vs " << j << ": " << actual_cor << "\n";
-      ++id;
-    }
-  }
-  std::cerr << "\n";
+void PhenoArch::gen_vert(double* ptr_vert, std::size_t n_ind, double h2_vert) {
+  if (h2_vert == 0) return;
+  amsim::rng::NormalPolar::fill(ptr_vert, n_ind);
+  cblas_dscal(n_ind, std::sqrt(h2_vert), ptr_vert, 1);
 }
 
 std::vector<std::uint64_t> PhenoArch::initMask() {
@@ -106,10 +127,10 @@ std::vector<std::uint64_t> PhenoArch::initMask() {
   for (std::size_t pheno = 0; pheno < n_pheno_; ++pheno) {
     std::uint64_t* loc_ptr = &loc_mask[pheno * n_words];
 
-    const std::size_t n_loc_pheno = n_loc_[pheno];
+    const std::size_t n_loc_pheno = v_n_loc_[pheno];
     for (std::size_t r_id = n_loc_tot_ - n_loc_pheno; r_id < n_loc_tot_;
          ++r_id) {
-      const std::size_t l_id = rng_unf_.sample(r_id + 1);
+      const std::size_t l_id = amsim::rng::UniformIntRange::sample(r_id + 1);
       const std::size_t lw = l_id / 64;
       const std::size_t lo = l_id % 64;
       const std::size_t rw = r_id / 64;
@@ -149,7 +170,7 @@ std::vector<double> PhenoArch::initWeights() const {
   for (std::size_t i = 0; i < n_pheno_; ++i) {
     for (std::size_t j = i + 1; j < n_pheno_; ++j) {
       weights[id] =
-          gen_cor_[(j * n_pheno_) + i] * std::sqrt(n_loc_[i] * n_loc_[j]);
+          gen_cor_[(j * n_pheno_) + i] * std::sqrt(v_n_loc_[i] * v_n_loc_[j]);
       ++id;
     }
   }
@@ -195,8 +216,8 @@ void PhenoArch::optim_arch(std::size_t max_it, double eps) {
           std::size_t intersect_cur = intersect_prev + (causal ? -1 : 1);
           double target = weights[idx];
 
-          delta += (intersect_cur - target) * (intersect_cur - target) -
-                   (intersect_prev - target) * (intersect_prev - target);
+          delta += ((intersect_cur - target) * (intersect_cur - target)) -
+                   ((intersect_prev - target) * (intersect_prev - target));
         }
       }
 
@@ -251,7 +272,7 @@ void PhenoArch::optim_arch(std::size_t max_it, double eps) {
   }
 }
 
-std::vector<std::size_t> PhenoArch::pheno_mask(
+std::vector<std::size_t> PhenoArch::pheno_loc(
     const std::size_t pheno_id) const {
   const std::size_t n_words = (n_loc_tot_ + 63) / 64;
   const std::uint64_t* ptr_pheno = &loc_mask_[pheno_id * n_words];
@@ -259,12 +280,18 @@ std::vector<std::size_t> PhenoArch::pheno_mask(
 
   for (std::size_t word = 0; word < n_words; ++word) {
     for (std::uint64_t mask = ptr_pheno[word]; mask; mask &= (mask - 1)) {
-      const std::size_t offset =
-          static_cast<std::uint64_t>(__builtin_ctzll(mask));
+      const auto offset = static_cast<std::uint64_t>(__builtin_ctzll(mask));
       const std::size_t loc = (64 * word) + offset;
       loci.push_back(loc);
     }
   }
   return loci;
 }
+
+const double* PhenoArch::pheno_effects(std::size_t pheno_id) const {
+  std::size_t off = 0;
+  for (std::size_t pheno = 0; pheno < pheno_id; ++pheno) off += v_n_loc_[pheno];
+  return &loc_effects_[off];
+}
+
 }  // namespace amsim

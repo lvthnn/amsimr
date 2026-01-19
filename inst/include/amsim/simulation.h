@@ -40,7 +40,6 @@ class Simulation {
         n_pheno(other.n_pheno),
         pheno_names(std::move(other.pheno_names)),
         out_dir(std::move(other.out_dir)),
-        rng_(std::move(other.rng_)),
         genome_(std::move(other.genome_)),
         arch_(std::move(other.arch_)),
         buf_(std::move(other.buf_)),
@@ -66,7 +65,6 @@ class Simulation {
   void run();
 
  private:
-  rng::Xoshiro256ss rng_;        ///< RNG state
   Genome genome_;                ///< Genome state
   PhenoArch arch_;               ///< Phenotype architecture
   PhenoBuf buf_;                 ///< Phenotype buffer
@@ -74,8 +72,7 @@ class Simulation {
   AssortativeModel model_;       ///< Mating model
   SimulationContext ctx_;        ///< Simulation context
   std::vector<Metric> metrics_;  ///< Metrics to compute
-  std::vector<std::unique_ptr<std::ofstream>>
-      streams_;  ///< Output file streams
+  std::vector<std::unique_ptr<std::ofstream>> streams_;  ///< Output streams
 
   /// @brief Write metrics for current generation to output streams
   /// @param gen Generation number
@@ -83,7 +80,7 @@ class Simulation {
 };
 
 /// @brief Shuffle a seed based on the replicate simulation ID
-/// 
+///
 /// @param rng_seed The base RNG seed used by the simulation
 /// @param rep_id The replication ID used to shuffle the base seed
 ///
@@ -98,11 +95,10 @@ std::uint64_t shuffle_seed(std::uint64_t rng_seed, std::size_t rep_id);
 /// @param log_file Whether to write log to file
 /// @param log_level Logging verbosity level
 void run_simulation(
-  const SimulationConfig& config,
-  std::optional<std::filesystem::path> out_dir_,
-  bool log_file = false,
-  LogLevel log_level = LogLevel::INFO
-);
+    const SimulationConfig& config,
+    std::optional<std::filesystem::path> out_dir_,
+    bool log_file = false,
+    LogLevel log_level = LogLevel::INFO);
 
 /// @brief Run multiple simulation replicates in parallel
 ///
